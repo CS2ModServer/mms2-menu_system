@@ -1,5 +1,5 @@
-# {project}
-# Copyright (C) {year} {name of author}
+# Menu System
+# Copyright (C) 2024-2025 komashchenko & Wend4r
 # Licensed under the GPLv3 license. See LICENSE file in the project root for details.
 
 if(NOT ANY_CONFIG_DIR)

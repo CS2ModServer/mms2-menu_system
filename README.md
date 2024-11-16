@@ -1,4 +1,4 @@
-## Sample plugin
+## MenuSystem plugin
 
 ### Requirements (included)
 

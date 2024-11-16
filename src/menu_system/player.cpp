@@ -1,8 +1,8 @@
 /**
  * vim: set ts=4 sw=4 tw=99 noet :
  * ======================================================
- * Metamod:Source {project}
- * Written by {name of author} ({fullname}).
+ * Metamod:Source Menu System
+ * Written by komashchenko & Wend4r (Borys Komashchenko & Vladimir Ezhikov).
  * ======================================================
 
  * This program is free software: you can redistribute it and/or modify
@@ -19,26 +19,26 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <sample_plugin.hpp>
+#include <menu_system_plugin.hpp>
 
-SamplePlugin::CPlayer::CPlayer()
+MenuSystemPlugin::CPlayer::CPlayer()
  :  m_pLanguage(nullptr), 
     m_aYourArgumentPhrase({nullptr, nullptr})
 {
 }
 
-void SamplePlugin::CPlayer::Init()
+void MenuSystemPlugin::CPlayer::Init()
 {
 	m_pLanguage = nullptr;
 	m_aYourArgumentPhrase = {nullptr, nullptr};
 }
 
-void SamplePlugin::CPlayer::Destroy()
+void MenuSystemPlugin::CPlayer::Destroy()
 {
 	Init();
 }
 
-bool SamplePlugin::CPlayer::AddLanguageListener(const LanguageHandleCallback_t &fnCallback)
+bool MenuSystemPlugin::CPlayer::AddLanguageListener(const LanguageHandleCallback_t &fnCallback)
 {
 	const auto *pfnCallback = &fnCallback;
 
@@ -54,24 +54,24 @@ bool SamplePlugin::CPlayer::AddLanguageListener(const LanguageHandleCallback_t &
 	return bIsExists;
 }
 
-bool SamplePlugin::CPlayer::RemoveLanguageListener(const LanguageHandleCallback_t &fnCallback)
+bool MenuSystemPlugin::CPlayer::RemoveLanguageListener(const LanguageHandleCallback_t &fnCallback)
 {
 	const auto *pfnCallback = &fnCallback;
 
 	return m_vecLanguageCallbacks.FindAndRemove(pfnCallback);
 }
 
-const ISample::ILanguage *SamplePlugin::CPlayer::GetLanguage() const
+const IMenuSystem::ILanguage *MenuSystemPlugin::CPlayer::GetLanguage() const
 {
 	return m_pLanguage;
 }
 
-void SamplePlugin::CPlayer::SetLanguage(const ILanguage *pData)
+void MenuSystemPlugin::CPlayer::SetLanguage(const ILanguage *pData)
 {
 	m_pLanguage = pData;
 }
 
-void SamplePlugin::CPlayer::OnLanguageReceived(CPlayerSlot aSlot, CLanguage *pData)
+void MenuSystemPlugin::CPlayer::OnLanguageReceived(CPlayerSlot aSlot, CLanguage *pData)
 {
 	SetLanguage(pData);
 
@@ -81,7 +81,7 @@ void SamplePlugin::CPlayer::OnLanguageReceived(CPlayerSlot aSlot, CLanguage *pDa
 	}
 }
 
-void SamplePlugin::CPlayer::TranslatePhrases(const Translations *pTranslations, const CLanguage &aServerLanguage, CUtlVector<CUtlString> &vecMessages)
+void MenuSystemPlugin::CPlayer::TranslatePhrases(const Translations *pTranslations, const CLanguage &aServerLanguage, CUtlVector<CUtlString> &vecMessages)
 {
 	const struct
 	{
@@ -143,12 +143,12 @@ void SamplePlugin::CPlayer::TranslatePhrases(const Translations *pTranslations, 
 	}
 }
 
-const SamplePlugin::CPlayer::TranslatedPhrase &SamplePlugin::CPlayer::GetYourArgumentPhrase() const
+const MenuSystemPlugin::CPlayer::TranslatedPhrase &MenuSystemPlugin::CPlayer::GetYourArgumentPhrase() const
 {
 	return m_aYourArgumentPhrase;
 }
 
-const ISample::ILanguage *SamplePlugin::GetServerLanguage() const
+const IMenuSystem::ILanguage *MenuSystemPlugin::GetServerLanguage() const
 {
 	return &m_aServerLanguage;
 }

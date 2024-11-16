@@ -1,8 +1,8 @@
 /**
  * vim: set ts=4 sw=4 tw=99 noet :
  * ======================================================
- * Metamod:Source {project}
- * Written by {name of author} ({fullname}).
+ * Metamod:Source Menu System
+ * Written by komashchenko & Wend4r (Borys Komashchenko & Vladimir Ezhikov).
  * ======================================================
 
  * This program is free software: you can redistribute it and/or modify
@@ -19,9 +19,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <sample/provider.hpp>
+#include <menu_system/provider.hpp>
 
-Sample::Provider::GameDataStorage::CGameSystem::CGameSystem()
+MenuSystem::Provider::GameDataStorage::CGameSystem::CGameSystem()
 {
 	{
 		auto &aCallbacks = m_aAddressCallbacks;
@@ -35,17 +35,17 @@ Sample::Provider::GameDataStorage::CGameSystem::CGameSystem()
 	}
 }
 
-bool Sample::Provider::GameDataStorage::CGameSystem::Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
+bool MenuSystem::Provider::GameDataStorage::CGameSystem::Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
 {
 	return m_aGameConfig.Load(pRoot, pGameConfig, vecMessages);
 }
 
-void Sample::Provider::GameDataStorage::CGameSystem::Reset()
+void MenuSystem::Provider::GameDataStorage::CGameSystem::Reset()
 {
 	m_ppFirst = nullptr;
 }
 
-CBaseGameSystemFactory **Sample::Provider::GameDataStorage::CGameSystem::GetFirstointer() const
+CBaseGameSystemFactory **MenuSystem::Provider::GameDataStorage::CGameSystem::GetFirstointer() const
 {
 	return m_ppFirst;
 }

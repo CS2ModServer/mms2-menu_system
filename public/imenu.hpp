@@ -1,8 +1,8 @@
 /**
  * vim: set ts=4 sw=4 tw=99 noet :
  * ======================================================
- * Metamod:Source {project}
- * Written by {name of author} ({fullname}).
+ * Metamod:Source Menu System
+ * Written by komashchenko & Wend4r (Borys Komashchenko & Vladimir Ezhikov).
  * ======================================================
 
  * This program is free software: you can redistribute it and/or modify
@@ -20,8 +20,8 @@
  */
 
 
-#ifndef _INCLUDE_METAMOD_SOURCE_ISAMPLE_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_ISAMPLE_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_IMENU_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_IMENU_HPP_
 
 #	pragma once
 
@@ -31,17 +31,17 @@
 
 #	include <playerslot.h>
 
-#	define SAMPLE_INTERFACE_NAME "Sample v1.0.0"
+#	define MENU_SYSTEM_INTERFACE_NAME "Menu System v1.0.0"
 
 class CGameEntitySystem;
 class CBaseGameSystemFactory;
 class IGameEventManager2;
 
 /**
- * @brief A sample interface.
- * Note: gets with "ismm->MetaFactory(SAMPLE_INTERFACE_NAME, NULL, NULL);"
+ * @brief A Menu System interface.
+ * Note: gets with "ismm->MetaFactory(MENU_SYSTEM_INTERFACE_NAME, NULL, NULL);"
 **/
-class ISample
+class IMenuSystem
 {
 public:
 	/**
@@ -176,6 +176,6 @@ public: // Player ones.
 	 * @return              Returns a player data.
 	 */
 	virtual IPlayer *GetPlayer(const CPlayerSlot &aSlot) = 0;
-}; // ISample
+}; // IMenuSystem
 
-#endif // _INCLUDE_METAMOD_SOURCE_ISAMPLE_HPP_
+#endif // _INCLUDE_METAMOD_SOURCE_IMENU_HPP_

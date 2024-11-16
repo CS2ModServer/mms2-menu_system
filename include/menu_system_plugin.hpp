@@ -1,8 +1,8 @@
 /**
  * vim: set ts=4 sw=4 tw=99 noet :
  * ======================================================
- * Metamod:Source {project}
- * Written by {name of author} ({fullname}).
+ * Metamod:Source Menu System
+ * Written by komashchenko & Wend4r (Borys Komashchenko & Vladimir Ezhikov).
  * ======================================================
 
  * This program is free software: you can redistribute it and/or modify
@@ -19,14 +19,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _INCLUDE_METAMOD_SOURCE_SAMPLE_PLUGIN_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_SAMPLE_PLUGIN_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_PLUGIN_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_PLUGIN_HPP_
 
 #	pragma once
 
-#	include <isample.hpp>
-#	include <sample/chat_command_system.hpp>
-#	include <sample/provider.hpp>
+#	include <imenu.hpp>
+#	include <menu_system/chat_command_system.hpp>
+#	include <menu_system/provider.hpp>
 #	include <concat.hpp>
 
 #	include <logger.hpp>
@@ -48,28 +48,28 @@
 #	include <tier1/convar.h>
 #	include <tier1/utlvector.h>
 
-#	define SAMPLE_LOGGINING_COLOR {127, 255, 0, 191} // Green (Chartreuse)
+#	define MENU_SYSTEM_LOGGINING_COLOR {127, 255, 0, 191} // Green (Chartreuse)
 
-#	define SAMPLE_BASE_DIR "addons" CORRECT_PATH_SEPARATOR_S META_PLUGIN_PREFIX
-#	define SAMPLE_GAME_EVENTS_FILES "resource" CORRECT_PATH_SEPARATOR_S "*.gameevents"
-#	define SAMPLE_GAME_TRANSLATIONS_FILES "translations" CORRECT_PATH_SEPARATOR_S "*.phrases.*"
-#	define SAMPLE_GAME_TRANSLATIONS_PATH_FILES SAMPLE_BASE_DIR CORRECT_PATH_SEPARATOR_S SAMPLE_GAME_TRANSLATIONS_FILES
-#	define SAMPLE_GAME_LANGUAGES_FILES "configs" CORRECT_PATH_SEPARATOR_S "languages.*"
-#	define SAMPLE_GAME_LANGUAGES_PATH_FILES SAMPLE_BASE_DIR CORRECT_PATH_SEPARATOR_S SAMPLE_GAME_LANGUAGES_FILES
-#	define SAMPLE_BASE_PATHID "GAME"
+#	define MENU_SYSTEM_BASE_DIR "addons" CORRECT_PATH_SEPARATOR_S META_PLUGIN_PREFIX
+#	define MENU_SYSTEM_GAME_EVENTS_FILES "resource" CORRECT_PATH_SEPARATOR_S "*.gameevents"
+#	define MENU_SYSTEM_GAME_TRANSLATIONS_FILES "translations" CORRECT_PATH_SEPARATOR_S "*.phrases.*"
+#	define MENU_SYSTEM_GAME_TRANSLATIONS_PATH_FILES MENU_SYSTEM_BASE_DIR CORRECT_PATH_SEPARATOR_S MENU_SYSTEM_GAME_TRANSLATIONS_FILES
+#	define MENU_SYSTEM_GAME_LANGUAGES_FILES "configs" CORRECT_PATH_SEPARATOR_S "languages.*"
+#	define MENU_SYSTEM_GAME_LANGUAGES_PATH_FILES MENU_SYSTEM_BASE_DIR CORRECT_PATH_SEPARATOR_S MENU_SYSTEM_GAME_LANGUAGES_FILES
+#	define MENU_SYSTEM_BASE_PATHID "GAME"
 
-#	define SAMPLE_EXAMPLE_CHAT_COMMAND "example"
+#	define MENU_SYSTEM_EXAMPLE_CHAT_COMMAND "example"
 
-#	define SAMPLE_CLIENT_CVAR_NAME_LANGUAGE "cl_language"
+#	define MENU_SYSTEM_CLIENT_CVAR_NAME_LANGUAGE "cl_language"
 
 class CBasePlayerController;
 class INetworkMessageInternal;
 
-class SamplePlugin final : public ISmmPlugin, public IMetamodListener, public ISample, public CBaseGameSystem, public IGameEventListener2, 
-                           public Sample::ChatCommandSystem, public Sample::Provider, virtual public Logger, public Translations
+class MenuSystemPlugin final : public ISmmPlugin, public IMetamodListener, public IMenuSystem, public CBaseGameSystem, public IGameEventListener2, 
+                           public MenuSystem::ChatCommandSystem, public MenuSystem::Provider, virtual public Logger, public Translations
 {
 public:
-	SamplePlugin();
+	MenuSystemPlugin();
 
 public: // ISmmPlugin
 	bool Load(PluginId id, ISmmAPI *ismm, char *error = nullptr, size_t maxlen = 0, bool late = true) override;
@@ -90,14 +90,14 @@ public: // ISmmPlugin
 public: // IMetamodListener
 	void *OnMetamodQuery(const char *iface, int *ret) override;
 
-public: // ISample
+public: // IMenuSystem
 	CGameEntitySystem **GetGameEntitySystemPointer() const override;
 	CBaseGameSystemFactory **GetFirstGameSystemPointer() const override;
 	IGameEventManager2 **GetGameEventManagerPointer() const override;
 
-	class CLanguage : public ISample::ILanguage
+	class CLanguage : public IMenuSystem::ILanguage
 	{
-		friend class SamplePlugin;
+		friend class MenuSystemPlugin;
 
 	public:
 		CLanguage(const CUtlSymbolLarge &sInitName = NULL, const char *pszInitCountryCode = "en");
@@ -117,7 +117,7 @@ public: // ISample
 
 	class CPlayer : public IPlayer
 	{
-		friend class SamplePlugin;
+		friend class MenuSystemPlugin;
 
 	public:
 		CPlayer();
@@ -155,8 +155,8 @@ public: // ISample
 		TranslatedPhrase m_aYourArgumentPhrase;
 	}; // CPlayer
 
-	const ISample::ILanguage *GetServerLanguage() const override;
-	const ISample::ILanguage *GetLanguageByName(const char *psz) const override;
+	const IMenuSystem::ILanguage *GetServerLanguage() const override;
+	const IMenuSystem::ILanguage *GetLanguageByName(const char *psz) const override;
 	IPlayer *GetPlayer(const CPlayerSlot &aSlot) override;
 	CPlayer &GetPlayerData(const CPlayerSlot &aSlot);
 
@@ -238,7 +238,7 @@ public: // Event actions.
 	bool UnhookGameEvents();
 
 private: // Commands.
-	CON_COMMAND_MEMBER_F(SamplePlugin, "mm_" META_PLUGIN_PREFIX "_reload_gamedata", OnReloadGameDataCommand, "Reload gamedata configs", FCVAR_LINKED_CONCOMMAND);
+	CON_COMMAND_MEMBER_F(MenuSystemPlugin, "mm_" META_PLUGIN_PREFIX "_reload_gamedata", OnReloadGameDataCommand, "Reload gamedata configs", FCVAR_LINKED_CONCOMMAND);
 
 private: // ConVars. See the constructor
 	ConVar<bool> m_aEnableFrameDetailsConVar;
@@ -300,10 +300,10 @@ private: // Fields.
 	CUtlVector<CLanguage> m_vecLanguages;
 
 	CPlayer m_aPlayers[ABSOLUTE_PLAYER_LIMIT];
-}; // SamplePlugin
+}; // MenuSystemPlugin
 
-extern SamplePlugin *g_pSamplePlugin;
+extern MenuSystemPlugin *g_pMenuSystemPlugin;
 
 PLUGIN_GLOBALVARS();
 
-#endif //_INCLUDE_METAMOD_SOURCE_SAMPLE_PLUGIN_HPP_
+#endif //_INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_PLUGIN_HPP_

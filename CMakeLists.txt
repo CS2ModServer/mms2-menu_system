@@ -1,5 +1,5 @@
-# {project}
-# Copyright (C) {year} {name of author}
+# Menu System
+# Copyright (C) 2024-2025 komashchenko & Wend4r
 # Licensed under the GPLv3 license. See LICENSE file in the project root for details.
 
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
@@ -8,10 +8,10 @@ if(POLICY CMP0092)
 	cmake_policy(SET CMP0092 NEW) # Don't add -W3 warning level by default.
 endif()
 
-project(mms2-sample
+project(mms2-menu_system
 	VERSION 1.0.0
-	DESCRIPTION "Sample"
-	HOMEPAGE_URL "https://github.com/Wend4r/mms2-sample"
+	DESCRIPTION "Menu System"
+	HOMEPAGE_URL "https://github.com/Wend4r/mms2-menu_system"
 	LANGUAGES C CXX
 )
 
@@ -19,10 +19,10 @@ string(REGEX REPLACE "^[^-]*-" "" PROJECT_NAME_SUBSTRING "${PROJECT_NAME}")
 string(TOLOWER "${PROJECT_NAME_SUBSTRING}" PROJECT_NAME_LOWER)
 string(TOUPPER "${PROJECT_NAME_SUBSTRING}" PROJECT_NAME_UPPER)
 
-set(PROJECT_OUTPUT_NAME "sample")
+set(PROJECT_OUTPUT_NAME "menu")
 
-set(PROJECT_AUTHOR "Sample author")
-set(PROJECT_DESCRIPTION_FULL "Metamod:Source sample plugin")
+set(PROJECT_AUTHOR "komashchenko & Wend4r")
+set(PROJECT_DESCRIPTION_FULL "The menu system")
 set(PROJECT_LICENSE "GPLv3")
 string(TIMESTAMP PROJECT_BUILD_DATE "%Y-%m-%d")
 string(TIMESTAMP PROJECT_BUILD_TIME "%H:%M:%S")
@@ -31,9 +31,9 @@ set(EXTERNAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external")
 set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(PUBLIC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/public")
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
-set(SOURCE_SAMPLE_DIR "${SOURCE_DIR}/sample")
-set(SOURCE_SAMPLE_PROVIDER_DIR "${SOURCE_SAMPLE_DIR}/provider")
-set(SOURCE_SAMPLE_PROVIDER_GAMEDATA_DIR "${SOURCE_SAMPLE_PROVIDER_DIR}/gamedata")
+set(SOURCE_MENU_SYSTEM_DIR "${SOURCE_DIR}/menu_system")
+set(SOURCE_MENU_SYSTEM_PROVIDER_DIR "${SOURCE_MENU_SYSTEM_DIR}/provider")
+set(SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR "${SOURCE_MENU_SYSTEM_PROVIDER_DIR}/gamedata")
 
 set(SOURCESDK_PROTOS
 	netmessages
@@ -72,16 +72,16 @@ include(cmake/sourcesdk.cmake)
 include(cmake/translations.cmake)
 
 set(SOURCE_FILES
-	${SOURCE_SAMPLE_PROVIDER_GAMEDATA_DIR}/gameresource.cpp
-	${SOURCE_SAMPLE_PROVIDER_GAMEDATA_DIR}/gamesystem.cpp
-	${SOURCE_SAMPLE_PROVIDER_GAMEDATA_DIR}/source2server.cpp
-	${SOURCE_SAMPLE_DIR}/chat_command_system.cpp
-	${SOURCE_SAMPLE_DIR}/language.cpp
-	${SOURCE_SAMPLE_DIR}/player.cpp
-	${SOURCE_SAMPLE_DIR}/provider.cpp
+	${SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR}/gameresource.cpp
+	${SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR}/gamesystem.cpp
+	${SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR}/source2server.cpp
+	${SOURCE_MENU_SYSTEM_DIR}/chat_command_system.cpp
+	${SOURCE_MENU_SYSTEM_DIR}/language.cpp
+	${SOURCE_MENU_SYSTEM_DIR}/player.cpp
+	${SOURCE_MENU_SYSTEM_DIR}/provider.cpp
 	${SOURCE_DIR}/concat.cpp
 	${SOURCE_DIR}/globals.cpp
-	${SOURCE_DIR}/sample_plugin.cpp
+	${SOURCE_DIR}/menu_system_plugin.cpp
 )
 
 set(INCLUDE_DIRS

@@ -2,8 +2,8 @@
 /**
  * vim: set ts=4 sw=4 tw=99 noet :
  * ======================================================
- * Metamod:Source {project}
- * Written by {name of author} ({fullname}).
+ * Metamod:Source Menu System
+ * Written by komashchenko & Wend4r (Borys Komashchenko & Vladimir Ezhikov).
  * ======================================================
 
  * This program is free software: you can redistribute it and/or modify
