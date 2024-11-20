@@ -25,6 +25,7 @@
 #	pragma once
 
 #	include <imenu.hpp>
+#	include <ientitymgr.hpp>
 #	include <menu_system/chat_command_system.hpp>
 #	include <menu_system/provider.hpp>
 #	include <concat.hpp>
@@ -66,7 +67,7 @@ class CBasePlayerController;
 class INetworkMessageInternal;
 
 class MenuSystemPlugin final : public ISmmPlugin, public IMetamodListener, public IMenuSystem, public CBaseGameSystem, public IGameEventListener2, 
-                           public MenuSystem::ChatCommandSystem, public MenuSystem::Provider, virtual public Logger, public Translations
+                               public MenuSystem::ChatCommandSystem, public MenuSystem::Provider, virtual public Logger, public Translations
 {
 public:
 	MenuSystemPlugin();
@@ -204,6 +205,11 @@ public: // Utils.
 	bool LoadProvider(char *error = nullptr, size_t maxlen = 0);
 	bool UnloadProvider(char *error = nullptr, size_t maxlen = 0);
 
+public: // Entity Manager.
+	bool InitEntityManager(char *error = nullptr, size_t maxlen = 0);
+	void DumpEntityManager(const ConcatLineString &aConcat, CBufferString &sOutput);
+	bool UnloadEntityManager(char *error = nullptr, size_t maxlen = 0);
+
 public: // Game Resource.
 	bool RegisterGameResource(char *error = nullptr, size_t maxlen = 0);
 	bool UnregisterGameResource(char *error = nullptr, size_t maxlen = 0);
@@ -289,6 +295,10 @@ private: // Language (hash)map.
 
 private: // Fields.
 	IGameSystemFactory *m_pFactory = NULL;
+
+	IEntityManager *m_pEntityManager = nullptr;
+	IEntityManager::IProviderAgent *m_pEntityManagerProviderAgent = nullptr;
+	IEntityManager::CSpawnGroupMgrProvider *m_pEntityManagerSpawnGroupMgrProvider = nullptr;
 
 	INetworkMessageInternal *m_pGetCvarValueMessage = NULL;
 	INetworkMessageInternal *m_pSayText2Message = NULL;

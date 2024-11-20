@@ -55,6 +55,7 @@ endfunction()
 
 set_or_external_dir(ANY_CONFIG_DIR "any_config")
 set_or_external_dir(DYNLIBUTILS_DIR "memory_utils")
+set_or_external_dir(ENTITY_MANAGER_DIR "entity_manager")
 set_or_external_dir(GAMEDATA_DIR "gamedata")
 set_or_external_dir(LOGGER_DIR "logger")
 set_or_external_dir(METAMOD_DIR "metamod-source")
@@ -65,6 +66,7 @@ include(cmake/platform/shared.cmake)
 
 include(cmake/any_config.cmake)
 include(cmake/dynlibutils.cmake)
+include(cmake/entity_manager.cmake)
 include(cmake/gamedata.cmake)
 include(cmake/logger.cmake)
 include(cmake/metamod.cmake)
@@ -113,6 +115,6 @@ target_compile_options(${PROJECT_NAME} PRIVATE ${COMPILER_OPTIONS} ${SOURCESDK_C
 target_link_options(${PROJECT_NAME} PRIVATE ${LINK_OPTIONS} ${SOURCESDK_LINK_OPTIONS})
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE ${COMPILE_DEFINITIONS} ${METAMOD_COMPILE_DEFINITIONS} ${SOURCESDK_COMPILE_DEFINITIONS})
-target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS} ${ANY_CONFIG_INCLUDE_DIRS} ${DYNLIBUTILS_INCLUDE_DIRS} ${GAMEDATA_INCLUDE_DIRS} ${LOGGER_INCLUDE_DIRS} ${METAMOD_INCLUDE_DIRS} ${SOURCESDK_INCLUDE_DIRS} ${TRNALSTIONS_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS} ${ANY_CONFIG_INCLUDE_DIRS} ${DYNLIBUTILS_INCLUDE_DIRS} ${ENTITY_MANAGER_INCLUDE_DIRS} ${GAMEDATA_INCLUDE_DIRS} ${LOGGER_INCLUDE_DIRS} ${METAMOD_INCLUDE_DIRS} ${SOURCESDK_INCLUDE_DIRS} ${TRNALSTIONS_INCLUDE_DIRS})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LINK_LIBRARIES} ${ANY_CONFIG_BINARY_DIR} ${DYNLIBUTILS_BINARY_DIR} ${GAMEDATA_BINARY_DIR} ${LOGGER_BINARY_DIR} ${SOURCESDK_BINARY_DIR} ${TRNALSTIONS_BINARY_DIR})

@@ -51,6 +51,10 @@ SH_DECL_HOOK1_void(CServerSideClientBase, PerformDisconnection, SH_NOATTRIB, 0, 
 static MenuSystemPlugin s_aMenuSystemPlugin;
 MenuSystemPlugin *g_pMenuSystemPlugin = &s_aMenuSystemPlugin;
 
+static IEntityManager *s_pEntityManager = nullptr;
+static IEntityManager *s_pEntityManagerProviderAgent = nullptr;
+static IEntityManager *s_pEntityManagerSpawnGroupMgrProvider = nullptr;
+
 const ConcatLineString s_aEmbedConcat =
 {
 	{
@@ -114,6 +118,19 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 	if(!LoadProvider(error, maxlen))
 	{
 		return false;
+	}
+
+	if(!InitEntityManager(error, maxlen))
+	{
+		return false;
+	}
+
+	if(IsChannelEnabled(LS_DETAILED))
+	{
+		CBufferStringGrowable<1024> sMessage;
+
+		DumpEntityManager(s_aEmbedConcat, sMessage);
+		Logger::Detailed(sMessage);
 	}
 
 	if(!ParseLanguages(error, maxlen))
@@ -205,6 +222,11 @@ bool MenuSystemPlugin::Unload(char *error, size_t maxlen)
 	Assert(ClearTranslations());
 
 	if(!UnloadProvider(error, maxlen))
+	{
+		return false;
+	}
+
+	if(!UnloadEntityManager(error, maxlen))
 	{
 		return false;
 	}
@@ -1037,6 +1059,60 @@ bool MenuSystemPlugin::UnloadProvider(char *error, size_t maxlen)
 	}
 
 	return bResult;
+}
+
+
+bool MenuSystemPlugin::InitEntityManager(char *error, size_t maxlen)
+{
+	// Gets a main entity manager interface.
+	{
+		m_pEntityManager = reinterpret_cast<IEntityManager *>(g_SMAPI->MetaFactory(ENTITY_MANAGER_INTERFACE_NAME, nullptr, nullptr));
+
+		if(!m_pEntityManager)
+		{
+			strncpy(error, "Failed to get a entity manager interface", maxlen);
+
+			return false;
+		}
+	}
+
+	// Gets an entity manager provider agent interface.
+	{
+		m_pEntityManagerProviderAgent = m_pEntityManager->GetProviderAgent();
+
+		if(!m_pEntityManagerProviderAgent)
+		{
+			strncpy(error, "Failed to get a entity manager provider agent interface", maxlen);
+
+			return false;
+		}
+	}
+
+	// Gets an entity manager spawn group mgr interface.
+	{
+		m_pEntityManagerSpawnGroupMgrProvider = m_pEntityManager->GetSpawnGroupManager();
+
+		if(!m_pEntityManagerSpawnGroupMgrProvider)
+		{
+			strncpy(error, "Failed to get a entity manager spawn group mgr interface", maxlen);
+
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void MenuSystemPlugin::DumpEntityManager(const ConcatLineString &aConcat, CBufferString &sOutput)
+{
+	GLOBALS_APPEND_VARIABLE(m_pEntityManager);
+	GLOBALS_APPEND_VARIABLE(m_pEntityManagerProviderAgent);
+	GLOBALS_APPEND_VARIABLE(m_pEntityManagerSpawnGroupMgrProvider);
+}
+
+bool MenuSystemPlugin::UnloadEntityManager(char *error, size_t maxlen)
+{
+	return true;
 }
 
 bool MenuSystemPlugin::RegisterGameResource(char *error, size_t maxlen)
