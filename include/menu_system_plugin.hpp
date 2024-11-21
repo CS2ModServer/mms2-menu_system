@@ -191,6 +191,8 @@ public: // Entity Manager.
 
 	bool LoadMenuSpawnGroups(const Vector &aWorldOrigin = {0.0f, 0.0f, 0.0f});
 	void FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV);
+	void FillMenuEntityKeyValues2(CEntityKeyValues *pMenuKV);
+	void FillMenuEntityKeyValues3(CEntityKeyValues *pMenuKV);
 
 	void SpawnMenuEntities();
 

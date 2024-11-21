@@ -467,12 +467,20 @@ void MenuSystemPlugin::OnSpawnGroupCreateLoading(SpawnGroupHandle_t hSpawnGroup,
 		Logger::DetailedFormat("%s\n", __FUNCTION__);
 	}
 
-	CEntityKeyValues *pMenuKV = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL);
+	CEntityKeyValues *pMenuKV = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL),
+	                 *pMenuKV2 = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL), 
+	                 *pMenuKV3 = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL);
 
 	FillMenuEntityKeyValues(pMenuKV);
+	FillMenuEntityKeyValues2(pMenuKV2);
+	FillMenuEntityKeyValues3(pMenuKV3);
 
 	g_pEntitySystem->AddRefKeyValues(pMenuKV);
+	g_pEntitySystem->AddRefKeyValues(pMenuKV2);
+	g_pEntitySystem->AddRefKeyValues(pMenuKV3);
 	vecKeyValues.AddToTail(pMenuKV);
+	vecKeyValues.AddToTail(pMenuKV2);
+	vecKeyValues.AddToTail(pMenuKV3);
 }
 
 void MenuSystemPlugin::OnSpawnGroupDestroyed(SpawnGroupHandle_t hSpawnGroup)
@@ -688,40 +696,121 @@ bool MenuSystemPlugin::LoadMenuSpawnGroups(const Vector &aWorldOrigin)
 void MenuSystemPlugin::FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV)
 {
 	pMenuKV->SetString("classname", "point_worldtext");
+	pMenuKV->SetVector("origin", {-42.0f, 30.0f, -159.95f});
+	pMenuKV->SetQAngle("angles", {180.0f, 0.0f, 0.0f});
+
+	// Text settings.
+	pMenuKV->SetBool("enabled", true);
+	pMenuKV->SetBool("fullbright", true);
+	pMenuKV->SetColor("color", {100, 73, 28, 255});
+	// pMenuKV->SetColor("color", {0, 0, 0, 255});
+	pMenuKV->SetFloat("world_units_per_pixel", 0.0125f);
+	pMenuKV->SetInt("font_size", 175);
+	pMenuKV->SetString("font_name", "Arial");
+	pMenuKV->SetInt("justify_horizontal", 0);
+	pMenuKV->SetInt("justify_vertical", 0);
+	pMenuKV->SetFloat("depth_render_offset", 0.125f);
+	pMenuKV->SetInt("reorient_mode", 0);
+
+	// Background.
+	pMenuKV->SetBool("draw_background", true);
+	pMenuKV->SetString("background_material_name", "materials/dev/annotation_worldtext_background.vmat");
+	// pMenuKV->SetString("background_material_name", "materials/dev/point_worldtext_default_background.vmat");
+	// pMenuKV->SetString("background_material_name", "materials/editor/icon_empty.vmat");
+	pMenuKV->SetFloat("background_border_width", 2.0f);
+	pMenuKV->SetFloat("background_border_height", 1.0f);
+	pMenuKV->SetFloat("background_world_to_uv", 0.1f);
+
+	pMenuKV->SetString("message", "Заголовок\n"
+	                              "\n"
+	                              "1. bratbufi\n"
+	                              "2. mamabufi\n"
+	                              "3. doublebufi\n"
+	                              "4. bufi\n"
+	                              "5. megabufi\n"
+	                              "6. superbufi\n"
+	                              "\n"
+	                              "7. Назад\n"
+	                              "8. Вперёд\n"
+	                              "9. Выход\n");
+}
+
+void MenuSystemPlugin::FillMenuEntityKeyValues2(CEntityKeyValues *pMenuKV)
+{
+	pMenuKV->SetString("classname", "point_worldtext");
 	pMenuKV->SetVector("origin", {-42.0f, 30.0f, -160.0f});
 	pMenuKV->SetQAngle("angles", {180.0f, 0.0f, 0.0f});
 
 	// Text settings.
 	pMenuKV->SetBool("enabled", true);
 	pMenuKV->SetBool("fullbright", true);
-	pMenuKV->SetColor("color", {195, 141, 52, 255});
+	pMenuKV->SetColor("color", {195, 141, 52, 255}); // Yellow.
+	// pMenuKV->SetColor("color", {0, 0, 0, 255});
 	pMenuKV->SetFloat("world_units_per_pixel", 0.0125f);
 	pMenuKV->SetInt("font_size", 175);
 	pMenuKV->SetString("font_name", "Arial");
-	pMenuKV->SetInt("justify_horizontal", 1);
-	pMenuKV->SetInt("justify_vertical", 1);
+	pMenuKV->SetInt("justify_horizontal", 0);
+	pMenuKV->SetInt("justify_vertical", 0);
 	pMenuKV->SetFloat("depth_render_offset", 0.125f);
-	pMenuKV->SetInt("reorient_mode", 1);
+	pMenuKV->SetInt("reorient_mode", 0);
 
-	// Background.
 	pMenuKV->SetBool("draw_background", true);
-	pMenuKV->SetString("background_material_name", "materials/dev/annotation_worldtext_background.vmat");
+	pMenuKV->SetString("background_material_name", "materials/editor/icon_empty.vmat");
+	pMenuKV->SetFloat("background_border_width", 2.0f);
+	pMenuKV->SetFloat("background_border_height", 1.0f);
+	pMenuKV->SetFloat("background_world_to_uv", 0.1f);
+
+	pMenuKV->SetString("message", "\n"
+	                              "\n"
+	                              "1. bratbufi\n"
+	                              "\n"
+	                              "3. doublebufi\n"
+	                              "4. bufi\n"
+	                              "\n"
+	                              "6. superbufi\n"
+	                              "\n"
+	                              "7. Назад\n"
+	                              "8. Вперёд\n"
+	                              "9. Выход\n");
+}
+
+void MenuSystemPlugin::FillMenuEntityKeyValues3(CEntityKeyValues *pMenuKV)
+{
+	pMenuKV->SetString("classname", "point_worldtext");
+	pMenuKV->SetVector("origin", {-42.0f, 30.0f, -160.0f});
+	pMenuKV->SetQAngle("angles", {180.0f, 0.0f, 0.0f});
+
+	// Text settings.
+	pMenuKV->SetBool("enabled", true);
+	pMenuKV->SetBool("fullbright", true);
+	pMenuKV->SetColor("color", {255, 255, 255, 255}); // White.
+	// pMenuKV->SetColor("color", {0, 0, 0, 255});
+	pMenuKV->SetFloat("world_units_per_pixel", 0.0125f);
+	pMenuKV->SetInt("font_size", 175);
+	pMenuKV->SetString("font_name", "Arial");
+	pMenuKV->SetInt("justify_horizontal", 0);
+	pMenuKV->SetInt("justify_vertical", 0);
+	pMenuKV->SetFloat("depth_render_offset", 0.125f);
+	pMenuKV->SetInt("reorient_mode", 0);
+
+	pMenuKV->SetBool("draw_background", true);
+	pMenuKV->SetString("background_material_name", "materials/editor/icon_empty.vmat");
 	pMenuKV->SetFloat("background_border_width", 2.0f);
 	pMenuKV->SetFloat("background_border_height", 1.0f);
 	pMenuKV->SetFloat("background_world_to_uv", 0.1f);
 
 	pMenuKV->SetString("message", "Заголовок\n"
-	                                 "\n"
-	                                 "1. bratbufi\n"
-	                                 "2. mamabufi\n"
-	                                 "3. doublebufi"
-	                                 "4. bufi\n"
-	                                 "5. megabufi\n"
-	                                 "6. superbufi\n"
-	                                 "\n"
-	                                 "7. Назад\n"
-	                                 "8. Вперёд\n"
-	                                 "9. Выход\n");
+	                              "\n"
+	                              "\n"
+	                              "2. mamabufi\n"
+	                              "\n"
+	                              "\n"
+	                              "5. megabufi\n"
+	                              "\n"
+	                              "\n"
+	                              "\n"
+	                              "\n"
+	                              "\n");
 }
 
 void MenuSystemPlugin::SpawnMenuEntities()
