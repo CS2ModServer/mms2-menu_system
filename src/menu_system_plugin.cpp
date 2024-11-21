@@ -197,6 +197,8 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 		}
 	}
 
+	ismm->AddListener(static_cast<ISmmPlugin *>(this), static_cast<IMetamodListener *>(this));
+
 	MessageFormat("%s started!\n", GetName());
 
 	return true;
