@@ -148,7 +148,7 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 		return false;
 	}
 
-	Assert(ParseGameEvents());
+	m_vecGameEvents.AddToTail("round_start"); // Hook Round Start event to respawn menu entities. See "FireGameEvent" method.
 
 	SH_ADD_HOOK(ICvar, DispatchConCommand, g_pCVar, SH_MEMBER(this, &MenuSystemPlugin::OnDispatchConCommandHook), false);
 	SH_ADD_HOOK_MEMFUNC(INetworkServerService, StartupServer, g_pNetworkServerService, this, &MenuSystemPlugin::OnStartupServerHook, true);
@@ -492,6 +492,14 @@ GS_EVENT_MEMBER(MenuSystemPlugin, GameActivate)
 		if(!RegisterGameResource(sMessage, sizeof(sMessage)))
 		{
 			Logger::WarningFormat("%s\n", sMessage);
+		}
+	}
+
+	// Load menu spawn groups.
+	{
+		if(!LoadMenuSpawnGroups())
+		{
+			Logger::Warning("Failed to load the menu spawn groups\n");
 		}
 	}
 }
@@ -898,56 +906,82 @@ GS_EVENT_MEMBER(MenuSystemPlugin, RestoreGame)
 
 void MenuSystemPlugin::FireGameEvent(IGameEvent *event)
 {
-	if(!m_aEnableGameEventsDetaillsConVar.GetValue())
+	if(m_aEnableGameEventsDetaillsConVar.GetValue())
 	{
-		return;
-	}
+		KeyValues3 *pEventDataKeys = event->GetDataKeys();
 
-	KeyValues3 *pEventDataKeys = event->GetDataKeys();
-
-	if(!pEventDataKeys)
-	{
-		Logger::WarningFormat("Data keys is empty at \"%s\" event\n", event->GetName());
-
-		return;
-	}
-
-	if(IsChannelEnabled(LS_DETAILED))
-	{
-		int iMemberCount = pEventDataKeys->GetMemberCount();
-
-		if(!iMemberCount)
+		if(!pEventDataKeys)
 		{
-			Logger::WarningFormat("No members at \"%s\" event\n", event->GetName());
+			Logger::WarningFormat("Data keys is empty at \"%s\" event\n", event->GetName());
 
 			return;
 		}
 
+		if(IsChannelEnabled(LS_DETAILED))
 		{
-			auto aDetails = Logger::CreateDetailsScope();
+			int iMemberCount = pEventDataKeys->GetMemberCount();
 
-			aDetails.PushFormat("\"%s\":", event->GetName());
-			aDetails.Push("{");
-
-			for(KV3MemberId_t id = 0; id < iMemberCount; id++)
+			if(!iMemberCount)
 			{
-				const char *pEventMemberName = pEventDataKeys->GetMemberName(id);
+				Logger::WarningFormat("No members at \"%s\" event\n", event->GetName());
 
-				KeyValues3 *pEventMember = pEventDataKeys->GetMember(id);
-
-				CBufferStringGrowable<128> sEventMember;
-
-				pEventMember->ToString(sEventMember, KV3_TO_STRING_DONT_CLEAR_BUFF);
-				aDetails.PushFormat("\t\"%s\":\t%s", pEventMemberName, sEventMember.Get());
+				return;
 			}
 
-			aDetails.Push("}");
-			aDetails.Send([&](const CUtlString &sMessage)
 			{
-				Logger::Detailed(sMessage);
-			});
+				auto aDetails = Logger::CreateDetailsScope();
+
+				aDetails.PushFormat("\"%s\":", event->GetName());
+				aDetails.Push("{");
+
+				for(KV3MemberId_t id = 0; id < iMemberCount; id++)
+				{
+					const char *pEventMemberName = pEventDataKeys->GetMemberName(id);
+
+					KeyValues3 *pEventMember = pEventDataKeys->GetMember(id);
+
+					CBufferStringGrowable<128> sEventMember;
+
+					pEventMember->ToString(sEventMember, KV3_TO_STRING_DONT_CLEAR_BUFF);
+					aDetails.PushFormat("\t\"%s\":\t%s", pEventMemberName, sEventMember.Get());
+				}
+
+				aDetails.Push("}");
+				aDetails.Send([&](const CUtlString &sMessage)
+				{
+					Logger::Detailed(sMessage);
+				});
+			}
 		}
 	}
+
+	// SpawnMenuEntities();
+	// LoadMenuSpawnGroups();
+}
+
+void MenuSystemPlugin::OnSpawnGroupAllocated(SpawnGroupHandle_t hSpawnGroup, ISpawnGroup *pSpawnGroup)
+{
+	// AsyncSpawnMenuEntities();
+}
+
+void MenuSystemPlugin::OnSpawnGroupCreateLoading(SpawnGroupHandle_t hSpawnGroup, CMapSpawnGroup *pMapSpawnGroup, bool bSynchronouslySpawnEntities, bool bConfirmResourcesLoaded, CUtlVector<const CEntityKeyValues *> &vecKeyValues)
+{
+	if(Logger::IsChannelEnabled(LV_DETAILED))
+	{
+		Logger::DetailedFormat("%s\n", __FUNCTION__);
+	}
+
+	CEntityKeyValues *pMenuKV = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL);
+
+	FillMenuEntityKeyValues(pMenuKV);
+
+	g_pEntitySystem->AddRefKeyValues(pMenuKV);
+	vecKeyValues.AddToTail(pMenuKV);
+}
+
+void MenuSystemPlugin::OnSpawnGroupDestroyed(SpawnGroupHandle_t hSpawnGroup)
+{
+	m_pMySpawnGroupInstance->RemoveNotificationsListener(static_cast<IEntityManager::IProviderAgent::ISpawnGroupNotifications *>(this));
 }
 
 bool MenuSystemPlugin::InitProvider(char *error, size_t maxlen)
@@ -1090,9 +1124,9 @@ bool MenuSystemPlugin::InitEntityManager(char *error, size_t maxlen)
 
 	// Gets an entity manager spawn group mgr interface.
 	{
-		m_pEntityManagerSpawnGroupMgrProvider = m_pEntityManager->GetSpawnGroupManager();
+		m_pEntityManagerSpawnGroupProvider = m_pEntityManager->GetSpawnGroupManager();
 
-		if(!m_pEntityManagerSpawnGroupMgrProvider)
+		if(!m_pEntityManagerSpawnGroupProvider)
 		{
 			strncpy(error, "Failed to get a entity manager spawn group mgr interface", maxlen);
 
@@ -1107,12 +1141,139 @@ void MenuSystemPlugin::DumpEntityManager(const ConcatLineString &aConcat, CBuffe
 {
 	GLOBALS_APPEND_VARIABLE(m_pEntityManager);
 	GLOBALS_APPEND_VARIABLE(m_pEntityManagerProviderAgent);
-	GLOBALS_APPEND_VARIABLE(m_pEntityManagerSpawnGroupMgrProvider);
+	GLOBALS_APPEND_VARIABLE(m_pEntityManagerSpawnGroupProvider);
 }
 
 bool MenuSystemPlugin::UnloadEntityManager(char *error, size_t maxlen)
 {
 	return true;
+}
+
+bool MenuSystemPlugin::LoadMenuSpawnGroups(const Vector &aWorldOrigin)
+{
+	if(IsChannelEnabled(LS_DETAILED))
+	{
+		Logger::DetailedFormat("%s\n", __FUNCTION__);
+	}
+
+	{
+		CUtlString sMenu = GetName();
+
+		SpawnGroupDesc_t aDesc;
+
+		// aDesc.m_hOwner = 1; // Merge the spawn group into active one.
+		// aDesc.m_sWorldName = sMenu;
+		aDesc.m_sDescriptiveName = sMenu;
+		aDesc.m_sEntityLumpName = "main lump";
+		aDesc.m_sEntityFilterName = "menu_loader";
+		aDesc.m_sLocalNameFixup = "menu_system";
+		aDesc.m_sWorldGroupname = "menu";
+		aDesc.m_manifestLoadPriority = RESOURCE_MANIFEST_LOAD_PRIORITY_HIGH;
+		aDesc.m_bCreateClientEntitiesOnLaterConnectingClients = true;
+		aDesc.m_bBlockUntilLoaded = true;
+
+		auto *pSpawnGroupInstance = m_pEntityManagerProviderAgent->CreateSpawnGroup();
+
+		pSpawnGroupInstance->AddNotificationsListener(static_cast<IEntityManager::IProviderAgent::ISpawnGroupNotifications *>(this));
+
+		if(pSpawnGroupInstance->Load(aDesc, aWorldOrigin))
+		{
+			m_pMySpawnGroupInstance = pSpawnGroupInstance;
+		}
+		else
+		{
+			Logger::WarningFormat("Failed to load \"%s\" spawn group", sMenu.Get());
+		}
+	}
+
+	return true;
+}
+
+void MenuSystemPlugin::FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV)
+{
+	pMenuKV->SetString("classname", "point_worldtext");
+	pMenuKV->SetVector("origin", {-42.0f, 30.0f, -160.0f});
+	pMenuKV->SetQAngle("angles", {180.0f, 0.0f, 0.0f});
+
+	// Text settings.
+	pMenuKV->SetBool("enabled", true);
+	pMenuKV->SetBool("fullbright", true);
+	pMenuKV->SetColor("color", {195, 141, 52, 255});
+	pMenuKV->SetFloat("world_units_per_pixel", 0.0125f);
+	pMenuKV->SetInt("font_size", 175);
+	pMenuKV->SetString("font_name", "Arial");
+	pMenuKV->SetInt("justify_horizontal", 1);
+	pMenuKV->SetInt("justify_vertical", 1);
+	pMenuKV->SetFloat("depth_render_offset", 0.125f);
+	pMenuKV->SetInt("reorient_mode", 1);
+
+	// Background.
+	pMenuKV->SetBool("draw_background", true);
+	pMenuKV->SetString("background_material_name", "materials/dev/annotation_worldtext_background.vmat");
+	pMenuKV->SetFloat("background_border_width", 2.0f);
+	pMenuKV->SetFloat("background_border_height", 1.0f);
+	pMenuKV->SetFloat("background_world_to_uv", 0.1f);
+
+	pMenuKV->SetString("message", "Заголовок\n"
+	                                 "\n"
+	                                 "1. bratbufi\n"
+	                                 "2. mamabufi\n"
+	                                 "3. doublebufi"
+	                                 "4. bufi\n"
+	                                 "5. megabufi\n"
+	                                 "6. superbufi\n"
+	                                 "\n"
+	                                 "7. Назад\n"
+	                                 "8. Вперёд\n"
+	                                 "9. Выход\n");
+}
+
+void MenuSystemPlugin::SpawnMenuEntities()
+{
+	if(Logger::IsChannelEnabled(LS_DETAILED))
+	{
+		Logger::DetailedFormat("%s\n", __FUNCTION__);
+	}
+
+	SpawnGroupHandle_t hSpawnGroup = m_pMySpawnGroupInstance->GetSpawnGroupHandle();
+
+	static_assert(INVALID_SPAWN_GROUP == ANY_SPAWN_GROUP);
+
+	CEntityKeyValues *pMenuKV = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL);
+
+	g_pEntitySystem->AddRefKeyValues(pMenuKV);
+	FillMenuEntityKeyValues(pMenuKV);
+
+	{
+		m_pEntityManagerProviderAgent->PushSpawnQueue(pMenuKV, hSpawnGroup);
+
+		{
+			CUtlVector<CUtlString> vecDetails, 
+			                       vecWarnings;
+
+			m_pEntityManagerProviderAgent->ExecuteSpawnQueued(hSpawnGroup, &m_vecMyEntities, &vecDetails, &vecWarnings);
+
+			if(vecDetails.Count())
+			{
+				for(const auto &it : vecDetails)
+				{
+					Logger::MessageFormat("%s\n", it.Get());
+				}
+			}
+
+			if(vecWarnings.Count())
+			{
+				for(const auto &it : vecWarnings)
+				{
+					Logger::WarningFormat("%s\n", it.Get());
+				}
+			}
+		}
+	}
+
+	g_pEntitySystem->ReleaseKeyValues(pMenuKV);
+
+	// delete pMenuKV;
 }
 
 bool MenuSystemPlugin::RegisterGameResource(char *error, size_t maxlen)
@@ -1581,7 +1742,7 @@ bool MenuSystemPlugin::HookGameEvents()
 	{
 		const char *pszEvent = sEvent.Get();
 
-		if(g_pGameEventManager->AddListener(this, pszEvent, true) == -1)
+		if(g_pGameEventManager->AddListener(static_cast<IGameEventListener2 *>(this), pszEvent, true) == -1)
 		{
 			aWarnings.PushFormat(pszWarningFormat, pszEvent);
 
@@ -1952,7 +2113,7 @@ void MenuSystemPlugin::OnStartupServer(CNetworkGameServerBase *pNetServer, const
 
 		if(RegisterSource2Server(sMessage, sizeof(sMessage)))
 		{
-			Assert(HookGameEvents());
+			HookGameEvents();
 		}
 		else
 		{

@@ -48,6 +48,8 @@
 #	include <tier0/strtools.h>
 #	include <tier1/convar.h>
 #	include <tier1/utlvector.h>
+#	include <tier1/keyvalues3.h>
+#	include <entity2/entitykeyvalues.h>
 
 #	define MENU_SYSTEM_LOGGINING_COLOR {127, 255, 0, 191} // Green (Chartreuse)
 
@@ -66,7 +68,7 @@
 class CBasePlayerController;
 class INetworkMessageInternal;
 
-class MenuSystemPlugin final : public ISmmPlugin, public IMetamodListener, public IMenuSystem, public CBaseGameSystem, public IGameEventListener2, 
+class MenuSystemPlugin final : public ISmmPlugin, public IMetamodListener, public IMenuSystem, public CBaseGameSystem, public IGameEventListener2, public IEntityManager::IProviderAgent::ISpawnGroupNotifications,
                                public MenuSystem::ChatCommandSystem, public MenuSystem::Provider, virtual public Logger, public Translations
 {
 public:
@@ -200,6 +202,11 @@ public: // CBaseGameSystem
 public: // IGameEventListener2
 	void FireGameEvent(IGameEvent *event) override;
 
+public: // IEntityManager::IProviderAgent::ISpawnGroupNotifications
+	void OnSpawnGroupAllocated(SpawnGroupHandle_t hSpawnGroup, ISpawnGroup *pSpawnGroup) override;
+	void OnSpawnGroupCreateLoading(SpawnGroupHandle_t hSpawnGroup, CMapSpawnGroup *pMapSpawnGroup, bool bSynchronouslySpawnEntities, bool bConfirmResourcesLoaded, CUtlVector<const CEntityKeyValues *> &vecKeyValues) override;
+	void OnSpawnGroupDestroyed(SpawnGroupHandle_t hSpawnGroup) override;
+
 public: // Utils.
 	bool InitProvider(char *error = nullptr, size_t maxlen = 0);
 	bool LoadProvider(char *error = nullptr, size_t maxlen = 0);
@@ -209,6 +216,11 @@ public: // Entity Manager.
 	bool InitEntityManager(char *error = nullptr, size_t maxlen = 0);
 	void DumpEntityManager(const ConcatLineString &aConcat, CBufferString &sOutput);
 	bool UnloadEntityManager(char *error = nullptr, size_t maxlen = 0);
+
+	bool LoadMenuSpawnGroups(const Vector &aWorldOrigin = {0.0f, 0.0f, 0.0f});
+	void FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV);
+
+	void SpawnMenuEntities();
 
 public: // Game Resource.
 	bool RegisterGameResource(char *error = nullptr, size_t maxlen = 0);
@@ -296,9 +308,17 @@ private: // Language (hash)map.
 private: // Fields.
 	IGameSystemFactory *m_pFactory = NULL;
 
+	CKeyValues3Context m_aEntityAllocator;
+
+	// Provide to Entity Manager plugin.
 	IEntityManager *m_pEntityManager = nullptr;
 	IEntityManager::IProviderAgent *m_pEntityManagerProviderAgent = nullptr;
-	IEntityManager::CSpawnGroupMgrProvider *m_pEntityManagerSpawnGroupMgrProvider = nullptr;
+	IEntityManager::CSpawnGroupProvider *m_pEntityManagerSpawnGroupProvider = nullptr;
+
+	// Run-time things.
+	IEntityManager::IProviderAgent::ISpawnGroupInstance *m_pMySpawnGroupInstance;
+
+	CUtlVector<CEntityInstance *> m_vecMyEntities;
 
 	INetworkMessageInternal *m_pGetCvarValueMessage = NULL;
 	INetworkMessageInternal *m_pSayText2Message = NULL;
