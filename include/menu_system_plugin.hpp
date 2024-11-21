@@ -168,36 +168,8 @@ public: // CBaseGameSystem
 	void PostInit() override;
 	void Shutdown() override;
 
-	GS_EVENT(GameInit);
-	GS_EVENT(GameShutdown);
-	GS_EVENT(GamePostInit);
-	GS_EVENT(GamePreShutdown);
-	GS_EVENT(BuildGameSessionManifest);
 	GS_EVENT(GameActivate);
-	GS_EVENT(ClientFullySignedOn);
-	GS_EVENT(Disconnect);
 	GS_EVENT(GameDeactivate);
-	GS_EVENT(SpawnGroupPrecache);
-	GS_EVENT(SpawnGroupUncache);
-	GS_EVENT(PreSpawnGroupLoad);
-	GS_EVENT(PostSpawnGroupLoad);
-	GS_EVENT(PreSpawnGroupUnload);
-	GS_EVENT(PostSpawnGroupUnload);
-	GS_EVENT(ActiveSpawnGroupChanged);
-	GS_EVENT(ClientPostDataUpdate);
-	GS_EVENT(ClientPreRender);
-	GS_EVENT(ClientPreEntityThink);
-	GS_EVENT(ClientUpdate);
-	GS_EVENT(ClientPostRender);
-	GS_EVENT(ServerPreEntityThink);
-	GS_EVENT(ServerPostEntityThink);
-	GS_EVENT(ServerPreClientUpdate);
-	GS_EVENT(ServerGamePostSimulate);
-	GS_EVENT(ClientGamePostSimulate);
-	GS_EVENT(GameFrameBoundary);
-	GS_EVENT(OutOfGameFrameBoundary);
-	GS_EVENT(SaveGame);
-	GS_EVENT(RestoreGame);
 
 public: // IGameEventListener2
 	void FireGameEvent(IGameEvent *event) override;
@@ -268,15 +240,6 @@ public: // SourceHooks.
 	CServerSideClientBase *OnConnectClientHook(const char *pszName, ns_address *pAddr, int socket, CCLCMsg_SplitPlayerConnect_t *pSplitPlayer, const char *pszChallenge, const byte *pAuthTicket, int nAuthTicketLength, bool bIsLowViolence);
 	bool OnProcessRespondCvarValueHook(const CCLCMsg_RespondCvarValue_t &aMessage);
 	void OnDisconectClientHook(ENetworkDisconnectionReason eReason);
-
-public: // Dump ones.
-	static void DumpProtobufMessage(const ConcatLineString &aConcat, CBufferString &sOutput, const google::protobuf::Message &aMessage);
-	static void DumpEngineLoopState(const ConcatLineString &aConcat, CBufferString &sOutput, const EngineLoopState_t &aMessage);
-	static void DumpEntityList(const ConcatLineString &aConcat, CBufferString &sOutput, const CUtlVector<CEntityHandle> &vecEntityList);
-	static void DumpEventSimulate(const ConcatLineString &aConcat, const ConcatLineString &aConcat2, CBufferString &sOutput, const EventSimulate_t &aMessage);
-	static void DumpEventFrameBoundary(const ConcatLineString &aConcat, CBufferString &sOutput, const EventFrameBoundary_t &aMessage);
-	static void DumpServerSideClient(const ConcatLineString &aConcat, CBufferString &sOutput, CServerSideClientBase *pClient);
-	static void DumpDisconnectReason(const ConcatLineString &aConcat, CBufferString &sOutput, ENetworkDisconnectionReason eReason);
 
 public: // Utils.
 	void SendCvarValueQuery(IRecipientFilter *pFilter, const char *pszName, int iCookie);
