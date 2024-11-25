@@ -202,10 +202,20 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 
 			if(pPlayer)
 			{
-				CUtlVector<CEntityInstance *> vecEntitites;
+				auto *pPlayerPawn = CBasePlayerController_Helper::GetPawn(reinterpret_cast<CBasePlayerController *>(pPlayer))->Get();
 
-				SpawnMenuEntitiesForPlayer(reinterpret_cast<CBasePlayerController *>(pPlayer), &vecEntitites);
-				m_mapPlayerEntities.Insert(iClient, vecEntitites);
+				if(pPlayerPawn)
+				{
+					CUtlVector<CEntityInstance *> vecEntitites;
+
+					SpawnMenuEntitiesForPlayer(pPlayerPawn, &vecEntitites);
+					AttachMenuEntitiesToPlayer(pPlayerPawn, vecEntitites);
+					m_mapPlayerEntities.Insert(iClient, vecEntitites);
+				}
+				else
+				{
+					Logger::WarningFormat("Failed to get player pawn. Client index is %d\n", iClient);
+				}
 			}
 			else
 			{
@@ -442,17 +452,17 @@ GS_EVENT_MEMBER(MenuSystemPlugin, GameDeactivate)
 
 GS_EVENT_MEMBER(MenuSystemPlugin, ServerPostEntityThink)
 {
-	FOR_EACH_MAP_FAST(m_mapPlayerEntities, i)
-	{
-		const auto iClient = m_mapPlayerEntities.Key(i);
+	// FOR_EACH_MAP_FAST(m_mapPlayerEntities, i)
+	// {
+	// 	const auto iClient = m_mapPlayerEntities.Key(i);
 
-		auto *pPlayer = g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient + 1));
+	// 	auto *pPlayer = g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient + 1));
 
-		if(pPlayer)
-		{
-			TeleportMenuEntityToPlayer(reinterpret_cast<CBasePlayerController *>(pPlayer), m_mapPlayerEntities.Element(i));
-		}
-	}
+	// 	if(pPlayer)
+	// 	{
+	// 		TeleportMenuEntitiesToPlayer(reinterpret_cast<CBasePlayerController *>(pPlayer), m_mapPlayerEntities.Element(i));
+	// 	}
+	// }
 }
 
 void MenuSystemPlugin::FireGameEvent(IGameEvent *event)
@@ -871,6 +881,7 @@ void MenuSystemPlugin::FillMenuEntityKeyValues2(CEntityKeyValues *pMenuKV, const
 	pMenuKV->SetInt("reorient_mode", 0);
 
 	pMenuKV->SetBool("draw_background", true);
+	pMenuKV->SetString("background_material_name", "materials/editor/icon_empty.vmat");
 	pMenuKV->SetFloat("background_border_width", 2.0f);
 	pMenuKV->SetFloat("background_border_height", 1.0f);
 	pMenuKV->SetFloat("background_world_to_uv", 0.1f);
@@ -909,6 +920,7 @@ void MenuSystemPlugin::FillMenuEntityKeyValues3(CEntityKeyValues *pMenuKV, const
 	pMenuKV->SetInt("reorient_mode", 0);
 
 	pMenuKV->SetBool("draw_background", true);
+	pMenuKV->SetString("background_material_name", "materials/editor/icon_empty.vmat");
 	pMenuKV->SetFloat("background_border_width", 2.0f);
 	pMenuKV->SetFloat("background_border_height", 1.0f);
 	pMenuKV->SetFloat("background_world_to_uv", 0.1f);
@@ -927,29 +939,20 @@ void MenuSystemPlugin::FillMenuEntityKeyValues3(CEntityKeyValues *pMenuKV, const
 	                              "\n");
 }
 
-void MenuSystemPlugin::SpawnMenuEntitiesForPlayer(CBasePlayerController *pPlayerController, CUtlVector<CEntityInstance *> *pEntities)
+void MenuSystemPlugin::SpawnMenuEntitiesForPlayer(CBasePlayerPawn *pPlayerPawn, CUtlVector<CEntityInstance *> *pEntities)
 {
-	auto *pPlayerPawn = CBasePlayerController_Helper::GetPawn(pPlayerController)->Get();
+	auto *pPlayerBodyComponent = *CBaseEntity_Helper::GetBodyComponent(reinterpret_cast<CBaseEntity *>(pPlayerPawn));
 
-	if(pPlayerPawn)
-	{
-		auto *pPlayerBodyComponent = *CBaseEntity_Helper::GetBodyComponent(reinterpret_cast<CBaseEntity *>(pPlayerPawn));
+	auto *pPlayerSceneNode = *CBodyComponent_Helper::GetSceneNode(pPlayerBodyComponent);
 
-		auto *pPlayerSceneNode = *CBodyComponent_Helper::GetSceneNode(pPlayerBodyComponent);
+	Vector vecMenuAbsOrigin = *CGameSceneNode_Helper::GetAbsOrigin(pPlayerSceneNode);
 
-		Vector vecMenuAbsOrigin = *CGameSceneNode_Helper::GetAbsOrigin(pPlayerSceneNode);
+	QAngle angMenuRotation = *CGameSceneNode_Helper::GetAbsRotation(pPlayerSceneNode);
 
-		QAngle angMenuRotation = *CGameSceneNode_Helper::GetAbsRotation(pPlayerSceneNode);
+	// Correct a origin.
+	vecMenuAbsOrigin.z += 32.0f;
 
-		// Correct a origin.
-		vecMenuAbsOrigin.z += 32.0f;
-
-		SpawnMenuEntities(vecMenuAbsOrigin, angMenuRotation, {angMenuRotation.x, angMenuRotation.y - 90.f, angMenuRotation.z + 90.f}, pEntities);
-	}
-	else
-	{
-		Logger::Warning("No pawn to spawn menus\n");
-	}
+	SpawnMenuEntities(vecMenuAbsOrigin, angMenuRotation, {angMenuRotation.x - 45.f, angMenuRotation.y - 90.f, angMenuRotation.z + 90.f}, pEntities);
 }
 
 void MenuSystemPlugin::SpawnMenuEntities(const Vector &vecOrigin, const QAngle &angOriginalRotation, const QAngle &angRotation, CUtlVector<CEntityInstance *> *pEntities)
@@ -978,8 +981,6 @@ void MenuSystemPlugin::SpawnMenuEntities(const Vector &vecOrigin, const QAngle &
 	m_pEntityManagerProviderAgent->PushSpawnQueue(pMenuKV3, hSpawnGroupHandle);
 
 	{
-		m_pEntityManagerProviderAgent->PushSpawnQueue(pMenuKV, hSpawnGroup);
-
 		{
 			CUtlVector<CUtlString> vecDetails, 
 			                       vecWarnings;
@@ -1009,38 +1010,59 @@ void MenuSystemPlugin::SpawnMenuEntities(const Vector &vecOrigin, const QAngle &
 	// g_pEntitySystem->ReleaseKeyValues(pMenuKV3);
 }
 
-void MenuSystemPlugin::TeleportMenuEntityToPlayer(CBasePlayerController *pPlayerController, const CUtlVector<CEntityInstance *> &vecEntities)
+void MenuSystemPlugin::TeleportMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities)
 {
-	auto *pPlayerPawn = CBasePlayerController_Helper::GetPawn(pPlayerController)->Get();
+	auto *pPlayerBodyComponent = *CBaseEntity_Helper::GetBodyComponent(reinterpret_cast<CBaseEntity *>(pPlayerPawn));
 
-	if(pPlayerPawn)
+	auto *pPlayerSceneNode = *CBodyComponent_Helper::GetSceneNode(pPlayerBodyComponent);
+
+	Vector vecMenuAbsOrigin = *CGameSceneNode_Helper::GetAbsOrigin(pPlayerSceneNode);
+
+	QAngle angMenuRotation = *CGameSceneNode_Helper::GetAbsRotation(pPlayerSceneNode);
+
+	// Correct a origin.
+	vecMenuAbsOrigin.z += 32.0f;
+
+	for(auto *pEntity : vecEntities)
 	{
-		auto *pPlayerBodyComponent = *CBaseEntity_Helper::GetBodyComponent(reinterpret_cast<CBaseEntity *>(pPlayerPawn));
+		auto *pBodyComponent = *CBaseEntity_Helper::GetBodyComponent(reinterpret_cast<CBaseEntity *>(pEntity));
 
-		auto *pPlayerSceneNode = *CBodyComponent_Helper::GetSceneNode(pPlayerBodyComponent);
+		auto *pSceneNode = *CBodyComponent_Helper::GetSceneNode(pBodyComponent);
 
-		Vector vecMenuAbsOrigin = *CGameSceneNode_Helper::GetAbsOrigin(pPlayerSceneNode);
+		*CGameSceneNode_Helper::GetAbsOrigin(pSceneNode) = vecMenuAbsOrigin;
+		*CGameSceneNode_Helper::GetAbsRotation(pSceneNode) = angMenuRotation;
 
-		QAngle angMenuRotation = *CGameSceneNode_Helper::GetAbsRotation(pPlayerSceneNode);
-
-		// Correct a origin.
-		vecMenuAbsOrigin.z += 32.0f;
-
-		for(auto *pEntity : vecEntities)
-		{
-			auto *pBodyComponent = *CBaseEntity_Helper::GetBodyComponent(reinterpret_cast<CBaseEntity *>(pEntity));
-
-			auto *pSceneNode = *CBodyComponent_Helper::GetSceneNode(pBodyComponent);
-
-			*CGameSceneNode_Helper::GetAbsOrigin(pSceneNode) = vecMenuAbsOrigin;
-			*CGameSceneNode_Helper::GetAbsRotation(pSceneNode) = angMenuRotation;
-
-			pEntity->NetworkStateChanged();
-		}
+		pEntity->NetworkStateChanged();
 	}
-	else
+}
+
+void MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities)
+{
+	auto &aBaseEntity = GetGameDataStorage().GetBaseEntity();
+
+	auto *pPlayerPawnEntity = reinterpret_cast<CEntityInstance *>(pPlayerPawn);
+
+	auto *pPlayerBodyComponent = *CBaseEntity_Helper::GetBodyComponent(reinterpret_cast<CBaseEntity *>(pPlayerPawn));
+
+	auto *pPlayerSceneNode = *CBodyComponent_Helper::GetSceneNode(pPlayerBodyComponent);
+
+	Vector vecMenuAbsOrigin = *CGameSceneNode_Helper::GetAbsOrigin(pPlayerSceneNode),
+	       vecMenuAbsOriginFirst = vecMenuAbsOrigin;
+
+	QAngle angMenuRotation = *CGameSceneNode_Helper::GetAbsRotation(pPlayerSceneNode);
+
+	vecMenuAbsOrigin = AddToFrontByRotation({vecMenuAbsOrigin.x, vecMenuAbsOrigin.y, vecMenuAbsOrigin.z + 40.f}, angMenuRotation, 30.f);
+	vecMenuAbsOriginFirst = AddToFrontByRotation(vecMenuAbsOrigin, angMenuRotation, 0.125f);
+	angMenuRotation = {angMenuRotation.x, angMenuRotation.y - 90.f, angMenuRotation.z + 90.f};
+
+	auto aParentVariant = variant_t("!activator");
+
+	FOR_EACH_VEC(vecEntities, i)
 	{
-		Logger::Warning("No pawn to spawn menus\n");
+		auto *pEntity = vecEntities[i];
+
+		aBaseEntity.Teleport(pEntity, i ? vecMenuAbsOrigin : vecMenuAbsOriginFirst, angMenuRotation);
+		aBaseEntity.AcceptInput(pEntity, "SetParent", pPlayerPawnEntity, pEntity, &aParentVariant, 0);
 	}
 }
 

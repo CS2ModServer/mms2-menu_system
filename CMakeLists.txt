@@ -75,6 +75,7 @@ include(cmake/sourcesdk.cmake)
 include(cmake/translations.cmake)
 
 set(SOURCE_FILES
+	${SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR}/baseentity.cpp
 	${SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR}/gameresource.cpp
 	${SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR}/gamesystem.cpp
 	${SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR}/source2server.cpp

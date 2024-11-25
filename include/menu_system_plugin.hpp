@@ -206,10 +206,11 @@ public: // Entity Manager.
 	void FillMenuEntityKeyValues2(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation);
 	void FillMenuEntityKeyValues3(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation);
 
-	void SpawnMenuEntitiesForPlayer(CBasePlayerController *pPlayerController, CUtlVector<CEntityInstance *> *pEntities);
+	void SpawnMenuEntitiesForPlayer(CBasePlayerPawn *pPlayerPawn, CUtlVector<CEntityInstance *> *pEntities);
 	void SpawnMenuEntities(const Vector &vecOrigin, const QAngle &angOriginalRotation, const QAngle &angRotation, CUtlVector<CEntityInstance *> *pEntities);
 
-	void TeleportMenuEntityToPlayer(CBasePlayerController *pPlayerController, const CUtlVector<CEntityInstance *> &vecEntities);
+	void TeleportMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities);
+	void AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities);
 
 public: // Game Resource.
 	bool RegisterGameResource(char *error = nullptr, size_t maxlen = 0);

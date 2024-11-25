@@ -33,10 +33,12 @@
 #	include <tier1/utldelegateimpl.h>
 #	include <tier1/utlmap.h>
 #	include <entity2/entitykeyvalues.h>
+#	include <variant.h>
 
 #	include <gamedata.hpp> // GameData
 
 #	define MENU_SYSTEM_GAMECONFIG_FOLDER_DIR "gamedata"
+#	define MENU_SYSTEM_GAMECONFIG_BASEENTITY_FILENAME "baseentity.games.*"
 #	define MENU_SYSTEM_GAMECONFIG_GAMERESOURCE_FILENAME "gameresource.games.*"
 #	define MENU_SYSTEM_GAMECONFIG_GAMESYSTEM_FILENAME "gamesystem.games.*"
 #	define MENU_SYSTEM_GAMECONFIG_SOURCE2SERVER_FILENAME "source2server.games.*"
@@ -72,11 +74,37 @@ namespace MenuSystem
 			bool Load(IGameData *pRoot, const char *pszBaseConfigDir, const char *pszPathID, GameData::CBufferStringVector &vecMessages);
 
 		protected:
+			bool LoadBaseEntity(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
 			bool LoadGameResource(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
 			bool LoadGameSystem(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
 			bool LoadSource2Server(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
 
 		public:
+			class CBaseEntity
+			{
+			public:
+				CBaseEntity();
+
+			public:
+				bool Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
+				void Reset();
+
+			public:
+				void AcceptInput(CEntityInstance *pInstance, const char *pInputName, CEntityInstance *pActivator, CEntityInstance *pCaller, variant_t *pValue, int nOutputID) const;
+				void Teleport(CEntityInstance *pInstance, const Vector &vecPosition = {}, const QAngle &angRotation = {}, const Vector &velocity = {}) const;
+
+			private:
+				GameData::Config::Addresses::ListenerCallbacksCollector m_aAddressCallbacks;
+				GameData::Config::Offsets::ListenerCallbacksCollector m_aOffsetCallbacks;
+				GameData::Config m_aGameConfig;
+
+			private: // Addresses.
+				using AcceptInput_t = void (CEntityInstance *, const char *, CEntityInstance *, CEntityInstance *, variant_t *, int);
+
+				AcceptInput_t *m_pAcceptInputMethod = nullptr;
+				ptrdiff_t m_nTeleportOffset;
+			}; // CBaseEntity
+
 			class CGameResource
 			{
 			public:
@@ -137,11 +165,13 @@ namespace MenuSystem
 				CGameEventManager **m_ppGameEventManager = nullptr;
 			}; // CSource2Server
 
+			const CBaseEntity &GetBaseEntity() const;
 			const CGameResource &GetGameResource() const;
 			const CGameSystem &GetGameSystem() const;
 			const CSource2Server &GetSource2Server() const;
 
 		private:
+			CBaseEntity m_aBaseEntity;
 			CGameResource m_aGameResource;
 			CGameSystem m_aGameSystem;
 			CSource2Server m_aSource2Server;
