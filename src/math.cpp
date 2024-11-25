@@ -22,6 +22,8 @@
 #include <math.h>
 #include <math.hpp>
 
+#include <mathlib/mathlib.h>
+
 static const float s_flFullRadian = 180.f / M_PI;
 
 Vector AddToFrontByRotation(const Vector &vecOrigin, const QAngle &angRotation, float flUnits)
@@ -32,4 +34,21 @@ Vector AddToFrontByRotation(const Vector &vecOrigin, const QAngle &angRotation, 
 		sinf(angRotation.y / s_flFullRadian) * flUnits + vecOrigin.y,
 		-sinf(angRotation.x / s_flFullRadian) * flUnits + vecOrigin.z
 	};
+}
+
+Vector SpawnEntityWithOffset(const Vector &vecPosition, const QAngle &angRotation, const Vector &vecOffset, Vector &veResult, QAngle &angResult)
+{
+	Vector forward, right, up;
+
+	AngleVectors(angRotation, &forward, &right, &up);
+
+	Vector vecEntityOffset = forward * vecOffset.z + right * vecOffset.x + up * vecOffset.y;
+
+	veResult = vecPosition + vecEntityOffset;
+
+	Vector vecLookAtDirection = vecPosition - veResult;
+
+	VectorAngles(vecLookAtDirection, angResult);
+
+	return vecLookAtDirection;
 }
