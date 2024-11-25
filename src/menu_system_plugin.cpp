@@ -21,6 +21,7 @@
 
 #include <menu_system_plugin.hpp>
 #include <globals.hpp>
+#include <math.hpp>
 
 #include <stdint.h>
 
@@ -41,6 +42,11 @@
 #include <shareddefs.h>
 #include <tier0/commonmacros.h>
 #include <usermessages.pb.h>
+
+using CBaseEntity_Helper = MenuSystem::Schema::CBaseEntity_Helper;
+using CBasePlayerController_Helper = MenuSystem::Schema::CBasePlayerController_Helper;
+using CBodyComponent_Helper = MenuSystem::Schema::CBodyComponent_Helper;
+using CGameSceneNode_Helper = MenuSystem::Schema::CGameSceneNode_Helper;
 
 SH_DECL_HOOK3_void(ICvar, DispatchConCommand, SH_NOATTRIB, 0, ConCommandHandle, const CCommandContext &, const CCommand &);
 SH_DECL_HOOK3_void(INetworkServerService, StartupServer, SH_NOATTRIB, 0, const GameSessionConfiguration_t &, ISource2WorldSession *, const char *);
@@ -82,10 +88,17 @@ MenuSystemPlugin::MenuSystemPlugin()
     {
     	LoggingSystem_AddTagToChannel(nTagChannelID, s_aMenuSystemPlugin.GetLogTag());
     }, 0, LV_DETAILED, MENU_SYSTEM_LOGGINING_COLOR),
+
+    CBaseEntity_Helper(this),
+    CBasePlayerController_Helper(this),
+    CBodyComponent_Helper(this),
+    CGameSceneNode_Helper(this),
+
     m_aEnableFrameDetailsConVar("mm_" META_PLUGIN_PREFIX "_enable_frame_details", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable detail messages of frames", false, true, false, true, true), 
     m_aEnableGameEventsDetaillsConVar("mm_" META_PLUGIN_PREFIX "_enable_game_events_details", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable detail messages of game events", false, true, false, true, true),
     m_mapConVarCookies(DefLessFunc(const CUtlSymbolLarge)),
-    m_mapLanguages(DefLessFunc(const CUtlSymbolLarge))
+    m_mapLanguages(DefLessFunc(const CUtlSymbolLarge)),
+	m_mapPlayerEntities(DefLessFunc(const int))
 {
 }
 
@@ -116,6 +129,11 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 	}
 
 	if(!LoadProvider(error, maxlen))
+	{
+		return false;
+	}
+
+	if(!InitSchema(error, maxlen))
 	{
 		return false;
 	}
@@ -177,6 +195,23 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 		{
 			Logger::Warning("Not found a your argument phrase\n");
 		}
+
+		// Teleport menus.
+		{
+			auto *pPlayer = g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient + 1));
+
+			if(pPlayer)
+			{
+				CUtlVector<CEntityInstance *> vecEntitites;
+
+				SpawnMenuEntitiesForPlayer(reinterpret_cast<CBasePlayerController *>(pPlayer), &vecEntitites);
+				m_mapPlayerEntities.Insert(iClient, vecEntitites);
+			}
+			else
+			{
+				Logger::WarningFormat("Failed to get player entity. Client index is %d\n", iClient);
+			}
+		}
 	});
 
 	if(late)
@@ -224,6 +259,11 @@ bool MenuSystemPlugin::Unload(char *error, size_t maxlen)
 	Assert(ClearTranslations());
 
 	if(!UnloadProvider(error, maxlen))
+	{
+		return false;
+	}
+
+	if(!UnloadSchema(error, maxlen))
 	{
 		return false;
 	}
@@ -400,6 +440,21 @@ GS_EVENT_MEMBER(MenuSystemPlugin, GameDeactivate)
 	// ...
 }
 
+GS_EVENT_MEMBER(MenuSystemPlugin, ServerPostEntityThink)
+{
+	FOR_EACH_MAP_FAST(m_mapPlayerEntities, i)
+	{
+		const auto iClient = m_mapPlayerEntities.Key(i);
+
+		auto *pPlayer = g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient + 1));
+
+		if(pPlayer)
+		{
+			TeleportMenuEntityToPlayer(reinterpret_cast<CBasePlayerController *>(pPlayer), m_mapPlayerEntities.Element(i));
+		}
+	}
+}
+
 void MenuSystemPlugin::FireGameEvent(IGameEvent *event)
 {
 	if(m_aEnableGameEventsDetaillsConVar.GetValue())
@@ -467,13 +522,17 @@ void MenuSystemPlugin::OnSpawnGroupCreateLoading(SpawnGroupHandle_t hSpawnGroup,
 		Logger::DetailedFormat("%s\n", __FUNCTION__);
 	}
 
+	const Vector vecOrigin = {-42.0f, 30.0f, -160.0f};
+
+	const QAngle angRotation = {180.0f, 0.0f, 0.0f};
+
 	CEntityKeyValues *pMenuKV = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL),
 	                 *pMenuKV2 = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL), 
 	                 *pMenuKV3 = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL);
 
-	FillMenuEntityKeyValues(pMenuKV);
-	FillMenuEntityKeyValues2(pMenuKV2);
-	FillMenuEntityKeyValues3(pMenuKV3);
+	FillMenuEntityKeyValues(pMenuKV, vecOrigin, angRotation, angRotation);
+	FillMenuEntityKeyValues2(pMenuKV2, vecOrigin, angRotation);
+	FillMenuEntityKeyValues3(pMenuKV3, vecOrigin, angRotation);
 
 	g_pEntitySystem->AddRefKeyValues(pMenuKV);
 	g_pEntitySystem->AddRefKeyValues(pMenuKV2);
@@ -599,6 +658,61 @@ bool MenuSystemPlugin::UnloadProvider(char *error, size_t maxlen)
 	return bResult;
 }
 
+bool MenuSystemPlugin::InitSchema(char *error, size_t maxlen)
+{
+	CUtlVector<const char *> vecLoadLibraries;
+
+	vecLoadLibraries.AddToTail(
+#if defined(_WINDOWS)
+		"server.dll"
+#elif defined(_LINUX)
+		"libserver.so"
+#elif defined(_OSX)
+		"libserver.dylib"
+#endif
+	);
+
+	GameData::CBufferStringVector vecMessages;
+
+	bool bResult = CSchemaSystem_Helper::Init(g_pSchemaSystem, vecLoadLibraries, &vecMessages);
+
+	if(vecMessages.Count())
+	{
+		if(IsChannelEnabled(LS_WARNING))
+		{
+			auto aWarnings = Logger::CreateWarningsScope();
+
+			FOR_EACH_VEC(vecMessages, i)
+			{
+				auto &aMessage = vecMessages[i];
+
+				aWarnings.Push(aMessage.Get());
+			}
+
+			aWarnings.SendColor([&](Color rgba, const CUtlString &sContext)
+			{
+				Logger::Warning(rgba, sContext);
+			});
+		}
+	}
+
+	if(!bResult)
+	{
+		if(error && maxlen)
+		{
+			strncpy(error, "Failed to load schema helper. See warnings", maxlen);
+		}
+	}
+
+	return bResult;
+}
+
+bool MenuSystemPlugin::UnloadSchema(char *error, size_t maxlen)
+{
+	CSchemaSystem_Helper::Destroy();
+
+	return true;
+}
 
 bool MenuSystemPlugin::InitEntityManager(char *error, size_t maxlen)
 {
@@ -693,11 +807,13 @@ bool MenuSystemPlugin::LoadMenuSpawnGroups(const Vector &aWorldOrigin)
 	return true;
 }
 
-void MenuSystemPlugin::FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV)
+void MenuSystemPlugin::FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angOriginalRotation, const QAngle &angRotation)
 {
+	Vector vecNewOrigin = AddToFrontByRotation(vecOrigin, {angOriginalRotation.x, angOriginalRotation.y + 180.f, 0.f}, -0.125f);
+
 	pMenuKV->SetString("classname", "point_worldtext");
-	pMenuKV->SetVector("origin", {-42.0f, 30.0f, -159.95f});
-	pMenuKV->SetQAngle("angles", {180.0f, 0.0f, 0.0f});
+	pMenuKV->SetVector("origin", vecNewOrigin);
+	pMenuKV->SetQAngle("angles", angRotation);
 
 	// Text settings.
 	pMenuKV->SetBool("enabled", true);
@@ -735,11 +851,11 @@ void MenuSystemPlugin::FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV)
 	                              "9. Выход\n");
 }
 
-void MenuSystemPlugin::FillMenuEntityKeyValues2(CEntityKeyValues *pMenuKV)
+void MenuSystemPlugin::FillMenuEntityKeyValues2(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation)
 {
 	pMenuKV->SetString("classname", "point_worldtext");
-	pMenuKV->SetVector("origin", {-42.0f, 30.0f, -160.0f});
-	pMenuKV->SetQAngle("angles", {180.0f, 0.0f, 0.0f});
+	pMenuKV->SetVector("origin", vecOrigin);
+	pMenuKV->SetQAngle("angles", angRotation);
 
 	// Text settings.
 	pMenuKV->SetBool("enabled", true);
@@ -755,7 +871,6 @@ void MenuSystemPlugin::FillMenuEntityKeyValues2(CEntityKeyValues *pMenuKV)
 	pMenuKV->SetInt("reorient_mode", 0);
 
 	pMenuKV->SetBool("draw_background", true);
-	pMenuKV->SetString("background_material_name", "materials/editor/icon_empty.vmat");
 	pMenuKV->SetFloat("background_border_width", 2.0f);
 	pMenuKV->SetFloat("background_border_height", 1.0f);
 	pMenuKV->SetFloat("background_world_to_uv", 0.1f);
@@ -774,11 +889,11 @@ void MenuSystemPlugin::FillMenuEntityKeyValues2(CEntityKeyValues *pMenuKV)
 	                              "9. Выход\n");
 }
 
-void MenuSystemPlugin::FillMenuEntityKeyValues3(CEntityKeyValues *pMenuKV)
+void MenuSystemPlugin::FillMenuEntityKeyValues3(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation)
 {
 	pMenuKV->SetString("classname", "point_worldtext");
-	pMenuKV->SetVector("origin", {-42.0f, 30.0f, -160.0f});
-	pMenuKV->SetQAngle("angles", {180.0f, 0.0f, 0.0f});
+	pMenuKV->SetVector("origin", vecOrigin);
+	pMenuKV->SetQAngle("angles", angRotation);
 
 	// Text settings.
 	pMenuKV->SetBool("enabled", true);
@@ -794,7 +909,6 @@ void MenuSystemPlugin::FillMenuEntityKeyValues3(CEntityKeyValues *pMenuKV)
 	pMenuKV->SetInt("reorient_mode", 0);
 
 	pMenuKV->SetBool("draw_background", true);
-	pMenuKV->SetString("background_material_name", "materials/editor/icon_empty.vmat");
 	pMenuKV->SetFloat("background_border_width", 2.0f);
 	pMenuKV->SetFloat("background_border_height", 1.0f);
 	pMenuKV->SetFloat("background_world_to_uv", 0.1f);
@@ -813,7 +927,32 @@ void MenuSystemPlugin::FillMenuEntityKeyValues3(CEntityKeyValues *pMenuKV)
 	                              "\n");
 }
 
-void MenuSystemPlugin::SpawnMenuEntities()
+void MenuSystemPlugin::SpawnMenuEntitiesForPlayer(CBasePlayerController *pPlayerController, CUtlVector<CEntityInstance *> *pEntities)
+{
+	auto *pPlayerPawn = CBasePlayerController_Helper::GetPawn(pPlayerController)->Get();
+
+	if(pPlayerPawn)
+	{
+		auto *pPlayerBodyComponent = *CBaseEntity_Helper::GetBodyComponent(reinterpret_cast<CBaseEntity *>(pPlayerPawn));
+
+		auto *pPlayerSceneNode = *CBodyComponent_Helper::GetSceneNode(pPlayerBodyComponent);
+
+		Vector vecMenuAbsOrigin = *CGameSceneNode_Helper::GetAbsOrigin(pPlayerSceneNode);
+
+		QAngle angMenuRotation = *CGameSceneNode_Helper::GetAbsRotation(pPlayerSceneNode);
+
+		// Correct a origin.
+		vecMenuAbsOrigin.z += 32.0f;
+
+		SpawnMenuEntities(vecMenuAbsOrigin, angMenuRotation, {angMenuRotation.x, angMenuRotation.y - 90.f, angMenuRotation.z + 90.f}, pEntities);
+	}
+	else
+	{
+		Logger::Warning("No pawn to spawn menus\n");
+	}
+}
+
+void MenuSystemPlugin::SpawnMenuEntities(const Vector &vecOrigin, const QAngle &angOriginalRotation, const QAngle &angRotation, CUtlVector<CEntityInstance *> *pEntities)
 {
 	if(Logger::IsChannelEnabled(LS_DETAILED))
 	{
@@ -824,10 +963,19 @@ void MenuSystemPlugin::SpawnMenuEntities()
 
 	static_assert(INVALID_SPAWN_GROUP == ANY_SPAWN_GROUP);
 
-	CEntityKeyValues *pMenuKV = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL);
+	const SpawnGroupHandle_t hSpawnGroupHandle = m_pMySpawnGroupInstance->GetSpawnGroupHandle();
 
-	g_pEntitySystem->AddRefKeyValues(pMenuKV);
-	FillMenuEntityKeyValues(pMenuKV);
+	CEntityKeyValues *pMenuKV = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL),
+	                 *pMenuKV2 = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL), 
+	                 *pMenuKV3 = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL);
+
+	FillMenuEntityKeyValues(pMenuKV, vecOrigin, angOriginalRotation, angRotation);
+	FillMenuEntityKeyValues2(pMenuKV2, vecOrigin, angRotation);
+	FillMenuEntityKeyValues3(pMenuKV3, vecOrigin, angRotation);
+
+	m_pEntityManagerProviderAgent->PushSpawnQueue(pMenuKV, hSpawnGroupHandle);
+	m_pEntityManagerProviderAgent->PushSpawnQueue(pMenuKV2, hSpawnGroupHandle);
+	m_pEntityManagerProviderAgent->PushSpawnQueue(pMenuKV3, hSpawnGroupHandle);
 
 	{
 		m_pEntityManagerProviderAgent->PushSpawnQueue(pMenuKV, hSpawnGroup);
@@ -836,7 +984,7 @@ void MenuSystemPlugin::SpawnMenuEntities()
 			CUtlVector<CUtlString> vecDetails, 
 			                       vecWarnings;
 
-			m_pEntityManagerProviderAgent->ExecuteSpawnQueued(hSpawnGroup, &m_vecMyEntities, &vecDetails, &vecWarnings);
+			m_pEntityManagerProviderAgent->ExecuteSpawnQueued(hSpawnGroup, pEntities, &vecDetails, &vecWarnings);
 
 			if(vecDetails.Count())
 			{
@@ -856,9 +1004,44 @@ void MenuSystemPlugin::SpawnMenuEntities()
 		}
 	}
 
-	g_pEntitySystem->ReleaseKeyValues(pMenuKV);
+	// g_pEntitySystem->ReleaseKeyValues(pMenuKV);
+	// g_pEntitySystem->ReleaseKeyValues(pMenuKV2);
+	// g_pEntitySystem->ReleaseKeyValues(pMenuKV3);
+}
 
-	// delete pMenuKV;
+void MenuSystemPlugin::TeleportMenuEntityToPlayer(CBasePlayerController *pPlayerController, const CUtlVector<CEntityInstance *> &vecEntities)
+{
+	auto *pPlayerPawn = CBasePlayerController_Helper::GetPawn(pPlayerController)->Get();
+
+	if(pPlayerPawn)
+	{
+		auto *pPlayerBodyComponent = *CBaseEntity_Helper::GetBodyComponent(reinterpret_cast<CBaseEntity *>(pPlayerPawn));
+
+		auto *pPlayerSceneNode = *CBodyComponent_Helper::GetSceneNode(pPlayerBodyComponent);
+
+		Vector vecMenuAbsOrigin = *CGameSceneNode_Helper::GetAbsOrigin(pPlayerSceneNode);
+
+		QAngle angMenuRotation = *CGameSceneNode_Helper::GetAbsRotation(pPlayerSceneNode);
+
+		// Correct a origin.
+		vecMenuAbsOrigin.z += 32.0f;
+
+		for(auto *pEntity : vecEntities)
+		{
+			auto *pBodyComponent = *CBaseEntity_Helper::GetBodyComponent(reinterpret_cast<CBaseEntity *>(pEntity));
+
+			auto *pSceneNode = *CBodyComponent_Helper::GetSceneNode(pBodyComponent);
+
+			*CGameSceneNode_Helper::GetAbsOrigin(pSceneNode) = vecMenuAbsOrigin;
+			*CGameSceneNode_Helper::GetAbsRotation(pSceneNode) = angMenuRotation;
+
+			pEntity->NetworkStateChanged();
+		}
+	}
+	else
+	{
+		Logger::Warning("No pawn to spawn menus\n");
+	}
 }
 
 bool MenuSystemPlugin::RegisterGameResource(char *error, size_t maxlen)

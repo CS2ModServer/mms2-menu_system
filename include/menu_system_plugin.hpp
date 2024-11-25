@@ -28,6 +28,11 @@
 #	include <ientitymgr.hpp>
 #	include <menu_system/chat_command_system.hpp>
 #	include <menu_system/provider.hpp>
+#	include <menu_system/schema.hpp>
+#	include <menu_system/schema/base_entity.hpp>
+#	include <menu_system/schema/base_player_controller.hpp>
+#	include <menu_system/schema/body_component.hpp>
+#	include <menu_system/schema/game_scene_node.hpp>
 #	include <concat.hpp>
 
 #	include <logger.hpp>
@@ -48,6 +53,7 @@
 #	include <tier0/strtools.h>
 #	include <tier1/convar.h>
 #	include <tier1/utlvector.h>
+#	include <tier1/utlmap.h>
 #	include <tier1/keyvalues3.h>
 #	include <entity2/entitykeyvalues.h>
 
@@ -68,8 +74,9 @@
 class CBasePlayerController;
 class INetworkMessageInternal;
 
-class MenuSystemPlugin final : public ISmmPlugin, public IMetamodListener, public IMenuSystem, public CBaseGameSystem, public IGameEventListener2, public IEntityManager::IProviderAgent::ISpawnGroupNotifications,
-                               public MenuSystem::ChatCommandSystem, public MenuSystem::Provider, virtual public Logger, public Translations
+class MenuSystemPlugin final : public ISmmPlugin, public IMetamodListener, public IMenuSystem, public CBaseGameSystem, public IGameEventListener2, public IEntityManager::IProviderAgent::ISpawnGroupNotifications, // Interfaces.
+                               public MenuSystem::ChatCommandSystem, public MenuSystem::Provider, public MenuSystem::CSchemaSystem_Helper, virtual public Logger, public Translations, // Conponents.
+                               public MenuSystem::Schema::CBaseEntity_Helper, public MenuSystem::Schema::CBasePlayerController_Helper, public MenuSystem::Schema::CBodyComponent_Helper, public MenuSystem::Schema::CGameSceneNode_Helper // Schema helpers.
 {
 public:
 	MenuSystemPlugin();
@@ -170,6 +177,7 @@ public: // CBaseGameSystem
 
 	GS_EVENT(GameActivate);
 	GS_EVENT(GameDeactivate);
+	GS_EVENT(ServerPostEntityThink);
 
 public: // IGameEventListener2
 	void FireGameEvent(IGameEvent *event) override;
@@ -184,17 +192,24 @@ public: // Utils.
 	bool LoadProvider(char *error = nullptr, size_t maxlen = 0);
 	bool UnloadProvider(char *error = nullptr, size_t maxlen = 0);
 
+public: // Schema.
+	bool InitSchema(char *error = nullptr, size_t maxlen = 0);
+	bool UnloadSchema(char *error = nullptr, size_t maxlen = 0);
+
 public: // Entity Manager.
 	bool InitEntityManager(char *error = nullptr, size_t maxlen = 0);
 	void DumpEntityManager(const ConcatLineString &aConcat, CBufferString &sOutput);
 	bool UnloadEntityManager(char *error = nullptr, size_t maxlen = 0);
 
 	bool LoadMenuSpawnGroups(const Vector &aWorldOrigin = {0.0f, 0.0f, 0.0f});
-	void FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV);
-	void FillMenuEntityKeyValues2(CEntityKeyValues *pMenuKV);
-	void FillMenuEntityKeyValues3(CEntityKeyValues *pMenuKV);
+	void FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angOriginalRotation, const QAngle &angRotation);
+	void FillMenuEntityKeyValues2(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation);
+	void FillMenuEntityKeyValues3(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation);
 
-	void SpawnMenuEntities();
+	void SpawnMenuEntitiesForPlayer(CBasePlayerController *pPlayerController, CUtlVector<CEntityInstance *> *pEntities);
+	void SpawnMenuEntities(const Vector &vecOrigin, const QAngle &angOriginalRotation, const QAngle &angRotation, CUtlVector<CEntityInstance *> *pEntities);
+
+	void TeleportMenuEntityToPlayer(CBasePlayerController *pPlayerController, const CUtlVector<CEntityInstance *> &vecEntities);
 
 public: // Game Resource.
 	bool RegisterGameResource(char *error = nullptr, size_t maxlen = 0);
@@ -284,6 +299,7 @@ private: // Fields.
 	IEntityManager::IProviderAgent::ISpawnGroupInstance *m_pMySpawnGroupInstance;
 
 	CUtlVector<CEntityInstance *> m_vecMyEntities;
+	CUtlMap<int /* Player slot index. */, CUtlVector<CEntityInstance *>> m_mapPlayerEntities;
 
 	INetworkMessageInternal *m_pGetCvarValueMessage = NULL;
 	INetworkMessageInternal *m_pSayText2Message = NULL;

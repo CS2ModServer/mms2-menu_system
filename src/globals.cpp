@@ -49,6 +49,7 @@ bool InitGlobals(SourceMM::ISmmAPI *ismm, char *error, size_t maxlen)
 	GET_V_IFACE_CURRENT(GetFileSystemFactory, g_pFullFileSystem, IFileSystem, FILESYSTEM_INTERFACE_VERSION);
 	GET_V_IFACE_ANY(GetServerFactory, g_pSource2Server, IServerGameDLL, INTERFACEVERSION_SERVERGAMEDLL);
 	GET_V_IFACE_ANY(GetEngineFactory, g_pNetworkServerService, INetworkServerService, NETWORKSERVERSERVICE_INTERFACE_VERSION);
+	GET_V_IFACE_CURRENT(GetEngineFactory, g_pSchemaSystem, ISchemaSystem, SCHEMASYSTEM_INTERFACE_VERSION);
 
 	return true;
 }
@@ -107,6 +108,7 @@ void DumpGlobals(const ConcatLineString &aConcat, CBufferString &sOutput)
 	GLOBALS_APPEND_VARIABLE(g_pFullFileSystem);
 	GLOBALS_APPEND_VARIABLE(g_pSource2Server);
 	GLOBALS_APPEND_VARIABLE(g_pNetworkServerService);
+	GLOBALS_APPEND_VARIABLE(g_pSchemaSystem);
 
 	DumpRegisterGlobals(aConcat, sOutput);
 }
@@ -129,6 +131,7 @@ bool DestoryGlobals(char *error, size_t maxlen)
 	g_pFullFileSystem = NULL;
 	g_pSource2Server = NULL;
 	g_pNetworkServerService = NULL;
+	g_pSchemaSystem = NULL;
 
 	if(!UnregisterGameEntitySystem())
 	{

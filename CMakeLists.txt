@@ -34,6 +34,7 @@ set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(SOURCE_MENU_SYSTEM_DIR "${SOURCE_DIR}/menu_system")
 set(SOURCE_MENU_SYSTEM_PROVIDER_DIR "${SOURCE_MENU_SYSTEM_DIR}/provider")
 set(SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR "${SOURCE_MENU_SYSTEM_PROVIDER_DIR}/gamedata")
+set(SOURCE_MENU_SYSTEM_SCHEMA_DIR "${SOURCE_MENU_SYSTEM_DIR}/schema")
 
 set(SOURCESDK_PROTOS
 	netmessages
@@ -77,12 +78,18 @@ set(SOURCE_FILES
 	${SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR}/gameresource.cpp
 	${SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR}/gamesystem.cpp
 	${SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR}/source2server.cpp
+	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/base_entity.cpp
+	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/base_player_controller.cpp
+	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/body_component.cpp
+	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/game_scene_node.cpp
 	${SOURCE_MENU_SYSTEM_DIR}/chat_command_system.cpp
 	${SOURCE_MENU_SYSTEM_DIR}/language.cpp
 	${SOURCE_MENU_SYSTEM_DIR}/player.cpp
 	${SOURCE_MENU_SYSTEM_DIR}/provider.cpp
+	${SOURCE_MENU_SYSTEM_DIR}/schema.cpp
 	${SOURCE_DIR}/concat.cpp
 	${SOURCE_DIR}/globals.cpp
+	${SOURCE_DIR}/math.cpp
 	${SOURCE_DIR}/menu_system_plugin.cpp
 )
 
