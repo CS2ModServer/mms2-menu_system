@@ -27,6 +27,6 @@
 #	include <mathlib/vector.h>
 
 Vector AddToFrontByRotation(const Vector &vecOrigin, const QAngle &angRotation, float flUnits);
-Vector SpawnEntityWithOffset(const Vector &vecEyePosition, const QAngle &angRotation, const Vector &vecOffset, Vector &veResult, QAngle &angResult); // Returns a look at direction.
+Vector GetSpawnWithOffset(const Vector &vecEyePosition, const QAngle &angRotation, const Vector &vecOffset, Vector &veResult, QAngle &angResult); // Returns a look at direction.
 
 #endif //_INCLUDE_METAMOD_SOURCE_MATH_HPP_

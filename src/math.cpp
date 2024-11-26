@@ -36,7 +36,7 @@ Vector AddToFrontByRotation(const Vector &vecOrigin, const QAngle &angRotation, 
 	};
 }
 
-Vector SpawnEntityWithOffset(const Vector &vecPosition, const QAngle &angRotation, const Vector &vecOffset, Vector &veResult, QAngle &angResult)
+Vector GetSpawnWithOffset(const Vector &vecPosition, const QAngle &angRotation, const Vector &vecOffset, Vector &veResult, QAngle &angResult)
 {
 	Vector forward, right, up;
 
