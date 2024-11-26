@@ -939,6 +939,13 @@ void MenuSystemPlugin::FillMenuEntityKeyValues3(CEntityKeyValues *pMenuKV, const
 	                              "\n");
 }
 
+void MenuSystemPlugin::GetMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, Vector &vecResult, Vector &vecBackgroundResult, QAngle &angResult)
+{
+	vecResult = AddToFrontByRotation({vecOrigin.x, vecOrigin.y, vecOrigin.z + 40.f}, angRotation, 30.f);
+	vecBackgroundResult = AddToFrontByRotation(vecResult, angRotation, 0.125f);
+	angResult = {angRotation.x, angRotation.y - 90.f, angRotation.z + 90.f};
+}
+
 void MenuSystemPlugin::SpawnMenuEntitiesForPlayer(CBasePlayerPawn *pPlayerPawn, CUtlVector<CEntityInstance *> *pEntities)
 {
 	auto *pPlayerBodyComponent = *CBaseEntity_Helper::GetBodyComponent(reinterpret_cast<CBaseEntity *>(pPlayerPawn));
@@ -1047,13 +1054,11 @@ void MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, 
 	auto *pPlayerSceneNode = *CBodyComponent_Helper::GetSceneNode(pPlayerBodyComponent);
 
 	Vector vecMenuAbsOrigin = *CGameSceneNode_Helper::GetAbsOrigin(pPlayerSceneNode),
-	       vecMenuAbsOriginFirst = vecMenuAbsOrigin;
+	       vecMenuAbsOriginBackground = vecMenuAbsOrigin;
 
 	QAngle angMenuRotation = *CGameSceneNode_Helper::GetAbsRotation(pPlayerSceneNode);
 
-	vecMenuAbsOrigin = AddToFrontByRotation({vecMenuAbsOrigin.x, vecMenuAbsOrigin.y, vecMenuAbsOrigin.z + 40.f}, angMenuRotation, 30.f);
-	vecMenuAbsOriginFirst = AddToFrontByRotation(vecMenuAbsOrigin, angMenuRotation, 0.125f);
-	angMenuRotation = {angMenuRotation.x, angMenuRotation.y - 90.f, angMenuRotation.z + 90.f};
+	GetMenuEntitiesPosition(vecMenuAbsOrigin, angMenuRotation, vecMenuAbsOrigin, vecMenuAbsOriginBackground, angMenuRotation);
 
 	auto aParentVariant = variant_t("!activator");
 
@@ -1061,7 +1066,7 @@ void MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, 
 	{
 		auto *pEntity = vecEntities[i];
 
-		aBaseEntity.Teleport(pEntity, i ? vecMenuAbsOrigin : vecMenuAbsOriginFirst, angMenuRotation);
+		aBaseEntity.Teleport(pEntity, i ? vecMenuAbsOrigin : vecMenuAbsOriginBackground, angMenuRotation);
 		aBaseEntity.AcceptInput(pEntity, "SetParent", pPlayerPawnEntity, pEntity, &aParentVariant, 0);
 	}
 }
