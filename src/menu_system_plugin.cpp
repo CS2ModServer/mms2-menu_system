@@ -969,11 +969,9 @@ void MenuSystemPlugin::SpawnMenuEntities(const Vector &vecOrigin, const QAngle &
 		Logger::DetailedFormat("%s\n", __FUNCTION__);
 	}
 
-	SpawnGroupHandle_t hSpawnGroup = m_pMySpawnGroupInstance->GetSpawnGroupHandle();
+	const SpawnGroupHandle_t hSpawnGroupHandle = m_pMySpawnGroupInstance->GetSpawnGroupHandle();
 
 	static_assert(INVALID_SPAWN_GROUP == ANY_SPAWN_GROUP);
-
-	const SpawnGroupHandle_t hSpawnGroupHandle = m_pMySpawnGroupInstance->GetSpawnGroupHandle();
 
 	CEntityKeyValues *pMenuKV = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL),
 	                 *pMenuKV2 = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL), 
@@ -992,7 +990,7 @@ void MenuSystemPlugin::SpawnMenuEntities(const Vector &vecOrigin, const QAngle &
 			CUtlVector<CUtlString> vecDetails, 
 			                       vecWarnings;
 
-			m_pEntityManagerProviderAgent->ExecuteSpawnQueued(hSpawnGroup, pEntities, &vecDetails, &vecWarnings);
+			m_pEntityManagerProviderAgent->ExecuteSpawnQueued(hSpawnGroupHandle, pEntities, &vecDetails, &vecWarnings);
 
 			if(vecDetails.Count())
 			{
