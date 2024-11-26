@@ -53,7 +53,7 @@ namespace MenuSystem
 
 			struct
 			{
-				int m_nEyeAngles = -1;
+				int m_nEyeAngles = INVALID_SCHEMA_FIELD_OFFSET;
 			} m_aOffsets;
 		}; // MenuSystem::Schema::CBodyComponent_Helper
 	}; // MenuSystem::Schema

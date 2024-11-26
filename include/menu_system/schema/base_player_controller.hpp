@@ -56,7 +56,7 @@ namespace MenuSystem
 
 			struct
 			{
-				int m_nPawn = -1;
+				int m_nPawn = INVALID_SCHEMA_FIELD_OFFSET;
 			} m_aOffsets;
 		}; // MenuSystem::Schema::CBaseEntity_Helper
 	}; // MenuSystem::Schema

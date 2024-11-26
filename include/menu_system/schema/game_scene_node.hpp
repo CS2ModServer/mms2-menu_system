@@ -55,8 +55,8 @@ namespace MenuSystem
 
 			struct
 			{
-				int m_nAbsOrigin = -1;
-				int m_nAbsRotation = -1;
+				int m_nAbsOrigin = INVALID_SCHEMA_FIELD_OFFSET;
+				int m_nAbsRotation = INVALID_SCHEMA_FIELD_OFFSET;
 			} m_aOffsets;
 		}; // CGameSceneNode_Helper
 	}; // Schema

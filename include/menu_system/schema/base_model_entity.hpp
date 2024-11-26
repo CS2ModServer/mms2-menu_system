@@ -53,7 +53,7 @@ namespace MenuSystem
 
 			struct
 			{
-				int m_nViewOffset = -1;
+				int m_nViewOffset = INVALID_SCHEMA_FIELD_OFFSET;
 			} m_aOffsets;
 		}; // MenuSystem::Schema::CBaseModelEntity_Helper
 	}; // MenuSystem::Schema

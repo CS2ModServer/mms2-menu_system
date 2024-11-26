@@ -54,7 +54,7 @@ namespace MenuSystem
 
 			struct
 			{
-				int m_nSceneNode = -1;
+				int m_nSceneNode = INVALID_SCHEMA_FIELD_OFFSET;
 			} m_aOffsets;
 		}; // MenuSystem::Schema::CBodyComponent_Helper
 	}; // MenuSystem::Schema
