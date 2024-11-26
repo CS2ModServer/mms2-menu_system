@@ -57,6 +57,7 @@ bool MenuSystem::Provider::GameDataStorage::CBaseEntity::Load(IGameData *pRoot, 
 void MenuSystem::Provider::GameDataStorage::CBaseEntity::Reset()
 {
 	m_pAcceptInputMethod = nullptr;
+	m_nTeleportOffset = -1;
 }
 
 void MenuSystem::Provider::GameDataStorage::CBaseEntity::AcceptInput(CEntityInstance *pInstance, const char *pInputName, CEntityInstance *pActivator, CEntityInstance *pCaller, variant_t *pValue, int nOutputID) const

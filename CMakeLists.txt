@@ -76,12 +76,15 @@ include(cmake/translations.cmake)
 
 set(SOURCE_FILES
 	${SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR}/baseentity.cpp
+	${SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR}/baseplayerpawn.cpp
 	${SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR}/gameresource.cpp
 	${SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR}/gamesystem.cpp
 	${SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR}/source2server.cpp
 	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/base_entity.cpp
+	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/base_model_entity.cpp
 	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/base_player_controller.cpp
 	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/body_component.cpp
+	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/cs_player_pawn_base.cpp
 	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/game_scene_node.cpp
 	${SOURCE_MENU_SYSTEM_DIR}/chat_command_system.cpp
 	${SOURCE_MENU_SYSTEM_DIR}/language.cpp

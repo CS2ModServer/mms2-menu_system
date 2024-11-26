@@ -141,6 +141,10 @@ bool MenuSystem::Provider::GameDataStorage::Load(IGameData *pRoot, const char *p
 			&GameDataStorage::LoadBaseEntity
 		},
 		{
+			MENU_SYSTEM_GAMECONFIG_BASEPLAYERPAWN_FILENAME,
+			&GameDataStorage::LoadBasePlayerPawn
+		},
+		{
 			MENU_SYSTEM_GAMECONFIG_GAMERESOURCE_FILENAME,
 			&GameDataStorage::LoadGameResource
 		},
@@ -210,6 +214,11 @@ bool MenuSystem::Provider::GameDataStorage::LoadBaseEntity(IGameData *pRoot, Key
 	return m_aBaseEntity.Load(pRoot, pGameConfig, vecMessages);
 }
 
+bool MenuSystem::Provider::GameDataStorage::LoadBasePlayerPawn(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
+{
+	return m_aBasePlayerPawn.Load(pRoot, pGameConfig, vecMessages);
+}
+
 bool MenuSystem::Provider::GameDataStorage::LoadGameResource(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
 {
 	return m_aGameResource.Load(pRoot, pGameConfig, vecMessages);
@@ -228,6 +237,11 @@ bool MenuSystem::Provider::GameDataStorage::LoadSource2Server(IGameData *pRoot, 
 const MenuSystem::Provider::GameDataStorage::CBaseEntity &MenuSystem::Provider::GameDataStorage::GetBaseEntity() const
 {
 	return m_aBaseEntity;
+}
+
+const MenuSystem::Provider::GameDataStorage::CBasePlayerPawn &MenuSystem::Provider::GameDataStorage::GetBasePlayerPawn() const
+{
+	return m_aBasePlayerPawn;
 }
 
 const MenuSystem::Provider::GameDataStorage::CGameResource &MenuSystem::Provider::GameDataStorage::GetGameResource() const

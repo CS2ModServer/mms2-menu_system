@@ -44,8 +44,10 @@
 #include <usermessages.pb.h>
 
 using CBaseEntity_Helper = MenuSystem::Schema::CBaseEntity_Helper;
+using CBaseModelEntity_Helper = MenuSystem::Schema::CBaseModelEntity_Helper;
 using CBasePlayerController_Helper = MenuSystem::Schema::CBasePlayerController_Helper;
 using CBodyComponent_Helper = MenuSystem::Schema::CBodyComponent_Helper;
+using CCSPlayerPawnBase_Helper = MenuSystem::Schema::CCSPlayerPawnBase_Helper;
 using CGameSceneNode_Helper = MenuSystem::Schema::CGameSceneNode_Helper;
 
 SH_DECL_HOOK3_void(ICvar, DispatchConCommand, SH_NOATTRIB, 0, ConCommandHandle, const CCommandContext &, const CCommand &);
@@ -90,8 +92,10 @@ MenuSystemPlugin::MenuSystemPlugin()
     }, 0, LV_DETAILED, MENU_SYSTEM_LOGGINING_COLOR),
 
     CBaseEntity_Helper(this),
+	CBaseModelEntity_Helper(this),
     CBasePlayerController_Helper(this),
     CBodyComponent_Helper(this),
+    CCSPlayerPawnBase_Helper(this),
     CGameSceneNode_Helper(this),
 
     m_aEnableFrameDetailsConVar("mm_" META_PLUGIN_PREFIX "_enable_frame_details", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable detail messages of frames", false, true, false, true, true), 
@@ -208,7 +212,7 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 				{
 					CUtlVector<CEntityInstance *> vecEntitites;
 
-					SpawnMenuEntitiesForPlayer(pPlayerPawn, &vecEntitites);
+					SpawnMenuEntitiesByPlayer(pPlayerPawn, &vecEntitites);
 					AttachMenuEntitiesToPlayer(pPlayerPawn, vecEntitites);
 					m_mapPlayerEntities.Insert(iClient, vecEntitites);
 				}
@@ -452,17 +456,22 @@ GS_EVENT_MEMBER(MenuSystemPlugin, GameDeactivate)
 
 GS_EVENT_MEMBER(MenuSystemPlugin, ServerPostEntityThink)
 {
-	// FOR_EACH_MAP_FAST(m_mapPlayerEntities, i)
-	// {
-	// 	const auto iClient = m_mapPlayerEntities.Key(i);
+	FOR_EACH_MAP_FAST(m_mapPlayerEntities, i)
+	{
+		const auto iClient = m_mapPlayerEntities.Key(i);
 
-	// 	auto *pPlayer = g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient + 1));
+		auto *pPlayer = g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient + 1));
 
-	// 	if(pPlayer)
-	// 	{
-	// 		TeleportMenuEntitiesToPlayer(reinterpret_cast<CBasePlayerController *>(pPlayer), m_mapPlayerEntities.Element(i));
-	// 	}
-	// }
+		if(pPlayer)
+		{
+			auto *pPlayerPawn = CBasePlayerController_Helper::GetPawn(reinterpret_cast<CBasePlayerController *>(pPlayer))->Get();
+
+			if(pPlayerPawn)
+			{
+				TeleportMenuEntitiesToPlayer(pPlayerPawn, m_mapPlayerEntities.Element(i));
+			}
+		}
+	}
 }
 
 void MenuSystemPlugin::FireGameEvent(IGameEvent *event)
@@ -532,15 +541,18 @@ void MenuSystemPlugin::OnSpawnGroupCreateLoading(SpawnGroupHandle_t hSpawnGroup,
 		Logger::DetailedFormat("%s\n", __FUNCTION__);
 	}
 
-	const Vector vecOrigin = {-42.0f, 30.0f, -160.0f};
+	const Vector vecBackgroundOrigin = {-42.0f, 30.0f, -159.875f}, 
+	             vecOrigin = {-42.0f, 30.0f, -160.0f};
 
 	const QAngle angRotation = {180.0f, 0.0f, 0.0f};
+
+
 
 	CEntityKeyValues *pMenuKV = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL),
 	                 *pMenuKV2 = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL), 
 	                 *pMenuKV3 = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL);
 
-	FillMenuEntityKeyValues(pMenuKV, vecOrigin, angRotation, angRotation);
+	FillMenuEntityKeyValues(pMenuKV, vecBackgroundOrigin, angRotation);
 	FillMenuEntityKeyValues2(pMenuKV2, vecOrigin, angRotation);
 	FillMenuEntityKeyValues3(pMenuKV3, vecOrigin, angRotation);
 
@@ -817,12 +829,10 @@ bool MenuSystemPlugin::LoadMenuSpawnGroups(const Vector &aWorldOrigin)
 	return true;
 }
 
-void MenuSystemPlugin::FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angOriginalRotation, const QAngle &angRotation)
+void MenuSystemPlugin::FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation)
 {
-	Vector vecNewOrigin = AddToFrontByRotation(vecOrigin, {angOriginalRotation.x, angOriginalRotation.y + 180.f, 0.f}, -0.125f);
-
 	pMenuKV->SetString("classname", "point_worldtext");
-	pMenuKV->SetVector("origin", vecNewOrigin);
+	pMenuKV->SetVector("origin", vecOrigin);
 	pMenuKV->SetQAngle("angles", angRotation);
 
 	// Text settings.
@@ -939,30 +949,26 @@ void MenuSystemPlugin::FillMenuEntityKeyValues3(CEntityKeyValues *pMenuKV, const
 	                              "\n");
 }
 
-void MenuSystemPlugin::GetMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, Vector &vecResult, Vector &vecBackgroundResult, QAngle &angResult)
+void MenuSystemPlugin::GetMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
-	vecResult = AddToFrontByRotation({vecOrigin.x, vecOrigin.y, vecOrigin.z + 40.f}, angRotation, 30.f);
+	vecResult = AddToFrontByRotation({vecOrigin.x, vecOrigin.y, vecOrigin.z - 16.f}, angRotation, 30.f);
 	vecBackgroundResult = AddToFrontByRotation(vecResult, angRotation, 0.125f);
-	angResult = {angRotation.x, angRotation.y - 90.f, angRotation.z + 90.f};
+	angResult = {0.f, angRotation.y - 90.f, 90.f};
 }
 
-void MenuSystemPlugin::SpawnMenuEntitiesForPlayer(CBasePlayerPawn *pPlayerPawn, CUtlVector<CEntityInstance *> *pEntities)
+void MenuSystemPlugin::GetMenuEntitiesPositionByPlayer(CBasePlayerPawn *pPlayerPawn, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
 	auto *pPlayerBodyComponent = *CBaseEntity_Helper::GetBodyComponent(reinterpret_cast<CBaseEntity *>(pPlayerPawn));
 
 	auto *pPlayerSceneNode = *CBodyComponent_Helper::GetSceneNode(pPlayerBodyComponent);
 
-	Vector vecMenuAbsOrigin = *CGameSceneNode_Helper::GetAbsOrigin(pPlayerSceneNode);
+	vecResult = *CGameSceneNode_Helper::GetAbsOrigin(pPlayerSceneNode) + *CBaseModelEntity_Helper::GetViewOffset(reinterpret_cast<CBaseModelEntity *>(pPlayerPawn)),
+	angResult = *CCSPlayerPawnBase_Helper::GetEyeAngles(reinterpret_cast<CCSPlayerPawnBase *>(pPlayerPawn));
 
-	QAngle angMenuRotation = *CGameSceneNode_Helper::GetAbsRotation(pPlayerSceneNode);
-
-	// Correct a origin.
-	vecMenuAbsOrigin.z += 32.0f;
-
-	SpawnMenuEntities(vecMenuAbsOrigin, angMenuRotation, {angMenuRotation.x - 45.f, angMenuRotation.y - 90.f, angMenuRotation.z + 90.f}, pEntities);
+	GetMenuEntitiesPosition(vecResult, angResult, vecBackgroundResult, vecResult, angResult);
 }
 
-void MenuSystemPlugin::SpawnMenuEntities(const Vector &vecOrigin, const QAngle &angOriginalRotation, const QAngle &angRotation, CUtlVector<CEntityInstance *> *pEntities)
+void MenuSystemPlugin::SpawnMenuEntities(const Vector &vecBackgroundOrigin, const Vector &vecOrigin, const QAngle &angRotation, CUtlVector<CEntityInstance *> *pEntities)
 {
 	if(Logger::IsChannelEnabled(LS_DETAILED))
 	{
@@ -977,7 +983,7 @@ void MenuSystemPlugin::SpawnMenuEntities(const Vector &vecOrigin, const QAngle &
 	                 *pMenuKV2 = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL), 
 	                 *pMenuKV3 = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL);
 
-	FillMenuEntityKeyValues(pMenuKV, vecOrigin, angOriginalRotation, angRotation);
+	FillMenuEntityKeyValues(pMenuKV, vecBackgroundOrigin, angRotation);
 	FillMenuEntityKeyValues2(pMenuKV2, vecOrigin, angRotation);
 	FillMenuEntityKeyValues3(pMenuKV3, vecOrigin, angRotation);
 
@@ -1015,29 +1021,34 @@ void MenuSystemPlugin::SpawnMenuEntities(const Vector &vecOrigin, const QAngle &
 	// g_pEntitySystem->ReleaseKeyValues(pMenuKV3);
 }
 
+
+void MenuSystemPlugin::SpawnMenuEntitiesByPlayer(CBasePlayerPawn *pPlayerPawn, CUtlVector<CEntityInstance *> *pEntities)
+{
+	Vector vecMenuAbsOriginBackground {},
+	       vecMenuAbsOrigin {};
+
+	QAngle angMenuRotation {};
+
+	GetMenuEntitiesPositionByPlayer(pPlayerPawn, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
+	SpawnMenuEntities(vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation, pEntities);
+}
+
 void MenuSystemPlugin::TeleportMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities)
 {
-	auto *pPlayerBodyComponent = *CBaseEntity_Helper::GetBodyComponent(reinterpret_cast<CBaseEntity *>(pPlayerPawn));
+	auto &aBaseEntity = GetGameDataStorage().GetBaseEntity();
 
-	auto *pPlayerSceneNode = *CBodyComponent_Helper::GetSceneNode(pPlayerBodyComponent);
+	Vector vecMenuAbsOriginBackground {},
+	       vecMenuAbsOrigin {};
 
-	Vector vecMenuAbsOrigin = *CGameSceneNode_Helper::GetAbsOrigin(pPlayerSceneNode);
+	QAngle angMenuRotation {};
 
-	QAngle angMenuRotation = *CGameSceneNode_Helper::GetAbsRotation(pPlayerSceneNode);
+	GetMenuEntitiesPositionByPlayer(pPlayerPawn, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 
-	// Correct a origin.
-	vecMenuAbsOrigin.z += 32.0f;
-
-	for(auto *pEntity : vecEntities)
+	FOR_EACH_VEC(vecEntities, i)
 	{
-		auto *pBodyComponent = *CBaseEntity_Helper::GetBodyComponent(reinterpret_cast<CBaseEntity *>(pEntity));
+		auto *pEntity = vecEntities[i];
 
-		auto *pSceneNode = *CBodyComponent_Helper::GetSceneNode(pBodyComponent);
-
-		*CGameSceneNode_Helper::GetAbsOrigin(pSceneNode) = vecMenuAbsOrigin;
-		*CGameSceneNode_Helper::GetAbsRotation(pSceneNode) = angMenuRotation;
-
-		pEntity->NetworkStateChanged();
+		aBaseEntity.Teleport(pEntity, i ? vecMenuAbsOrigin : vecMenuAbsOriginBackground, angMenuRotation);
 	}
 }
 
@@ -1047,16 +1058,12 @@ void MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, 
 
 	auto *pPlayerPawnEntity = reinterpret_cast<CEntityInstance *>(pPlayerPawn);
 
-	auto *pPlayerBodyComponent = *CBaseEntity_Helper::GetBodyComponent(reinterpret_cast<CBaseEntity *>(pPlayerPawn));
+	Vector vecMenuAbsOriginBackground {},
+	       vecMenuAbsOrigin {};
 
-	auto *pPlayerSceneNode = *CBodyComponent_Helper::GetSceneNode(pPlayerBodyComponent);
+	QAngle angMenuRotation {};
 
-	Vector vecMenuAbsOrigin = *CGameSceneNode_Helper::GetAbsOrigin(pPlayerSceneNode),
-	       vecMenuAbsOriginBackground = vecMenuAbsOrigin;
-
-	QAngle angMenuRotation = *CGameSceneNode_Helper::GetAbsRotation(pPlayerSceneNode);
-
-	GetMenuEntitiesPosition(vecMenuAbsOrigin, angMenuRotation, vecMenuAbsOrigin, vecMenuAbsOriginBackground, angMenuRotation);
+	GetMenuEntitiesPositionByPlayer(pPlayerPawn, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 
 	auto aParentVariant = variant_t("!activator");
 

@@ -30,8 +30,10 @@
 #	include <menu_system/provider.hpp>
 #	include <menu_system/schema.hpp>
 #	include <menu_system/schema/base_entity.hpp>
+#	include <menu_system/schema/base_model_entity.hpp>
 #	include <menu_system/schema/base_player_controller.hpp>
 #	include <menu_system/schema/body_component.hpp>
+#	include <menu_system/schema/cs_player_pawn_base.hpp>
 #	include <menu_system/schema/game_scene_node.hpp>
 #	include <concat.hpp>
 
@@ -76,7 +78,7 @@ class INetworkMessageInternal;
 
 class MenuSystemPlugin final : public ISmmPlugin, public IMetamodListener, public IMenuSystem, public CBaseGameSystem, public IGameEventListener2, public IEntityManager::IProviderAgent::ISpawnGroupNotifications, // Interfaces.
                                public MenuSystem::ChatCommandSystem, public MenuSystem::Provider, public MenuSystem::CSchemaSystem_Helper, virtual public Logger, public Translations, // Conponents.
-                               public MenuSystem::Schema::CBaseEntity_Helper, public MenuSystem::Schema::CBasePlayerController_Helper, public MenuSystem::Schema::CBodyComponent_Helper, public MenuSystem::Schema::CGameSceneNode_Helper // Schema helpers.
+                               public MenuSystem::Schema::CBaseEntity_Helper, public MenuSystem::Schema::CBaseModelEntity_Helper, public MenuSystem::Schema::CBasePlayerController_Helper, public MenuSystem::Schema::CBodyComponent_Helper, public MenuSystem::Schema::CCSPlayerPawnBase_Helper, public MenuSystem::Schema::CGameSceneNode_Helper // Schema helpers.
 {
 public:
 	MenuSystemPlugin();
@@ -202,14 +204,15 @@ public: // Entity Manager.
 	bool UnloadEntityManager(char *error = nullptr, size_t maxlen = 0);
 
 	bool LoadMenuSpawnGroups(const Vector &aWorldOrigin = {0.0f, 0.0f, 0.0f});
-	void FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angOriginalRotation, const QAngle &angRotation);
+	void FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation);
 	void FillMenuEntityKeyValues2(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation);
 	void FillMenuEntityKeyValues3(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation);
 
-	void GetMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, Vector &vecResult, Vector &vecBackgroundResult, QAngle &angResult);
+	void GetMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
+	void GetMenuEntitiesPositionByPlayer(CBasePlayerPawn *pPlayerPawn, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
 
-	void SpawnMenuEntitiesForPlayer(CBasePlayerPawn *pPlayerPawn, CUtlVector<CEntityInstance *> *pEntities);
-	void SpawnMenuEntities(const Vector &vecOrigin, const QAngle &angOriginalRotation, const QAngle &angRotation, CUtlVector<CEntityInstance *> *pEntities);
+	void SpawnMenuEntities(const Vector &vecBackgroundOrigin, const Vector &vecOrigin, const QAngle &angRotation, CUtlVector<CEntityInstance *> *pEntities);
+	void SpawnMenuEntitiesByPlayer(CBasePlayerPawn *pPlayerPawn, CUtlVector<CEntityInstance *> *pEntities);
 
 	void TeleportMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities);
 	void AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities);

@@ -39,6 +39,7 @@
 
 #	define MENU_SYSTEM_GAMECONFIG_FOLDER_DIR "gamedata"
 #	define MENU_SYSTEM_GAMECONFIG_BASEENTITY_FILENAME "baseentity.games.*"
+#	define MENU_SYSTEM_GAMECONFIG_BASEPLAYERPAWN_FILENAME "baseplayerpawn.games.*"
 #	define MENU_SYSTEM_GAMECONFIG_GAMERESOURCE_FILENAME "gameresource.games.*"
 #	define MENU_SYSTEM_GAMECONFIG_GAMESYSTEM_FILENAME "gamesystem.games.*"
 #	define MENU_SYSTEM_GAMECONFIG_SOURCE2SERVER_FILENAME "source2server.games.*"
@@ -75,6 +76,7 @@ namespace MenuSystem
 
 		protected:
 			bool LoadBaseEntity(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
+			bool LoadBasePlayerPawn(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
 			bool LoadGameResource(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
 			bool LoadGameSystem(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
 			bool LoadSource2Server(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
@@ -102,8 +104,28 @@ namespace MenuSystem
 				using AcceptInput_t = void (CEntityInstance *, const char *, CEntityInstance *, CEntityInstance *, variant_t *, int);
 
 				AcceptInput_t *m_pAcceptInputMethod = nullptr;
-				ptrdiff_t m_nTeleportOffset;
+				ptrdiff_t m_nTeleportOffset = -1;
 			}; // CBaseEntity
+
+			class CBasePlayerPawn
+			{
+			public:
+				CBasePlayerPawn();
+
+			public:
+				bool Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
+				void Reset();
+
+			public:
+				Vector GetEyePosition(CEntityInstance *pInstance) const;
+
+			private:
+				GameData::Config::Offsets::ListenerCallbacksCollector m_aOffsetCallbacks;
+				GameData::Config m_aGameConfig;
+
+			private: // Addresses.
+				ptrdiff_t m_nGetEyePositionOffset;
+			}; // CBasePlayerPawn
 
 			class CGameResource
 			{
@@ -166,12 +188,14 @@ namespace MenuSystem
 			}; // CSource2Server
 
 			const CBaseEntity &GetBaseEntity() const;
+			const CBasePlayerPawn &GetBasePlayerPawn() const;
 			const CGameResource &GetGameResource() const;
 			const CGameSystem &GetGameSystem() const;
 			const CSource2Server &GetSource2Server() const;
 
 		private:
 			CBaseEntity m_aBaseEntity;
+			CBasePlayerPawn m_aBasePlayerPawn;
 			CGameResource m_aGameResource;
 			CGameSystem m_aGameSystem;
 			CSource2Server m_aSource2Server;
