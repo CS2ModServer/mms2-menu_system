@@ -965,11 +965,31 @@ void MenuSystemPlugin::FillMenuEntityKeyValues3(CEntityKeyValues *pMenuKV, const
 	                              "\n");
 }
 
+void MenuSystemPlugin::FillMenuEntityKeyValuesCursor(CEntityKeyValues *pEntityKV, const Vector &vecOrigin, const QAngle &angRotation)
+{
+	pEntityKV->SetString("classname", "point_worldtext");
+	pEntityKV->SetVector("origin", vecOrigin);
+	pEntityKV->SetQAngle("angles", angRotation);
+
+	pEntityKV->SetBool("enabled", true);
+	pEntityKV->SetBool("fullbright", true);
+	pEntityKV->SetColor("color", {255, 255, 255, 255});
+	pEntityKV->SetFloat("world_units_per_pixel", 0.0125f);
+	pEntityKV->SetInt("font_size", 175);
+	pEntityKV->SetString("font_name", "Arial");
+	pEntityKV->SetInt("justify_horizontal", 0);
+	pEntityKV->SetInt("justify_vertical", 0);
+	pEntityKV->SetFloat("depth_render_offset", 0.125f);
+	pEntityKV->SetInt("reorient_mode", 0);
+
+	pEntityKV->SetString("message", "^");
+}
+
 void MenuSystemPlugin::GetMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
-	vecResult = AddToFrontByRotation({vecOrigin.x, vecOrigin.y, vecOrigin.z - 16.f}, angRotation, 30.f);
+	vecResult = AddToFrontByRotation(vecOrigin, angRotation, 30.f);
 	vecBackgroundResult = AddToFrontByRotation(vecResult, angRotation, 0.125f);
-	angResult = {0.f, angRotation.y - 90.f, 90.f};
+	angResult = {0.f, angRotation.y - 90.f, -angRotation.x + 90.f};
 }
 
 void MenuSystemPlugin::GetMenuEntitiesPositionByPlayer(CBasePlayerPawn *pPlayerPawn, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
@@ -997,15 +1017,18 @@ void MenuSystemPlugin::SpawnMenuEntities(const Vector &vecBackgroundOrigin, cons
 
 	CEntityKeyValues *pMenuKV = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL),
 	                 *pMenuKV2 = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL), 
-	                 *pMenuKV3 = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL);
+	                 *pMenuKV3 = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL), 
+	                 *pEntityKV = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL);
 
 	FillMenuEntityKeyValues(pMenuKV, vecBackgroundOrigin, angRotation);
 	FillMenuEntityKeyValues2(pMenuKV2, vecOrigin, angRotation);
 	FillMenuEntityKeyValues3(pMenuKV3, vecOrigin, angRotation);
+	FillMenuEntityKeyValuesCursor(pEntityKV, vecOrigin, angRotation);
 
 	m_pEntityManagerProviderAgent->PushSpawnQueue(pMenuKV, hSpawnGroup);
 	m_pEntityManagerProviderAgent->PushSpawnQueue(pMenuKV2, hSpawnGroup);
 	m_pEntityManagerProviderAgent->PushSpawnQueue(pMenuKV3, hSpawnGroup);
+	m_pEntityManagerProviderAgent->PushSpawnQueue(pEntityKV, hSpawnGroup);
 
 	{
 		{
@@ -1035,6 +1058,7 @@ void MenuSystemPlugin::SpawnMenuEntities(const Vector &vecBackgroundOrigin, cons
 	// g_pEntitySystem->ReleaseKeyValues(pMenuKV);
 	// g_pEntitySystem->ReleaseKeyValues(pMenuKV2);
 	// g_pEntitySystem->ReleaseKeyValues(pMenuKV3);
+	// g_pEntitySystem->ReleaseKeyValues(pEntityKV);
 }
 
 
@@ -1060,11 +1084,14 @@ void MenuSystemPlugin::TeleportMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn
 
 	GetMenuEntitiesPositionByPlayer(pPlayerPawn, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 
+	auto aParentVariant = variant_t("!activator");
+
 	FOR_EACH_VEC(vecEntities, i)
 	{
 		auto *pEntity = vecEntities[i];
 
 		aBaseEntity.Teleport(pEntity, i ? vecMenuAbsOrigin : vecMenuAbsOriginBackground, angMenuRotation);
+		aBaseEntity.AcceptInput(pEntity, "SetParent", reinterpret_cast<CEntityInstance *>(pPlayerPawn), pEntity, &aParentVariant, 0);
 	}
 }
 
