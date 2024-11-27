@@ -24,9 +24,23 @@
 
 #	pragma once
 
+#	include <tier0/platform.h>
 #	include <mathlib/vector.h>
 
-Vector AddToFrontByRotation(const Vector &vecOrigin, const QAngle &angRotation, float flUnits);
-Vector GetSpawnWithOffset(const Vector &vecEyePosition, const QAngle &angRotation, const Vector &vecOffset, Vector &veResult, QAngle &angResult); // Returns a look at direction.
+const float g_flUnitRadians = 180.f / M_PI_F;
+
+FORCEINLINE Vector AddToFrontByRotation(const Vector &vecOrigin, const QAngle &angRotation, float flUnits)
+{
+	float flSine, flCosine;
+
+	SinCos(angRotation.y / g_flUnitRadians, &flSine, &flCosine);
+
+	return
+	{
+		vecOrigin.x + flCosine * flUnits,
+		vecOrigin.y + flSine * flUnits,
+		vecOrigin.z + -TableSin(angRotation.x / g_flUnitRadians) * flUnits
+	};
+}
 
 #endif //_INCLUDE_METAMOD_SOURCE_MATH_HPP_

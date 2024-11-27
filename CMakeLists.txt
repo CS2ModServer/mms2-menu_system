@@ -93,7 +93,6 @@ set(SOURCE_FILES
 	${SOURCE_MENU_SYSTEM_DIR}/schema.cpp
 	${SOURCE_DIR}/concat.cpp
 	${SOURCE_DIR}/globals.cpp
-	${SOURCE_DIR}/math.cpp
 	${SOURCE_DIR}/menu_system_plugin.cpp
 )
 
