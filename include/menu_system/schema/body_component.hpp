@@ -67,7 +67,7 @@ FORCEINLINE CGameSceneNode **MenuSystem::Schema::CBodyComponent_Helper::GetScene
 {
 	Assert(m_aOffsets.m_nSceneNode != INVALID_SCHEMA_FIELD_OFFSET);
 
-	return (CGameSceneNode **)((uintp)pInstance + m_aOffsets.m_nSceneNode);
+	return reinterpret_cast<CGameSceneNode **>(reinterpret_cast<uintp>(pInstance) + m_aOffsets.m_nSceneNode);
 }
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_BODY_COMPONENT_HPP_

@@ -66,7 +66,7 @@ FORCEINLINE Vector *MenuSystem::Schema::CBaseModelEntity_Helper::GetViewOffset(C
 {
 	Assert(m_aOffsets.m_nViewOffset != INVALID_SCHEMA_FIELD_OFFSET);
 
-	return (Vector *)((uintp)pInstance + m_aOffsets.m_nViewOffset);
+	return reinterpret_cast<Vector *>(reinterpret_cast<uintp>(pInstance) + m_aOffsets.m_nViewOffset);
 }
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_BASE_MODEL_ENTITY_HPP_

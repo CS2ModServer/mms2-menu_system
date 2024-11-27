@@ -49,6 +49,7 @@ using CBasePlayerController_Helper = MenuSystem::Schema::CBasePlayerController_H
 using CBodyComponent_Helper = MenuSystem::Schema::CBodyComponent_Helper;
 using CCSPlayerPawnBase_Helper = MenuSystem::Schema::CCSPlayerPawnBase_Helper;
 using CGameSceneNode_Helper = MenuSystem::Schema::CGameSceneNode_Helper;
+using CCSPlayer_ViewModelServices_Helper = MenuSystem::Schema::CCSPlayer_ViewModelServices_Helper;
 
 SH_DECL_HOOK3_void(ICvar, DispatchConCommand, SH_NOATTRIB, 0, ConCommandHandle, const CCommandContext &, const CCommand &);
 SH_DECL_HOOK3_void(INetworkServerService, StartupServer, SH_NOATTRIB, 0, const GameSessionConfiguration_t &, ISource2WorldSession *, const char *);
@@ -97,6 +98,7 @@ MenuSystemPlugin::MenuSystemPlugin()
     CBodyComponent_Helper(this),
     CCSPlayerPawnBase_Helper(this),
     CGameSceneNode_Helper(this),
+    CCSPlayer_ViewModelServices_Helper(this),
 
     m_aEnableFrameDetailsConVar("mm_" META_PLUGIN_PREFIX "_enable_frame_details", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable detail messages of frames", false, true, false, true, true), 
     m_aEnableGameEventsDetaillsConVar("mm_" META_PLUGIN_PREFIX "_enable_game_events_details", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable detail messages of game events", false, true, false, true, true),
@@ -456,22 +458,22 @@ GS_EVENT_MEMBER(MenuSystemPlugin, GameDeactivate)
 
 GS_EVENT_MEMBER(MenuSystemPlugin, ServerPostEntityThink)
 {
-	FOR_EACH_MAP_FAST(m_mapPlayerEntities, i)
-	{
-		const auto iClient = m_mapPlayerEntities.Key(i);
+	// FOR_EACH_MAP_FAST(m_mapPlayerEntities, i)
+	// {
+	// 	const auto iClient = m_mapPlayerEntities.Key(i);
 
-		auto *pPlayer = g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient + 1));
+	// 	auto *pPlayer = g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient + 1));
 
-		if(pPlayer)
-		{
-			auto *pPlayerPawn = CBasePlayerController_Helper::GetPawn(reinterpret_cast<CBasePlayerController *>(pPlayer))->Get();
+	// 	if(pPlayer)
+	// 	{
+	// 		auto *pPlayerPawn = CBasePlayerController_Helper::GetPawn(reinterpret_cast<CBasePlayerController *>(pPlayer))->Get();
 
-			if(pPlayerPawn)
-			{
-				TeleportMenuEntitiesToPlayer(pPlayerPawn, m_mapPlayerEntities.Element(i));
-			}
-		}
-	}
+	// 		if(pPlayerPawn)
+	// 		{
+	// 			TeleportMenuEntitiesToPlayer(pPlayerPawn, m_mapPlayerEntities.Element(i));
+	// 		}
+	// 	}
+	// }
 }
 
 void MenuSystemPlugin::FireGameEvent(IGameEvent *event)
@@ -1095,11 +1097,34 @@ void MenuSystemPlugin::TeleportMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn
 	}
 }
 
-void MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities)
+bool MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities)
 {
 	auto &aBaseEntity = GetGameDataStorage().GetBaseEntity();
 
-	auto *pPlayerPawnEntity = reinterpret_cast<CEntityInstance *>(pPlayerPawn);
+	// auto *pPlayerPawnEntity = reinterpret_cast<CEntityInstance *>(pPlayerPawn);
+
+	auto *pPlayerViewModelServices = *reinterpret_cast<CCSPlayer_ViewModelServices **>(CCSPlayerPawnBase_Helper::GetViewModelServices(reinterpret_cast<CCSPlayerPawnBase *>(pPlayerPawn)));
+
+	if(!pPlayerViewModelServices)
+	{
+		Logger::WarningFormat("Failed to get a player view model services\n");
+
+		return false;
+	}
+
+	auto *pPlayerViewModel = reinterpret_cast<CEntityInstance *>(CCSPlayer_ViewModelServices_Helper::GetViewModel(pPlayerViewModelServices)->Get());
+
+	if(!pPlayerViewModel)
+	{
+		Logger::WarningFormat("Failed to get a player view model\n");
+
+		return false;
+	}
+
+	if(IsChannelEnabled(LV_DETAILED))
+	{
+		Logger::DetailedFormat("Player view model: \"%s\" (%d)\n", pPlayerViewModel->GetClassname(), pPlayerViewModel->GetEntityIndex().Get());
+	}
 
 	Vector vecMenuAbsOriginBackground {},
 	       vecMenuAbsOrigin {};
@@ -1108,15 +1133,19 @@ void MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, 
 
 	GetMenuEntitiesPositionByPlayer(pPlayerPawn, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 
-	auto aParentVariant = variant_t("!activator");
+	auto aParentVariant = variant_t("!activator"), 
+	     aAttachmentVariant = variant_t("muzzle_flash");
 
 	FOR_EACH_VEC(vecEntities, i)
 	{
 		auto *pEntity = vecEntities[i];
 
 		aBaseEntity.Teleport(pEntity, i ? vecMenuAbsOrigin : vecMenuAbsOriginBackground, angMenuRotation);
-		aBaseEntity.AcceptInput(pEntity, "SetParent", pPlayerPawnEntity, pEntity, &aParentVariant, 0);
+		aBaseEntity.AcceptInput(pEntity, "SetParent", pPlayerViewModel, pEntity, &aParentVariant, 0);
+		aBaseEntity.AcceptInput(pEntity, "SetParentAttachment", pEntity, pEntity, &aAttachmentVariant, 0);
 	}
+
+	return true;
 }
 
 bool MenuSystemPlugin::RegisterGameResource(char *error, size_t maxlen)

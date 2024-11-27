@@ -34,6 +34,7 @@
 #	include <menu_system/schema/base_player_controller.hpp>
 #	include <menu_system/schema/body_component.hpp>
 #	include <menu_system/schema/cs_player_pawn_base.hpp>
+#	include <menu_system/schema/cs_player_view_model_services.hpp>
 #	include <menu_system/schema/game_scene_node.hpp>
 #	include <concat.hpp>
 
@@ -78,7 +79,7 @@ class INetworkMessageInternal;
 
 class MenuSystemPlugin final : public ISmmPlugin, public IMetamodListener, public IMenuSystem, public CBaseGameSystem, public IGameEventListener2, public IEntityManager::IProviderAgent::ISpawnGroupNotifications, // Interfaces.
                                public MenuSystem::ChatCommandSystem, public MenuSystem::Provider, public MenuSystem::CSchemaSystem_Helper, virtual public Logger, public Translations, // Conponents.
-                               public MenuSystem::Schema::CBaseEntity_Helper, public MenuSystem::Schema::CBaseModelEntity_Helper, public MenuSystem::Schema::CBasePlayerController_Helper, public MenuSystem::Schema::CBodyComponent_Helper, public MenuSystem::Schema::CCSPlayerPawnBase_Helper, public MenuSystem::Schema::CGameSceneNode_Helper // Schema helpers.
+                               public MenuSystem::Schema::CBaseEntity_Helper, public MenuSystem::Schema::CBaseModelEntity_Helper, public MenuSystem::Schema::CBasePlayerController_Helper, public MenuSystem::Schema::CBodyComponent_Helper, public MenuSystem::Schema::CCSPlayerPawnBase_Helper, public MenuSystem::Schema::CGameSceneNode_Helper, public MenuSystem::Schema::CCSPlayer_ViewModelServices_Helper // Schema helpers.
 {
 public:
 	MenuSystemPlugin();
@@ -217,7 +218,7 @@ public: // Entity Manager.
 	void SpawnMenuEntitiesByPlayer(CBasePlayerPawn *pPlayerPawn, CUtlVector<CEntityInstance *> *pEntities);
 
 	void TeleportMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities);
-	void AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities);
+	bool AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities);
 
 public: // Game Resource.
 	bool RegisterGameResource(char *error = nullptr, size_t maxlen = 0);

@@ -85,6 +85,7 @@ set(SOURCE_FILES
 	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/base_player_controller.cpp
 	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/body_component.cpp
 	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/cs_player_pawn_base.cpp
+	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/cs_player_view_model_services.cpp
 	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/game_scene_node.cpp
 	${SOURCE_MENU_SYSTEM_DIR}/chat_command_system.cpp
 	${SOURCE_MENU_SYSTEM_DIR}/language.cpp

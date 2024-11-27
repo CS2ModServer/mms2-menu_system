@@ -60,7 +60,7 @@ namespace MenuSystem
 			{
 				int m_nPawn = INVALID_SCHEMA_FIELD_OFFSET;
 			} m_aOffsets;
-		}; // MenuSystem::Schema::CBaseEntity_Helper
+		}; // MenuSystem::Schema::CBasePlayerController_Helper
 	}; // MenuSystem::Schema
 }; // MenuSystem
 
@@ -68,7 +68,7 @@ FORCEINLINE CHandle<CBasePlayerPawn> *MenuSystem::Schema::CBasePlayerController_
 {
 	Assert(m_aOffsets.m_nPawn != INVALID_SCHEMA_FIELD_OFFSET);
 
-	return (CHandle<CBasePlayerPawn> *)((uintp)pInstance + m_aOffsets.m_nPawn);
+	return reinterpret_cast<CHandle<CBasePlayerPawn> *>(reinterpret_cast<uintp>(pInstance) + m_aOffsets.m_nPawn);
 }
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_BASE_PLAYER_CONTOLLER_HPP_

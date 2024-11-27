@@ -67,7 +67,7 @@ FORCEINLINE CBodyComponent **MenuSystem::Schema::CBaseEntity_Helper::GetBodyComp
 {
 	Assert(m_aOffsets.m_nBodyComponent != INVALID_SCHEMA_FIELD_OFFSET);
 
-	return (CBodyComponent **)((uintp)pInstance + m_aOffsets.m_nBodyComponent);
+	return reinterpret_cast<CBodyComponent **>(reinterpret_cast<uintp>(pInstance) + m_aOffsets.m_nBodyComponent);
 }
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_BASE_ENTITY_HPP_

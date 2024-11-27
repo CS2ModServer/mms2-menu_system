@@ -19,34 +19,29 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <menu_system/schema/cs_player_pawn_base.hpp>
+#include <menu_system/schema/cs_player_view_model_services.hpp>
 
 #include <schemasystem/schemasystem.h>
 
-MenuSystem::Schema::CCSPlayerPawnBase_Helper::CCSPlayerPawnBase_Helper(CSchemaSystem_Helper *pSchemaSystemHelper)
+MenuSystem::Schema::CCSPlayer_ViewModelServices_Helper::CCSPlayer_ViewModelServices_Helper(CSchemaSystem_Helper *pSchemaSystemHelper)
 {
 	auto &aCallbacks = m_aClassFieldsClassbacks;
 
-	m_pClass = pSchemaSystemHelper->GetClass(CCSPLAYERPAWNBASE_CLASS_NAME);
+	m_pClass = pSchemaSystemHelper->GetClass(CCSPLAYER_VIEWMODELSERVICES_CLASS_NAME);
 
 	Assert(m_pClass);
 
 	auto &aFields = m_pClass->GetFields();
 
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_pViewModelServices"), [&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_hViewModel"), [&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
 	{
-		m_aOffsets.m_nViewModelServices = pField->m_nSingleInheritanceOffset;
-	});
-
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_angEyeAngles"), [&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
-	{
-		m_aOffsets.m_nEyeAngles = pField->m_nSingleInheritanceOffset;
+		m_aOffsets.m_nViewModel = pField->m_nSingleInheritanceOffset;
 	});
 
 	aFields.AddListener(&aCallbacks);
 }
 
-void MenuSystem::Schema::CCSPlayerPawnBase_Helper::Clear()
+void MenuSystem::Schema::CCSPlayer_ViewModelServices_Helper::Clear()
 {
 	m_aOffsets = {};
 }
