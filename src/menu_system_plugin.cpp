@@ -92,7 +92,7 @@ MenuSystemPlugin::MenuSystemPlugin()
     }, 0, LV_DETAILED, MENU_SYSTEM_LOGGINING_COLOR),
 
     CBaseEntity_Helper(this),
-	CBaseModelEntity_Helper(this),
+    CBaseModelEntity_Helper(this),
     CBasePlayerController_Helper(this),
     CBodyComponent_Helper(this),
     CCSPlayerPawnBase_Helper(this),
@@ -531,22 +531,38 @@ void MenuSystemPlugin::FireGameEvent(IGameEvent *event)
 
 void MenuSystemPlugin::OnSpawnGroupAllocated(SpawnGroupHandle_t hSpawnGroup, ISpawnGroup *pSpawnGroup)
 {
+	if(Logger::IsChannelEnabled(LV_DETAILED))
+	{
+		Logger::DetailedFormat("%s(hSpawnGroup = %d, pSpawnGroup = %p)\n", __FUNCTION__, hSpawnGroup, pSpawnGroup);
+	}
+
 	// AsyncSpawnMenuEntities();
+}
+
+void MenuSystemPlugin::OnSpawnGroupInit(SpawnGroupHandle_t hSpawnGroup, IEntityResourceManifest *pManifest, IEntityPrecacheConfiguration *pConfig, ISpawnGroupPrerequisiteRegistry *pRegistry)
+{
+	if(Logger::IsChannelEnabled(LV_DETAILED))
+	{
+		Logger::DetailedFormat("%s(hSpawnGroup = %d, pManifest = %p, pConfig = %p, pRegistry = %p)\n", __FUNCTION__, hSpawnGroup, pManifest, pConfig, pRegistry);
+	}
+
+	Assert(pManifest);
+
+	m_pEntityManagerProviderAgent->AddResourceToEntityManifest(pManifest, "materials/dev/annotation_worldtext_background.vmat");
+	m_pEntityManagerProviderAgent->AddResourceToEntityManifest(pManifest, "materials/editor/icon_empty.vmat");
 }
 
 void MenuSystemPlugin::OnSpawnGroupCreateLoading(SpawnGroupHandle_t hSpawnGroup, CMapSpawnGroup *pMapSpawnGroup, bool bSynchronouslySpawnEntities, bool bConfirmResourcesLoaded, CUtlVector<const CEntityKeyValues *> &vecKeyValues)
 {
 	if(Logger::IsChannelEnabled(LV_DETAILED))
 	{
-		Logger::DetailedFormat("%s\n", __FUNCTION__);
+		Logger::DetailedFormat("%s(hSpawnGroup = %d, pMapSpawnGroup = %p, bSynchronouslySpawnEntities = %s, bConfirmResourcesLoaded = %s, &vecKeyValues = %p)\n", __FUNCTION__, hSpawnGroup, pMapSpawnGroup, bSynchronouslySpawnEntities ? "true" : "false", bConfirmResourcesLoaded ? "true" : "false", &vecKeyValues);
 	}
 
 	const Vector vecBackgroundOrigin = {-42.0f, 30.0f, -159.875f}, 
 	             vecOrigin = {-42.0f, 30.0f, -160.0f};
 
 	const QAngle angRotation = {180.0f, 0.0f, 0.0f};
-
-
 
 	CEntityKeyValues *pMenuKV = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL),
 	                 *pMenuKV2 = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL), 
