@@ -29,7 +29,8 @@
 
 const float g_flUnitRadians = 180.f / M_PI_F;
 
-FORCEINLINE Vector GetDirectionFromAngle(const QAngle &angRotation)
+template<class T = Vector>
+FORCEINLINE T GetDirectionFromAngle(const QAngle &angRotation)
 {
 	const float flPitchRadians = angRotation.x / g_flUnitRadians;
 	const float flYawRadians = angRotation.y / g_flUnitRadians;
@@ -45,7 +46,7 @@ FORCEINLINE Vector GetDirectionFromAngle(const QAngle &angRotation)
 
 FORCEINLINE Vector AddToFrontByRotation(const Vector &vecOrigin, const QAngle &angRotation, float flDistance)
 {
-	return vecOrigin + (GetDirectionFromAngle(angRotation) * flDistance);
+	return vecOrigin + (GetDirectionFromAngle<>(angRotation) * flDistance);
 }
 
 #endif //_INCLUDE_METAMOD_SOURCE_MATH_HPP_
