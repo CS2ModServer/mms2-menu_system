@@ -26,6 +26,8 @@
 
 #	include <menu_system/schema.hpp>
 
+#	include <tier0/dbg.h>
+#	include <tier0/platform.h>
 #	include <ehandle.h>
 
 #	define CBASEPLAYERCONTROLLER_CLASS_NAME "CBasePlayerController"
@@ -48,7 +50,7 @@ namespace MenuSystem
 			void Clear();
 
 		public:
-			CHandle<CBasePlayerPawn> *GetPawn(CBasePlayerController *pInstance);
+			FORCEINLINE CHandle<CBasePlayerPawn> *GetPawn(CBasePlayerController *pInstance);
 
 		private:
 			CSchemaSystem_Helper::CClass *m_pClass;
@@ -61,5 +63,12 @@ namespace MenuSystem
 		}; // MenuSystem::Schema::CBaseEntity_Helper
 	}; // MenuSystem::Schema
 }; // MenuSystem
+
+FORCEINLINE CHandle<CBasePlayerPawn> *MenuSystem::Schema::CBasePlayerController_Helper::GetPawn(CBasePlayerController *pInstance)
+{
+	Assert(m_aOffsets.m_nPawn != INVALID_SCHEMA_FIELD_OFFSET);
+
+	return (CHandle<CBasePlayerPawn> *)((uintp)pInstance + m_aOffsets.m_nPawn);
+}
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_BASE_PLAYER_CONTOLLER_HPP_

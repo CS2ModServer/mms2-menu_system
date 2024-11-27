@@ -26,6 +26,9 @@
 
 #	include <menu_system/schema.hpp>
 
+#	include <tier0/dbg.h>
+#	include <tier0/platform.h>
+
 #	define CBASEENTITY_CLASS_NAME "CBaseEntity"
 
 class QAngle;
@@ -46,7 +49,7 @@ namespace MenuSystem
 			void Clear();
 
 		public:
-			CBodyComponent **GetBodyComponent(CBaseEntity *pInstance);
+			FORCEINLINE CBodyComponent **GetBodyComponent(CBaseEntity *pInstance);
 
 		private:
 			CSchemaSystem_Helper::CClass *m_pClass;
@@ -59,5 +62,12 @@ namespace MenuSystem
 		}; // MenuSystem::Schema::CBaseEntity_Helper
 	}; // MenuSystem::Schema
 }; // MenuSystem
+
+FORCEINLINE CBodyComponent **MenuSystem::Schema::CBaseEntity_Helper::GetBodyComponent(CBaseEntity *pInstance)
+{
+	Assert(m_aOffsets.m_nBodyComponent != INVALID_SCHEMA_FIELD_OFFSET);
+
+	return (CBodyComponent **)((uintp)pInstance + m_aOffsets.m_nBodyComponent);
+}
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_BASE_ENTITY_HPP_

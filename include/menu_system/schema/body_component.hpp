@@ -26,6 +26,9 @@
 
 #	include <menu_system/schema.hpp>
 
+#	include <tier0/dbg.h>
+#	include <tier0/platform.h>
+
 #	define CBODYCOMPONENT_CLASS_NAME "CBodyComponent"
 
 class QAngle;
@@ -46,7 +49,7 @@ namespace MenuSystem
 			void Clear();
 
 		public:
-			CGameSceneNode **GetSceneNode(CBodyComponent *pInstance);
+			FORCEINLINE CGameSceneNode **GetSceneNode(CBodyComponent *pInstance);
 
 		private:
 			CSchemaSystem_Helper::CClass *m_pClass;
@@ -59,5 +62,12 @@ namespace MenuSystem
 		}; // MenuSystem::Schema::CBodyComponent_Helper
 	}; // MenuSystem::Schema
 }; // MenuSystem
+
+FORCEINLINE CGameSceneNode **MenuSystem::Schema::CBodyComponent_Helper::GetSceneNode(CBodyComponent *pInstance)
+{
+	Assert(m_aOffsets.m_nSceneNode != INVALID_SCHEMA_FIELD_OFFSET);
+
+	return (CGameSceneNode **)((uintp)pInstance + m_aOffsets.m_nSceneNode);
+}
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_BODY_COMPONENT_HPP_

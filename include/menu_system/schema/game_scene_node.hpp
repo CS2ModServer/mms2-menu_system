@@ -27,6 +27,9 @@
 
 #	include <menu_system/schema.hpp>
 
+#	include <tier0/dbg.h>
+#	include <tier0/platform.h>
+
 #	define CGAMESCENENODE_CLASS_NAME "CGameSceneNode"
 
 class QAngle;
@@ -46,8 +49,8 @@ namespace MenuSystem
 			void Clear();
 
 		public:
-			Vector *GetAbsOrigin(CGameSceneNode *pInstance);
-			QAngle *GetAbsRotation(CGameSceneNode *pInstance);
+			FORCEINLINE Vector *GetAbsOrigin(CGameSceneNode *pInstance);
+			FORCEINLINE QAngle *GetAbsRotation(CGameSceneNode *pInstance);
 
 		private:
 			CSchemaSystem_Helper::CClass *m_pClass;
@@ -61,5 +64,19 @@ namespace MenuSystem
 		}; // CGameSceneNode_Helper
 	}; // Schema
 }; // MenuSystem
+
+FORCEINLINE Vector *MenuSystem::Schema::CGameSceneNode_Helper::GetAbsOrigin(CGameSceneNode *pInstance)
+{
+	Assert(m_aOffsets.m_nAbsOrigin != INVALID_SCHEMA_FIELD_OFFSET);
+
+	return (Vector *)((uintp)pInstance + m_aOffsets.m_nAbsOrigin);
+}
+
+FORCEINLINE QAngle *MenuSystem::Schema::CGameSceneNode_Helper::GetAbsRotation(CGameSceneNode *pInstance)
+{
+	Assert(m_aOffsets.m_nAbsRotation != INVALID_SCHEMA_FIELD_OFFSET);
+
+	return (QAngle *)((uintp)pInstance + m_aOffsets.m_nAbsRotation);
+}
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_GAME_SCENE_NODE_HPP_

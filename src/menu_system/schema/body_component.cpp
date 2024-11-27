@@ -21,8 +21,6 @@
 
 #include <menu_system/schema/body_component.hpp>
 
-#include <stdint.h>
-
 #include <schemasystem/schemasystem.h>
 
 MenuSystem::Schema::CBodyComponent_Helper::CBodyComponent_Helper(CSchemaSystem_Helper *pSchemaSystemHelper)
@@ -46,11 +44,4 @@ MenuSystem::Schema::CBodyComponent_Helper::CBodyComponent_Helper(CSchemaSystem_H
 void MenuSystem::Schema::CBodyComponent_Helper::Clear()
 {
 	m_aOffsets = {};
-}
-
-CGameSceneNode **MenuSystem::Schema::CBodyComponent_Helper::GetSceneNode(CBodyComponent *pInstance)
-{
-	Assert(m_aOffsets.m_nSceneNode != INVALID_SCHEMA_FIELD_OFFSET);
-
-	return (CGameSceneNode **)((uintptr_t)pInstance + m_aOffsets.m_nSceneNode);
 }

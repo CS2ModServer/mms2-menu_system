@@ -21,8 +21,6 @@
 
 #include <menu_system/schema/base_player_controller.hpp>
 
-#include <stdint.h>
-
 #include <schemasystem/schemasystem.h>
 
 MenuSystem::Schema::CBasePlayerController_Helper::CBasePlayerController_Helper(CSchemaSystem_Helper *pSchemaSystemHelper)
@@ -46,11 +44,4 @@ MenuSystem::Schema::CBasePlayerController_Helper::CBasePlayerController_Helper(C
 void MenuSystem::Schema::CBasePlayerController_Helper::Clear()
 {
 	m_aOffsets = {};
-}
-
-CHandle<CBasePlayerPawn> *MenuSystem::Schema::CBasePlayerController_Helper::GetPawn(CBasePlayerController *pInstance)
-{
-	Assert(m_aOffsets.m_nPawn != INVALID_SCHEMA_FIELD_OFFSET);
-
-	return (CHandle<CBasePlayerPawn> *)((uintptr_t)pInstance + m_aOffsets.m_nPawn);
 }

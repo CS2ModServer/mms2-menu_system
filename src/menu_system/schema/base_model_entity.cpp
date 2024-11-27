@@ -21,8 +21,6 @@
 
 #include <menu_system/schema/base_model_entity.hpp>
 
-#include <stdint.h>
-
 #include <schemasystem/schemasystem.h>
 
 MenuSystem::Schema::CBaseModelEntity_Helper::CBaseModelEntity_Helper(CSchemaSystem_Helper *pSchemaSystemHelper)
@@ -46,11 +44,4 @@ MenuSystem::Schema::CBaseModelEntity_Helper::CBaseModelEntity_Helper(CSchemaSyst
 void MenuSystem::Schema::CBaseModelEntity_Helper::Clear()
 {
 	m_aOffsets = {};
-}
-
-Vector *MenuSystem::Schema::CBaseModelEntity_Helper::GetViewOffset(CBaseModelEntity *pInstance)
-{
-	Assert(m_aOffsets.m_nViewOffset != INVALID_SCHEMA_FIELD_OFFSET);
-
-	return (Vector *)((uintptr_t)pInstance + m_aOffsets.m_nViewOffset);
 }

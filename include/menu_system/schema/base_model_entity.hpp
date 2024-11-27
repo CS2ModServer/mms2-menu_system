@@ -26,6 +26,9 @@
 
 #	include <menu_system/schema.hpp>
 
+#	include <tier0/dbg.h>
+#	include <tier0/platform.h>
+
 #	define CBASEMODELENTITY_CLASS_NAME "CBaseModelEntity"
 
 class QAngle;
@@ -45,7 +48,7 @@ namespace MenuSystem
 			void Clear();
 
 		public:
-			Vector *GetViewOffset(CBaseModelEntity *pInstance);
+			FORCEINLINE Vector *GetViewOffset(CBaseModelEntity *pInstance);
 
 		private:
 			CSchemaSystem_Helper::CClass *m_pClass;
@@ -58,5 +61,12 @@ namespace MenuSystem
 		}; // MenuSystem::Schema::CBaseModelEntity_Helper
 	}; // MenuSystem::Schema
 }; // MenuSystem
+
+FORCEINLINE Vector *MenuSystem::Schema::CBaseModelEntity_Helper::GetViewOffset(CBaseModelEntity *pInstance)
+{
+	Assert(m_aOffsets.m_nViewOffset != INVALID_SCHEMA_FIELD_OFFSET);
+
+	return (Vector *)((uintp)pInstance + m_aOffsets.m_nViewOffset);
+}
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_BASE_MODEL_ENTITY_HPP_

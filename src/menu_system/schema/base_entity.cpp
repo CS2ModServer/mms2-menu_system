@@ -21,8 +21,6 @@
 
 #include <menu_system/schema/base_entity.hpp>
 
-#include <stdint.h>
-
 #include <schemasystem/schemasystem.h>
 
 MenuSystem::Schema::CBaseEntity_Helper::CBaseEntity_Helper(CSchemaSystem_Helper *pSchemaSystemHelper)
@@ -46,11 +44,4 @@ MenuSystem::Schema::CBaseEntity_Helper::CBaseEntity_Helper(CSchemaSystem_Helper 
 void MenuSystem::Schema::CBaseEntity_Helper::Clear()
 {
 	m_aOffsets = {};
-}
-
-CBodyComponent **MenuSystem::Schema::CBaseEntity_Helper::GetBodyComponent(CBaseEntity *pInstance)
-{
-	Assert(m_aOffsets.m_nBodyComponent != INVALID_SCHEMA_FIELD_OFFSET);
-
-	return (CBodyComponent **)((uintptr_t)pInstance + m_aOffsets.m_nBodyComponent);
 }

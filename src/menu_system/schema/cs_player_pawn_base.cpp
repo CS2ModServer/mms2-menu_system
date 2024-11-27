@@ -21,8 +21,6 @@
 
 #include <menu_system/schema/cs_player_pawn_base.hpp>
 
-#include <stdint.h>
-
 #include <schemasystem/schemasystem.h>
 
 MenuSystem::Schema::CCSPlayerPawnBase_Helper::CCSPlayerPawnBase_Helper(CSchemaSystem_Helper *pSchemaSystemHelper)
@@ -46,11 +44,4 @@ MenuSystem::Schema::CCSPlayerPawnBase_Helper::CCSPlayerPawnBase_Helper(CSchemaSy
 void MenuSystem::Schema::CCSPlayerPawnBase_Helper::Clear()
 {
 	m_aOffsets = {};
-}
-
-QAngle *MenuSystem::Schema::CCSPlayerPawnBase_Helper::GetEyeAngles(CCSPlayerPawnBase *pInstance)
-{
-	Assert(m_aOffsets.m_nEyeAngles != INVALID_SCHEMA_FIELD_OFFSET);
-
-	return (QAngle *)((uintptr_t)pInstance + m_aOffsets.m_nEyeAngles);
 }

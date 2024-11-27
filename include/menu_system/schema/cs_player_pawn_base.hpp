@@ -26,6 +26,9 @@
 
 #	include <menu_system/schema.hpp>
 
+#	include <tier0/dbg.h>
+#	include <tier0/platform.h>
+
 #	define CCSPLAYERPAWNBASE_CLASS_NAME "CCSPlayerPawnBase"
 
 class QAngle;
@@ -45,7 +48,7 @@ namespace MenuSystem
 			void Clear();
 
 		public:
-			QAngle *GetEyeAngles(CCSPlayerPawnBase *pInstance);
+			FORCEINLINE QAngle *GetEyeAngles(CCSPlayerPawnBase *pInstance);
 
 		private:
 			CSchemaSystem_Helper::CClass *m_pClass;
@@ -58,5 +61,12 @@ namespace MenuSystem
 		}; // MenuSystem::Schema::CBodyComponent_Helper
 	}; // MenuSystem::Schema
 }; // MenuSystem
+
+FORCEINLINE QAngle *MenuSystem::Schema::CCSPlayerPawnBase_Helper::GetEyeAngles(CCSPlayerPawnBase *pInstance)
+{
+	Assert(m_aOffsets.m_nEyeAngles != INVALID_SCHEMA_FIELD_OFFSET);
+
+	return (QAngle *)((uintp)pInstance + m_aOffsets.m_nEyeAngles);
+}
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_CS_PLAYER_PAWN_BASE_HPP_

@@ -21,8 +21,6 @@
 
 #include <menu_system/schema/game_scene_node.hpp>
 
-#include <stdint.h>
-
 #include <schemasystem/schemasystem.h>
 
 MenuSystem::Schema::CGameSceneNode_Helper::CGameSceneNode_Helper(CSchemaSystem_Helper *pSchemaSystemHelper)
@@ -51,18 +49,4 @@ MenuSystem::Schema::CGameSceneNode_Helper::CGameSceneNode_Helper(CSchemaSystem_H
 void MenuSystem::Schema::CGameSceneNode_Helper::Clear()
 {
 	m_aOffsets = {};
-}
-
-Vector *MenuSystem::Schema::CGameSceneNode_Helper::GetAbsOrigin(CGameSceneNode *pInstance)
-{
-	Assert(m_aOffsets.m_nAbsOrigin != INVALID_SCHEMA_FIELD_OFFSET);
-
-	return (Vector *)((uintptr_t)pInstance + m_aOffsets.m_nAbsOrigin);
-}
-
-QAngle *MenuSystem::Schema::CGameSceneNode_Helper::GetAbsRotation(CGameSceneNode *pInstance)
-{
-	Assert(m_aOffsets.m_nAbsRotation != INVALID_SCHEMA_FIELD_OFFSET);
-
-	return (QAngle *)((uintptr_t)pInstance + m_aOffsets.m_nAbsRotation);
 }
