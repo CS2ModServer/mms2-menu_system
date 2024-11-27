@@ -29,18 +29,23 @@
 
 const float g_flUnitRadians = 180.f / M_PI_F;
 
-FORCEINLINE Vector AddToFrontByRotation(const Vector &vecOrigin, const QAngle &angRotation, float flUnits)
+FORCEINLINE Vector GetDirectionFromAngle(const QAngle &angRotation)
 {
-	float flSine, flCosine;
+	const float flPitchRadians = angRotation.x / g_flUnitRadians;
+	const float flYawRadians = angRotation.y / g_flUnitRadians;
 
-	SinCos(angRotation.y / g_flUnitRadians, &flSine, &flCosine);
+	float flPitchSine, flPitchCosine, 
+	      flYawSine, flYawCosine;
 
-	return
-	{
-		vecOrigin.x + flCosine * flUnits,
-		vecOrigin.y + flSine * flUnits,
-		vecOrigin.z + -TableSin(angRotation.x / g_flUnitRadians) * flUnits
-	};
+	SinCos(flPitchRadians, &flPitchSine, &flPitchCosine);
+	SinCos(flYawRadians, &flYawSine, &flYawCosine);
+
+	return {flPitchCosine * flYawCosine, flPitchCosine * flYawSine, -flPitchSine};
+}
+
+FORCEINLINE Vector AddToFrontByRotation(const Vector &vecOrigin, const QAngle &angRotation, float flDistance)
+{
+	return vecOrigin + (GetDirectionFromAngle(angRotation) * flDistance);
 }
 
 #endif //_INCLUDE_METAMOD_SOURCE_MATH_HPP_
