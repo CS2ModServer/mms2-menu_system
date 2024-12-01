@@ -211,6 +211,7 @@ public: // Entity Manager.
 	void FillMenuEntityKeyValues3(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation);
 	void FillMenuEntityKeyValuesCursor(CEntityKeyValues *pEntityKV, const Vector &vecOrigin, const QAngle &angRotation);
 
+	Vector GetEntityPosition(CBaseEntity *pEntity, QAngle *pRotation = nullptr);
 	void GetMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
 	void GetMenuEntitiesPositionByPlayer(CBasePlayerPawn *pPlayerPawn, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
 
@@ -219,6 +220,7 @@ public: // Entity Manager.
 
 	void TeleportMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities);
 	bool AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities);
+	bool SetMenuEntitiesProperties(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities);
 
 public: // Game Resource.
 	bool RegisterGameResource(char *error = nullptr, size_t maxlen = 0);
