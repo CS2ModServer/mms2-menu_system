@@ -51,6 +51,7 @@ namespace MenuSystem
 		public:
 			FORCEINLINE CBodyComponent **GetBodyComponent(CBaseEntity *pInstance);
 			FORCEINLINE uint *GetEffects(CBaseEntity *pInstance);
+			FORCEINLINE int *GetEFlags(CBaseEntity *pInstance);
 
 		private:
 			CSchemaSystem_Helper::CClass *m_pClass;
@@ -60,6 +61,7 @@ namespace MenuSystem
 			{
 				int m_nBodyComponent = INVALID_SCHEMA_FIELD_OFFSET;
 				int m_nEffects = INVALID_SCHEMA_FIELD_OFFSET;
+				int m_nEFlags = INVALID_SCHEMA_FIELD_OFFSET;
 			} m_aOffsets;
 		}; // MenuSystem::Schema::CBaseEntity_Helper
 	}; // MenuSystem::Schema
@@ -77,6 +79,13 @@ FORCEINLINE uint *MenuSystem::Schema::CBaseEntity_Helper::GetEffects(CBaseEntity
 	Assert(m_aOffsets.m_nEffects != INVALID_SCHEMA_FIELD_OFFSET);
 
 	return reinterpret_cast<uint *>(reinterpret_cast<uintp>(pInstance) + m_aOffsets.m_nEffects);
+}
+
+FORCEINLINE int *MenuSystem::Schema::CBaseEntity_Helper::GetEFlags(CBaseEntity *pInstance)
+{
+	Assert(m_aOffsets.m_nEFlags != INVALID_SCHEMA_FIELD_OFFSET);
+
+	return reinterpret_cast<int *>(reinterpret_cast<uintp>(pInstance) + m_aOffsets.m_nEFlags);
 }
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_BASE_ENTITY_HPP_

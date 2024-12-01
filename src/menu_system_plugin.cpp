@@ -180,7 +180,7 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 	SH_ADD_HOOK_MEMFUNC(INetworkServerService, StartupServer, g_pNetworkServerService, this, &MenuSystemPlugin::OnStartupServerHook, true);
 
 	// Register chat commands.
-	MenuSystem::ChatCommandSystem::Register("menu_system", [&](CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments)
+	MenuSystem::ChatCommandSystem::Register("menu", [&](CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments)
 	{
 		CSingleRecipientFilter aFilter(aSlot);
 
@@ -217,7 +217,7 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 					CUtlVector<CEntityInstance *> vecEntitites;
 
 					SpawnMenuEntitiesByPlayer(pPlayerPawn, &vecEntitites);
-					AttachMenuEntitiesToPlayer(pPlayerPawn, vecEntitites);
+					AttachMenuEntitiesToPlayer(pPlayerPawn, vecEntitites, vecArguments.Count() > 1 ? vecArguments[1].Get() : nullptr);
 					SetMenuEntitiesProperties(pPlayerPawn, vecEntitites);
 					m_mapPlayerEntities.Insert(iClient, vecEntitites);
 				}
@@ -231,6 +231,24 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 				Logger::WarningFormat("Failed to get player entity. Client index is %d\n", iClient);
 			}
 		}
+	});
+
+	MenuSystem::ChatCommandSystem::Register("menu_clear", [&](CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments)
+	{
+		// const SpawnGroupHandle_t hSpawnGroup = m_pMySpawnGroupInstance->GetSpawnGroupHandle();
+
+		FOR_EACH_MAP_FAST(m_mapPlayerEntities, i)
+		{
+			const auto iClient = m_mapPlayerEntities.Key(i);
+
+			for(auto *pEntity : m_mapPlayerEntities.Element(i))
+			{
+				m_pEntityManagerProviderAgent->PushDestroyQueue(pEntity);
+			}
+		}
+
+		m_pEntityManagerProviderAgent->ExecuteDestroyQueued();
+		m_mapPlayerEntities.Purge();
 	});
 
 	if(late)
@@ -1006,9 +1024,9 @@ Vector MenuSystemPlugin::GetEntityPosition(CBaseEntity *pEntity, QAngle *pRotati
 
 void MenuSystemPlugin::GetMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
-	QAngle angCorrect = {angRotation.x + 24.f, angRotation.y + 56.f, 90.f};
+	QAngle angCorrect = {angRotation.x + 12.f, angRotation.y + 54.f, 90.f};
 
-	vecResult = AddToFrontByRotation(vecOrigin, angCorrect, 48.f);
+	vecResult = AddToFrontByRotation(vecOrigin, angCorrect, 64.f);
 	vecBackgroundResult = AddToFrontByRotation(vecResult, angCorrect, 0.125f);
 	angResult = {0.f, angRotation.y - 90.f, -angRotation.x + 90.f};
 }
@@ -1111,7 +1129,7 @@ void MenuSystemPlugin::TeleportMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn
 	}
 }
 
-bool MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities)
+bool MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities, const char *pszAttachmentName)
 {
 	auto &aBaseEntity = GetGameDataStorage().GetBaseEntity();
 
@@ -1148,7 +1166,7 @@ bool MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, 
 	GetMenuEntitiesPositionByPlayer(pPlayerPawn, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 
 	auto aParentVariant = variant_t("!activator"), 
-	     aAttachmentVariant = variant_t("axis_of_intent");
+	     aAttachmentVariant = variant_t(pszAttachmentName);
 
 	FOR_EACH_VEC(vecEntities, i)
 	{
@@ -1157,51 +1175,10 @@ bool MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, 
 		aBaseEntity.Teleport(pEntity, i ? vecMenuAbsOrigin : vecMenuAbsOriginBackground, angMenuRotation);
 		aBaseEntity.AcceptInput(pEntity, "SetParent", pPlayerViewModel, NULL, &aParentVariant, 0);
 		// aBaseEntity.AcceptInput(pEntity, "FollowEntity", pPlayerViewModel, pEntity, &aParentVariant, 0);
-		aBaseEntity.AcceptInput(pEntity, "SetParentAttachmentMaintainOffset", reinterpret_cast<CEntityInstance *>(pPlayerPawn), NULL, &aAttachmentVariant, 0);
 
+		if(pszAttachmentName)
 		{
-			QAngle angRotation;
-
-			Vector vecOrigin = GetEntityPosition(reinterpret_cast<CBaseEntity *>(pEntity), &angRotation);
-
-			Logger::MessageFormat("Origin: %f %f %f\nAngles: %f %f %f\n", vecOrigin.x, vecOrigin.y, vecOrigin.z, angRotation.x, angRotation.y, angRotation.z);
-		}
-
-		{
-			auto *pEntityBodyComponent = *CBaseEntity_Helper::GetBodyComponent(reinterpret_cast<CBaseEntity *>(pEntity));
-
-			auto *pEntitySceneNode = *CBodyComponent_Helper::GetSceneNode(pEntityBodyComponent);
-
-			auto *pAttachName = CGameSceneNode_Helper::GetHierarchyAttachName(pEntitySceneNode);
-
-			Logger::MessageFormat("pAttachName = %d\n", pAttachName->GetHashCode());
-
-			{
-				auto *pEntitySceneNodeParent = CGameSceneNode_Helper::GetParent(pEntitySceneNode);
-
-				auto *pParentAttachName = CGameSceneNode_Helper::GetHierarchyAttachName(pEntitySceneNodeParent);
-
-				Logger::MessageFormat("pParentAttachName = %d\n", pParentAttachName->GetHashCode());
-			}
-		}
-	}
-
-	{
-		auto *pPlayerBodyComponent = *CBaseEntity_Helper::GetBodyComponent(reinterpret_cast<CBaseEntity *>(pPlayerPawn));
-
-		auto *pPlayerSceneNode = *CBodyComponent_Helper::GetSceneNode(pPlayerBodyComponent);
-
-		auto *pAttachName = CGameSceneNode_Helper::GetHierarchyAttachName(pPlayerSceneNode);
-
-		Logger::MessageFormat("Player pAttachName = %d\n", pAttachName->GetHashCode());
-
-
-		{
-			auto *pPlayerSceneNodeParent = CGameSceneNode_Helper::GetParent(pPlayerSceneNode);
-
-			auto *pParentAttachName = CGameSceneNode_Helper::GetHierarchyAttachName(pPlayerSceneNodeParent);
-
-			Logger::MessageFormat("Player pParentAttachName = %d\n", pParentAttachName->GetHashCode());
+			aBaseEntity.AcceptInput(pEntity, "SetParentAttachment", pPlayerViewModel, NULL, &aAttachmentVariant, 0);
 		}
 	}
 
@@ -1212,7 +1189,9 @@ bool MenuSystemPlugin::SetMenuEntitiesProperties(CBasePlayerPawn *pPlayerPawn, c
 {
 	for(auto *pEntity : vecEntities)
 	{
-		*CBaseEntity_Helper::GetEffects(reinterpret_cast<CBaseEntity *>(pEntity)) |= EF_MENU;
+		auto *pEFlags = CBaseEntity_Helper::GetEFlags(reinterpret_cast<CBaseEntity *>(pEntity));
+
+		*pEFlags = EF_MENU;
 	}
 
 	return true;

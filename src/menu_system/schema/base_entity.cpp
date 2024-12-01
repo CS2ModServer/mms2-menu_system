@@ -43,6 +43,11 @@ MenuSystem::Schema::CBaseEntity_Helper::CBaseEntity_Helper(CSchemaSystem_Helper 
 		m_aOffsets.m_nEffects = pField->m_nSingleInheritanceOffset;
 	});
 
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_iEFlags"), [&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
+	{
+		m_aOffsets.m_nEFlags = pField->m_nSingleInheritanceOffset;
+	});
+
 	aFields.AddListener(&aCallbacks);
 }
 
