@@ -267,6 +267,24 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 				}
 			}
 		}
+
+		// Initialize a game resource.
+		{
+			char sMessage[256];
+
+			if(!RegisterGameResource(sMessage, sizeof(sMessage)))
+			{
+				Logger::WarningFormat("%s\n", sMessage);
+			}
+		}
+
+		// Load menu spawn groups.
+		{
+			if(!LoadMenuSpawnGroups())
+			{
+				Logger::Warning("Failed to load the menu spawn groups\n");
+			}
+		}
 	}
 
 	ismm->AddListener(static_cast<ISmmPlugin *>(this), static_cast<IMetamodListener *>(this));
