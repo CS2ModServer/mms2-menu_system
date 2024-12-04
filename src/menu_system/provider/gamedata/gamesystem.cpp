@@ -45,7 +45,7 @@ void MenuSystem::Provider::GameDataStorage::CGameSystem::Reset()
 	m_ppFirst = nullptr;
 }
 
-CBaseGameSystemFactory **MenuSystem::Provider::GameDataStorage::CGameSystem::GetFirstointer() const
+CBaseGameSystemFactory **MenuSystem::Provider::GameDataStorage::CGameSystem::GetFirstPointer() const
 {
 	return m_ppFirst;
 }

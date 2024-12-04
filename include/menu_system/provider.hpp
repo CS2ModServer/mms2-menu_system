@@ -157,7 +157,7 @@ namespace MenuSystem
 				void Reset();
 
 			public:
-				CBaseGameSystemFactory **GetFirstointer() const;
+				CBaseGameSystemFactory **GetFirstPointer() const;
 
 			private:
 				GameData::Config::Addresses::ListenerCallbacksCollector m_aAddressCallbacks;
