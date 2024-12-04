@@ -42,6 +42,12 @@ set(SOURCESDK_PROTOS
 	networkbasetypes
 	networksystem_protomessages
 	usermessages
+
+	steammessages
+	engine_gcmessages
+	gcsdk_gcmessages
+	cstrike15_gcmessages
+	cstrike15_usermessages
 )
 
 function(set_or_external_dir VAR_NAME DEFAULT_DIR)

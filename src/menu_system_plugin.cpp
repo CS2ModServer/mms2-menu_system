@@ -42,6 +42,7 @@
 #include <shareddefs.h>
 #include <tier0/commonmacros.h>
 #include <usermessages.pb.h>
+#include <cstrike15_usermessages.pb.h>
 
 #define EF_MENU EF_BONEMERGE | EF_BRIGHTLIGHT | EF_DIMLIGHT | EF_NOINTERP | EF_NOSHADOW | EF_NODRAW | EF_NORECEIVESHADOW | EF_BONEMERGE_FASTCULL | EF_ITEM_BLINK | EF_PARENT_ANIMATES
 
@@ -204,7 +205,7 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 			Logger::Warning("Not found a your argument phrase\n");
 		}
 
-		// Teleport menus.
+		// Spawn & attach menus.
 		{
 			auto *pPlayer = g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient + 1));
 
@@ -230,6 +231,18 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 			{
 				Logger::WarningFormat("Failed to get player entity. Client index is %d\n", iClient);
 			}
+		}
+
+		{
+			bool bIsShow = true;
+
+			KeyValues3 aData;
+
+			aData.FindOrCreateMember("1")->SetString("-");
+			aData.FindOrCreateMember("2")->SetString("-");
+			aData.FindOrCreateMember("3")->SetString("-");
+
+			SendVGUIMenuMessage(&aFilter, "test", &bIsShow, &aData);
 		}
 	});
 
@@ -1042,7 +1055,7 @@ Vector MenuSystemPlugin::GetEntityPosition(CBaseEntity *pEntity, QAngle *pRotati
 
 void MenuSystemPlugin::GetMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
-	QAngle angCorrect = {angRotation.x + 12.f, angRotation.y + 54.f, 90.f};
+	const QAngle angCorrect = {angRotation.x + 12.f, angRotation.y + 54.f, 90.f};
 
 	vecResult = AddToFrontByRotation(vecOrigin, angCorrect, 64.f);
 	vecBackgroundResult = AddToFrontByRotation(vecResult, angCorrect, 0.125f);
@@ -1366,6 +1379,10 @@ bool MenuSystemPlugin::RegisterNetMessages(char *error, size_t maxlen)
 		{
 			"CUserMessageTextMsg",
 			&m_pTextMsgMessage,
+		},
+		{
+			"CCSUsrMsg_VGUIMenu",
+			&m_pVGUIMenuMessage,
 		},
 	};
 
@@ -1721,6 +1738,11 @@ void MenuSystemPlugin::OnReloadGameDataCommand(const CCommandContext &context, c
 	}
 }
 
+void MenuSystemPlugin::OnMenuSelectCommand(const CCommandContext &context, const CCommand &args)
+{
+	Logger::Message("SLOT1!!!\n");
+}
+
 void MenuSystemPlugin::OnDispatchConCommandHook(ConCommandHandle hCommand, const CCommandContext &aContext, const CCommand &aArgs)
 {
 	if(IsChannelEnabled(LV_DETAILED))
@@ -1961,6 +1983,102 @@ void MenuSystemPlugin::SendTextMessage(IRecipientFilter *pFilter, int iDestinati
 	}
 
 	g_pGameEventSystem->PostEventAbstract(-1, false, pFilter, pTextMsg, pMessage, 0);
+
+	delete pMessage;
+}
+
+void MenuSystemPlugin::SendVGUIMenuMessage(IRecipientFilter *pFilter, const char *pszName, const bool *pIsShow, KeyValues3 *pKeys)
+{
+	auto *pVGUIMenuMsg = m_pVGUIMenuMessage;
+
+	if(IsChannelEnabled(LV_DETAILED))
+	{
+		const auto &aConcat = s_aEmbedConcat, 
+		           &aConcat2 = s_aEmbed2Concat;
+
+		CBufferStringGrowable<1024> sBuffer;
+
+		sBuffer.Format("Send message (%s):\n", pVGUIMenuMsg->GetUnscopedName());
+		aConcat.AppendToBuffer(sBuffer, "Name", pszName ? pszName : "<none>");
+
+		if(pIsShow)
+		{
+			aConcat.AppendToBuffer(sBuffer, "Show", *pIsShow);
+		}
+		else
+		{
+			aConcat.AppendToBuffer(sBuffer, "Show", "<none>");
+		}
+
+		if(pKeys)
+		{
+			int iMemberCount = pKeys->GetMemberCount();
+
+			if(iMemberCount)
+			{
+				aConcat.AppendToBuffer(sBuffer, "Keys");
+
+				KV3MemberId_t i = 0;
+
+				do
+				{
+					KeyValues3 *pMember = pKeys->GetMember(i);
+					aConcat2.AppendToBuffer(sBuffer, "name", pKeys->GetMemberName(i));
+					aConcat2.AppendToBuffer(sBuffer, "value", pMember->GetString());
+
+					i++;
+				}
+				while(i < iMemberCount);
+			}
+			else
+			{
+				aConcat.AppendToBuffer(sBuffer, "Keys", "<no members>");
+			}
+		}
+		else
+		{
+			aConcat.AppendToBuffer(sBuffer, "Keys", "<none>");
+		}
+
+		Logger::Detailed(sBuffer);
+	}
+
+	auto *pMessage = pVGUIMenuMsg->AllocateMessage()->ToPB<CCSUsrMsg_VGUIMenu>();
+
+	if(pszName)
+	{
+		pMessage->set_name(pszName);
+	}
+
+	if(pIsShow)
+	{
+		pMessage->set_show(*pIsShow);
+	}
+
+	if(pKeys)
+	{
+		int iMemberCount = pKeys->GetMemberCount();
+
+		if(iMemberCount)
+		{
+			KV3MemberId_t i = 0;
+
+			do
+			{
+				KeyValues3 *pMember = pKeys->GetMember(i);
+
+				auto *pMessageKeys = pMessage->add_keys();
+
+				pMessageKeys->set_name(pKeys->GetMemberName(i));
+				pMessageKeys->set_value(pMember->GetString());
+
+				i++;
+			}
+			while(i < iMemberCount);
+		}
+	}
+
+	g_pGameEventSystem->PostEventAbstract(-1, false, pFilter, pVGUIMenuMsg, pMessage, 0);
 
 	delete pMessage;
 }
