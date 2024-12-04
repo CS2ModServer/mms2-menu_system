@@ -209,7 +209,7 @@ public: // Entity Manager.
 	void FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation);
 	void FillMenuEntityKeyValues2(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation);
 	void FillMenuEntityKeyValues3(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation);
-	void FillMenuEntityKeyValuesCursor(CEntityKeyValues *pEntityKV, const Vector &vecOrigin, const QAngle &angRotation);
+	void FillMenuEntityKeyValuesViewmodel(CEntityKeyValues *pEntityKV);
 
 	Vector GetEntityPosition(CBaseEntity *pEntity, QAngle *pRotation = nullptr);
 	void GetMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
