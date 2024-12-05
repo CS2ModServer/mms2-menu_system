@@ -218,7 +218,7 @@ public: // Entity Manager.
 	bool UnloadEntityManager(char *error = nullptr, size_t maxlen = 0);
 
 	bool LoadMenuSpawnGroups(const Vector &aWorldOrigin = {0.0f, 0.0f, 0.0f});
-	void FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation, const Color rgbaColor, const char *pszFontName, const char *pszBackgroundMaterialName, const char *pszMessageText);
+	void FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation, const Vector &vecScales, const Color rgbaColor, const char *pszFontName, const char *pszBackgroundMaterialName, const char *pszMessageText);
 	void FillViewModelEntityKeyValues(CEntityKeyValues *pEntityKV);
 
 	Vector GetEntityPosition(CBaseEntity *pEntity, QAngle *pRotation = nullptr);
