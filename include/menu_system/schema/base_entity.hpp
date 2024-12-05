@@ -51,6 +51,7 @@ namespace MenuSystem
 		public:
 			FORCEINLINE CBodyComponent **GetBodyComponent(CBaseEntity *pInstance);
 			FORCEINLINE uint *GetEffects(CBaseEntity *pInstance);
+			FORCEINLINE CBaseEntity **GetOwnerEntity(CBaseEntity *pInstance);
 			FORCEINLINE int *GetEFlags(CBaseEntity *pInstance);
 
 		private:
@@ -61,6 +62,7 @@ namespace MenuSystem
 			{
 				int m_nBodyComponent = INVALID_SCHEMA_FIELD_OFFSET;
 				int m_nEffects = INVALID_SCHEMA_FIELD_OFFSET;
+				int m_nOwnerEntity = INVALID_SCHEMA_FIELD_OFFSET;
 				int m_nEFlags = INVALID_SCHEMA_FIELD_OFFSET;
 			} m_aOffsets;
 		}; // MenuSystem::Schema::CBaseEntity_Helper
@@ -79,6 +81,13 @@ FORCEINLINE uint *MenuSystem::Schema::CBaseEntity_Helper::GetEffects(CBaseEntity
 	Assert(m_aOffsets.m_nEffects != INVALID_SCHEMA_FIELD_OFFSET);
 
 	return reinterpret_cast<uint *>(reinterpret_cast<uintp>(pInstance) + m_aOffsets.m_nEffects);
+}
+
+FORCEINLINE CBaseEntity **MenuSystem::Schema::CBaseEntity_Helper::GetOwnerEntity(CBaseEntity *pInstance)
+{
+	Assert(m_aOffsets.m_nOwnerEntity != INVALID_SCHEMA_FIELD_OFFSET);
+
+	return reinterpret_cast<CBaseEntity **>(reinterpret_cast<uintp>(pInstance) + m_aOffsets.m_nOwnerEntity);
 }
 
 FORCEINLINE int *MenuSystem::Schema::CBaseEntity_Helper::GetEFlags(CBaseEntity *pInstance)

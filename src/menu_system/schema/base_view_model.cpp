@@ -19,44 +19,29 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <menu_system/schema/base_entity.hpp>
+#include <menu_system/schema/base_view_model.hpp>
 
 #include <schemasystem/schemasystem.h>
 
-MenuSystem::Schema::CBaseEntity_Helper::CBaseEntity_Helper(CSchemaSystem_Helper *pSchemaSystemHelper)
+MenuSystem::Schema::CBaseViewModel_Helper::CBaseViewModel_Helper(CSchemaSystem_Helper *pSchemaSystemHelper)
 {
 	auto &aCallbacks = m_aClassFieldsClassbacks;
 
-	m_pClass = pSchemaSystemHelper->GetClass(CBASEENTITY_CLASS_NAME);
+	m_pClass = pSchemaSystemHelper->GetClass(CBASEVIEWMODEL_CLASS_NAME);
 
 	Assert(m_pClass);
 
 	auto &aFields = m_pClass->GetFields();
 
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_CBodyComponent"), [&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_nViewModelIndex"), [&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
 	{
-		m_aOffsets.m_nBodyComponent = pField->m_nSingleInheritanceOffset;
-	});
-
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_fEffects"), [&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
-	{
-		m_aOffsets.m_nEffects = pField->m_nSingleInheritanceOffset;
-	});
-
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_hOwnerEntity"), [&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
-	{
-		m_aOffsets.m_nOwnerEntity = pField->m_nSingleInheritanceOffset;
-	});
-
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_iEFlags"), [&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
-	{
-		m_aOffsets.m_nEFlags = pField->m_nSingleInheritanceOffset;
+		m_aOffsets.m_nViewModelIndex = pField->m_nSingleInheritanceOffset;
 	});
 
 	aFields.AddListener(&aCallbacks);
 }
 
-void MenuSystem::Schema::CBaseEntity_Helper::Clear()
+void MenuSystem::Schema::CBaseViewModel_Helper::Clear()
 {
 	m_aOffsets = {};
 }
