@@ -1741,7 +1741,7 @@ void MenuSystemPlugin::OnReloadGameDataCommand(const CCommandContext &context, c
 
 void MenuSystemPlugin::OnMenuSelectCommand(const CCommandContext &context, const CCommand &args)
 {
-	Logger::Message("SLOT1!!!\n");
+	Logger::MessageFormat("Menu select: slot %d!!!\n", args.ArgC() > 1 ? atoi(args.Arg(1)) : -1);
 }
 
 void MenuSystemPlugin::OnDispatchConCommandHook(ConCommandHandle hCommand, const CCommandContext &aContext, const CCommand &aArgs)
