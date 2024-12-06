@@ -312,7 +312,7 @@ private: // Language (hash)map.
 	CUtlMap<CUtlSymbolLarge, CLanguage> m_mapLanguages;
 
 private: // Fields.
-	IGameSystemFactory *m_pFactory = NULL;
+	CGameSystemStaticFactory<MenuSystemPlugin> *m_pFactory = NULL;
 
 	CKeyValues3Context m_aEntityAllocator;
 

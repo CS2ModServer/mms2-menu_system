@@ -1303,7 +1303,49 @@ bool MenuSystemPlugin::UnregisterGameFactory(char *error, size_t maxlen)
 	if(m_pFactory)
 	{
 		m_pFactory->Shutdown();
+
+		// Clean up smart dispatcher listener callbacks.
+		{
+			const auto *pGameSystem = m_pFactory->GetStaticGameSystem();
+
+			auto **ppDispatcher = GetGameDataStorage().GetGameSystem().GetEventDispatcher();
+
+			Assert(ppDispatcher);
+
+			auto *pDispatcher = *ppDispatcher;
+
+			if(pDispatcher)
+			{
+				auto *pfuncListeners = pDispatcher->m_funcListeners;
+
+				Assert(pfuncListeners);
+
+				auto &funcListeners = *pfuncListeners;
+
+				FOR_EACH_VEC_BACK(funcListeners, i)
+				{
+					auto &vecListeners = funcListeners[i];
+
+					FOR_EACH_VEC_BACK(vecListeners, j)
+					{
+						if(pGameSystem == vecListeners[j])
+						{
+							vecListeners.FastRemove(j);
+
+							break;
+						}
+					}
+
+					if(!vecListeners.Count())
+					{
+						funcListeners.FastRemove(i);
+					}
+				}
+			}
+		}
+
 		m_pFactory->DestroyGameSystem(this);
+		m_pFactory->Destroy();
 	}
 
 	if(!UnregisterFirstGameSystem())

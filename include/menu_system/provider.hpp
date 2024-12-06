@@ -33,6 +33,7 @@
 #	include <tier1/utldelegateimpl.h>
 #	include <tier1/utlmap.h>
 #	include <entity2/entitykeyvalues.h>
+#	include <igamesystemfactory.h>
 #	include <variant.h>
 
 #	include <gamedata.hpp> // GameData
@@ -158,6 +159,7 @@ namespace MenuSystem
 
 			public:
 				CBaseGameSystemFactory **GetFirstPointer() const;
+				CGameSystemEventDispatcher **GetEventDispatcher() const;
 
 			private:
 				GameData::Config::Addresses::ListenerCallbacksCollector m_aAddressCallbacks;
@@ -165,6 +167,7 @@ namespace MenuSystem
 
 			private: // Addresses.
 				CBaseGameSystemFactory **m_ppFirst = nullptr;
+				CGameSystemEventDispatcher **m_ppEventDispatcher = nullptr;
 			}; // CGameSystem
 
 			class CSource2Server
