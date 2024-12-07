@@ -24,7 +24,6 @@
 #include <schemasystem/schemasystem.h>
 
 MenuSystem::Schema::CBaseModelEntity_Helper::CBaseModelEntity_Helper(CSystem *pSchemaSystemHelper)
- :  CBaseEntity_Helper(pSchemaSystemHelper)
 {
 	auto &aCallbacks = m_aClassFieldsClassbacks;
 

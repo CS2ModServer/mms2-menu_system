@@ -91,7 +91,7 @@ class INetworkMessageInternal;
 
 class MenuSystemPlugin final : public ISmmPlugin, public IMetamodListener, public IMenuSystem, public CBaseGameSystem, public IGameEventListener2, public IEntityManager::IProviderAgent::ISpawnGroupNotifications, // Interfaces.
                                public MenuSystem::ChatCommandSystem, public MenuSystem::Provider, public MenuSystem::Schema::CSystem, virtual public Logger, public Translations, // Conponents.
-                               virtual public MenuSystem::Schema::CBaseEntity_Helper, virtual public MenuSystem::Schema::CBaseModelEntity_Helper, virtual public MenuSystem::Schema::CBasePlayerController_Helper, virtual public MenuSystem::Schema::CBaseViewModel_Helper, virtual public MenuSystem::Schema::CBodyComponent_Helper, virtual public MenuSystem::Schema::CCSPlayerPawnBase_Helper, virtual public MenuSystem::Schema::CGameSceneNode_Helper, virtual public MenuSystem::Schema::CCSPlayer_ViewModelServices_Helper // Schema helpers.
+                               public MenuSystem::Schema::CBaseEntity_Helper, public MenuSystem::Schema::CBaseModelEntity_Helper, public MenuSystem::Schema::CBasePlayerController_Helper, public MenuSystem::Schema::CBaseViewModel_Helper, public MenuSystem::Schema::CBodyComponent_Helper, public MenuSystem::Schema::CCSPlayerPawnBase_Helper, public MenuSystem::Schema::CGameSceneNode_Helper, public MenuSystem::Schema::CCSPlayer_ViewModelServices_Helper // Schema helpers.
 {
 public:
 	MenuSystemPlugin();

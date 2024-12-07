@@ -42,7 +42,7 @@ namespace MenuSystem
 {
 	namespace Schema
 	{
-		class CCSPlayerPawnBase_Helper : virtual public CBaseModelEntity_Helper
+		class CCSPlayerPawnBase_Helper
 		{
 		public:
 			CCSPlayerPawnBase_Helper(CSystem *pSchemaSystemHelper);
