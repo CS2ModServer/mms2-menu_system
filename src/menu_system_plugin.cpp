@@ -1183,6 +1183,12 @@ bool MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, 
 
 	GetMenuEntitiesPositionByPlayer(pPlayerPawn, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 
+	if(IsChannelEnabled(LV_DETAILED))
+	{
+		Logger::DetailedFormat("Menus spawns at %.0f %.0f %.0f (%.0f %.0f %.0f)\n", vecMenuAbsOrigin.x, vecMenuAbsOrigin.y, vecMenuAbsOrigin.z, 
+		                                                                            angMenuRotation.x, angMenuRotation.y, angMenuRotation.z);
+	}
+
 	FOR_EACH_VEC(vecEntities, i)
 	{
 		auto *pEntity = vecEntities[i];
