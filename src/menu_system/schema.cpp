@@ -26,12 +26,12 @@
 #include <tier1/utlmap.h>
 #include <schemasystem/schemasystem.h>
 
-MenuSystem::CSchemaSystem_Helper::CSchemaSystem_Helper()
+MenuSystem::Schema::CSystem::CSystem()
  :  m_mapClasses(DefLessFunc(CUtlSymbolLarge))
 {
 }
 
-bool MenuSystem::CSchemaSystem_Helper::Init(ISchemaSystem *pSchemaSystem, const CUtlVector<const char *> &vecLoadedLibraries, GameData::CBufferStringVector *pMessages)
+bool MenuSystem::Schema::CSystem::Init(ISchemaSystem *pSchemaSystem, const CUtlVector<const char *> &vecLoadedLibraries, GameData::CBufferStringVector *pMessages)
 {
 	CBufferStringGrowable<1024> sBuffer;
 
@@ -55,28 +55,28 @@ bool MenuSystem::CSchemaSystem_Helper::Init(ISchemaSystem *pSchemaSystem, const 
 	return true;
 }
 
-void MenuSystem::CSchemaSystem_Helper::Destroy()
+void MenuSystem::Schema::CSystem::Destroy()
 {
 	ClearClasses();
 	m_vecTypeScopes.Purge();
 }
 
-MenuSystem::CSchemaSystem_Helper::CClass::Fields &MenuSystem::CSchemaSystem_Helper::CClass::GetFields()
+MenuSystem::Schema::CSystem::CClass::Fields &MenuSystem::Schema::CSystem::CClass::GetFields()
 {
 	return m_aFieldStorage;
 }
 
-SchemaClassFieldData_t *MenuSystem::CSchemaSystem_Helper::CClass::GetField(const CUtlSymbolLarge &sName) const
+SchemaClassFieldData_t *MenuSystem::Schema::CSystem::CClass::GetField(const CUtlSymbolLarge &sName) const
 {
 	return m_aFieldStorage.Get(sName);
 }
 
-void MenuSystem::CSchemaSystem_Helper::CClass::SetField(const CUtlSymbolLarge &sName, SchemaClassFieldData_t *pData)
+void MenuSystem::Schema::CSystem::CClass::SetField(const CUtlSymbolLarge &sName, SchemaClassFieldData_t *pData)
 {
 	m_aFieldStorage.Set(sName, pData);
 }
 
-SchemaClassFieldData_t *MenuSystem::CSchemaSystem_Helper::CClass::FindField(const char *pszName) const
+SchemaClassFieldData_t *MenuSystem::Schema::CSystem::CClass::FindField(const char *pszName) const
 {
 	auto sFoundSymbol = FindFieldSymbol(pszName);
 
@@ -88,7 +88,7 @@ SchemaClassFieldData_t *MenuSystem::CSchemaSystem_Helper::CClass::FindField(cons
 	return GetField(sFoundSymbol);
 }
 
-int MenuSystem::CSchemaSystem_Helper::CClass::FindFieldOffset(const char *pszName) const
+int MenuSystem::Schema::CSystem::CClass::FindFieldOffset(const char *pszName) const
 {
 	auto *pField = FindField(pszName);
 
@@ -100,7 +100,7 @@ int MenuSystem::CSchemaSystem_Helper::CClass::FindFieldOffset(const char *pszNam
 	return pField->m_nSingleInheritanceOffset;
 }
 
-void MenuSystem::CSchemaSystem_Helper::CClass::ParseFields(CSchemaClassInfo *pInfo)
+void MenuSystem::Schema::CSystem::CClass::ParseFields(CSchemaClassInfo *pInfo)
 {
 	const uint16 nFieldCount = pInfo->m_nFieldCount;
 
@@ -119,17 +119,17 @@ void MenuSystem::CSchemaSystem_Helper::CClass::ParseFields(CSchemaClassInfo *pIn
 	}
 }
 
-CUtlSymbolLarge MenuSystem::CSchemaSystem_Helper::CClass::GetFieldSymbol(const char *pszName)
+CUtlSymbolLarge MenuSystem::Schema::CSystem::CClass::GetFieldSymbol(const char *pszName)
 {
 	return m_tableFileds.AddString(pszName);
 }
 
-CUtlSymbolLarge MenuSystem::CSchemaSystem_Helper::CClass::FindFieldSymbol(const char *pszName) const
+CUtlSymbolLarge MenuSystem::Schema::CSystem::CClass::FindFieldSymbol(const char *pszName) const
 {
 	return m_tableFileds.Find(pszName);
 }
 
-MenuSystem::CSchemaSystem_Helper::CClass *MenuSystem::CSchemaSystem_Helper::GetClass(const char *pszName)
+MenuSystem::Schema::CSystem::CClass *MenuSystem::Schema::CSystem::GetClass(const char *pszName)
 {
 	auto sSymbol = GetClassSymbol(pszName);
 
@@ -148,7 +148,7 @@ MenuSystem::CSchemaSystem_Helper::CClass *MenuSystem::CSchemaSystem_Helper::GetC
 	return &m_mapClasses[iFound];
 }
 
-MenuSystem::CSchemaSystem_Helper::CClass *MenuSystem::CSchemaSystem_Helper::FindClass(const char *pszName)
+MenuSystem::Schema::CSystem::CClass *MenuSystem::Schema::CSystem::FindClass(const char *pszName)
 {
 	auto sFoundSymbol = FindClassSymbol(pszName);
 
@@ -167,7 +167,7 @@ MenuSystem::CSchemaSystem_Helper::CClass *MenuSystem::CSchemaSystem_Helper::Find
 	return &m_mapClasses[iFound];
 }
 
-int MenuSystem::CSchemaSystem_Helper::FindClassFieldOffset(const char *pszClassName, const char *pszFiledName)
+int MenuSystem::Schema::CSystem::FindClassFieldOffset(const char *pszClassName, const char *pszFiledName)
 {
 	auto *pClass = FindClass(pszClassName);
 
@@ -179,7 +179,7 @@ int MenuSystem::CSchemaSystem_Helper::FindClassFieldOffset(const char *pszClassN
 	return pClass->FindFieldOffset(pszFiledName);
 }
 
-void MenuSystem::CSchemaSystem_Helper::ParseClasses(CSchemaSystemTypeScope *pType)
+void MenuSystem::Schema::CSystem::ParseClasses(CSchemaSystemTypeScope *pType)
 {
 	auto mapDeclaredClasses = pType->m_DeclaredClasses.m_Map;
 
@@ -200,18 +200,18 @@ void MenuSystem::CSchemaSystem_Helper::ParseClasses(CSchemaSystemTypeScope *pTyp
 	}
 }
 
-void MenuSystem::CSchemaSystem_Helper::ClearClasses()
+void MenuSystem::Schema::CSystem::ClearClasses()
 {
 	m_tableClasses.Purge();
 	m_mapClasses.Purge();
 }
 
-CUtlSymbolLarge MenuSystem::CSchemaSystem_Helper::GetClassSymbol(const char *pszName)
+CUtlSymbolLarge MenuSystem::Schema::CSystem::GetClassSymbol(const char *pszName)
 {
 	return m_tableClasses.AddString(pszName);
 }
 
-CUtlSymbolLarge MenuSystem::CSchemaSystem_Helper::FindClassSymbol(const char *pszName) const
+CUtlSymbolLarge MenuSystem::Schema::CSystem::FindClassSymbol(const char *pszName) const
 {
 	return m_tableClasses.Find(pszName);
 }

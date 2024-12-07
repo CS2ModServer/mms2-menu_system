@@ -26,15 +26,17 @@
 
 #	include <menu_system/schema.hpp>
 
-#	include <tier0/dbg.h>
-#	include <tier0/platform.h>
-
 #	define CBODYCOMPONENT_CLASS_NAME "CBodyComponent"
 
 class QAngle;
 class Vector;
-class CBodyComponent;
 class CGameSceneNode;
+
+class CBodyComponent
+{
+public:
+	// ...
+};
 
 namespace MenuSystem
 {
@@ -43,17 +45,17 @@ namespace MenuSystem
 		class CBodyComponent_Helper
 		{
 		public:
-			CBodyComponent_Helper(CSchemaSystem_Helper *pSchemaSystemHelper);
+			CBodyComponent_Helper(CSystem *pSchemaSystemHelper);
 
 		public:
 			void Clear();
 
 		public:
-			FORCEINLINE CGameSceneNode **GetSceneNode(CBodyComponent *pInstance);
+			SCHEMA_COMPONENT_ACCESSOR_METHOD(GetSceneNodeAccessor, CBodyComponent, CGameSceneNode *, m_aOffsets.m_nSceneNode);
 
 		private:
-			CSchemaSystem_Helper::CClass *m_pClass;
-			CSchemaSystem_Helper::CClass::Fields::ListenerCallbacksCollector m_aClassFieldsClassbacks;
+			CSystem::CClass *m_pClass;
+			CSystem::CClass::Fields::ListenerCallbacksCollector m_aClassFieldsClassbacks;
 
 			struct
 			{
@@ -62,12 +64,5 @@ namespace MenuSystem
 		}; // MenuSystem::Schema::CBodyComponent_Helper
 	}; // MenuSystem::Schema
 }; // MenuSystem
-
-FORCEINLINE CGameSceneNode **MenuSystem::Schema::CBodyComponent_Helper::GetSceneNode(CBodyComponent *pInstance)
-{
-	Assert(m_aOffsets.m_nSceneNode != INVALID_SCHEMA_FIELD_OFFSET);
-
-	return reinterpret_cast<CGameSceneNode **>(reinterpret_cast<uintp>(pInstance) + m_aOffsets.m_nSceneNode);
-}
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_BODY_COMPONENT_HPP_

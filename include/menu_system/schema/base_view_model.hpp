@@ -24,10 +24,9 @@
 
 #	pragma once
 
+#	include <menu_system/schema/base_entity.hpp>
 #	include <menu_system/schema.hpp>
 
-#	include <tier0/dbg.h>
-#	include <tier0/platform.h>
 #	include <entity2/entityinstance.h>
 
 #	define CBASEVIEWMODEL_CLASS_NAME "CBaseViewModel"
@@ -36,26 +35,30 @@ class QAngle;
 class Vector;
 class CBodyComponent;
 
-class CBaseViewModel : public CEntityInstance {};
+class CBaseViewModel : public CBaseEntity
+{
+public:
+	// ...
+};
 
 namespace MenuSystem
 {
 	namespace Schema
 	{
-		class CBaseViewModel_Helper
+		class CBaseViewModel_Helper : virtual public CBaseEntity_Helper
 		{
 		public:
-			CBaseViewModel_Helper(CSchemaSystem_Helper *pSchemaSystemHelper);
+			CBaseViewModel_Helper(CSystem *pSchemaSystemHelper);
 
 		public:
 			void Clear();
 
 		public:
-			FORCEINLINE uint *GetViewModelIndex(CBaseViewModel *pInstance);
+			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetViewModelIndexAccessor, CBaseViewModel, uint, m_aOffsets.m_nViewModelIndex);
 
 		private:
-			CSchemaSystem_Helper::CClass *m_pClass;
-			CSchemaSystem_Helper::CClass::Fields::ListenerCallbacksCollector m_aClassFieldsClassbacks;
+			CSystem::CClass *m_pClass;
+			CSystem::CClass::Fields::ListenerCallbacksCollector m_aClassFieldsClassbacks;
 
 			struct
 			{
@@ -64,12 +67,5 @@ namespace MenuSystem
 		}; // MenuSystem::Schema::CBaseViewModel_Helper
 	}; // MenuSystem::Schema
 }; // MenuSystem
-
-FORCEINLINE uint *MenuSystem::Schema::CBaseViewModel_Helper::GetViewModelIndex(CBaseViewModel *pInstance)
-{
-	Assert(m_aOffsets.m_nViewModelIndex != INVALID_SCHEMA_FIELD_OFFSET);
-
-	return reinterpret_cast<uint *>(reinterpret_cast<uintp>(pInstance) + m_aOffsets.m_nViewModelIndex);
-}
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_BASE_VIEW_MODEL_HPP_

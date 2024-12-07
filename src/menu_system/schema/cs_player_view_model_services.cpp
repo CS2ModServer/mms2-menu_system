@@ -23,7 +23,7 @@
 
 #include <schemasystem/schemasystem.h>
 
-MenuSystem::Schema::CCSPlayer_ViewModelServices_Helper::CCSPlayer_ViewModelServices_Helper(CSchemaSystem_Helper *pSchemaSystemHelper)
+MenuSystem::Schema::CCSPlayer_ViewModelServices_Helper::CCSPlayer_ViewModelServices_Helper(CSystem *pSchemaSystemHelper)
 {
 	auto &aCallbacks = m_aClassFieldsClassbacks;
 
@@ -35,7 +35,15 @@ MenuSystem::Schema::CCSPlayer_ViewModelServices_Helper::CCSPlayer_ViewModelServi
 
 	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_hViewModel"), [&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
 	{
-		m_aOffsets.m_nViewModel = pField->m_nSingleInheritanceOffset;
+		m_aOffsets.m_aViewModel.nValue = pField->m_nSingleInheritanceOffset;
+
+		{
+			int nSize {};
+			uint8 nAlignment {};
+
+			pField->m_pType->GetSizeAndAlignment(nSize, nAlignment);
+			m_aOffsets.m_aViewModel.nArraySize = nSize / sizeof(CHandle<CBaseViewModel>);
+		}
 	});
 
 	aFields.AddListener(&aCallbacks);

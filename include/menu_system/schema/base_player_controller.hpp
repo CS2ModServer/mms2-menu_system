@@ -24,37 +24,41 @@
 
 #	pragma once
 
+#	include <menu_system/schema/base_entity.hpp>
 #	include <menu_system/schema.hpp>
 
-#	include <tier0/dbg.h>
-#	include <tier0/platform.h>
 #	include <ehandle.h>
 
 #	define CBASEPLAYERCONTROLLER_CLASS_NAME "CBasePlayerController"
 
 class QAngle;
 class Vector;
-class CBasePlayerController;
 class CBasePlayerPawn;
+
+class CBasePlayerController : public CBaseEntity
+{
+public:
+	// ...
+};
 
 namespace MenuSystem
 {
 	namespace Schema
 	{
-		class CBasePlayerController_Helper
+		class CBasePlayerController_Helper : virtual public CBaseEntity_Helper
 		{
 		public:
-			CBasePlayerController_Helper(CSchemaSystem_Helper *pSchemaSystemHelper);
+			CBasePlayerController_Helper(CSystem *pSchemaSystemHelper);
 
 		public:
 			void Clear();
 
 		public:
-			FORCEINLINE CHandle<CBasePlayerPawn> *GetPawn(CBasePlayerController *pInstance);
+			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetPawnAccessor, CBasePlayerController, CHandle<CBasePlayerPawn>, m_aOffsets.m_nPawn);
 
 		private:
-			CSchemaSystem_Helper::CClass *m_pClass;
-			CSchemaSystem_Helper::CClass::Fields::ListenerCallbacksCollector m_aClassFieldsClassbacks;
+			CSystem::CClass *m_pClass;
+			CSystem::CClass::Fields::ListenerCallbacksCollector m_aClassFieldsClassbacks;
 
 			struct
 			{
@@ -63,12 +67,5 @@ namespace MenuSystem
 		}; // MenuSystem::Schema::CBasePlayerController_Helper
 	}; // MenuSystem::Schema
 }; // MenuSystem
-
-FORCEINLINE CHandle<CBasePlayerPawn> *MenuSystem::Schema::CBasePlayerController_Helper::GetPawn(CBasePlayerController *pInstance)
-{
-	Assert(m_aOffsets.m_nPawn != INVALID_SCHEMA_FIELD_OFFSET);
-
-	return reinterpret_cast<CHandle<CBasePlayerPawn> *>(reinterpret_cast<uintp>(pInstance) + m_aOffsets.m_nPawn);
-}
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_BASE_PLAYER_CONTOLLER_HPP_

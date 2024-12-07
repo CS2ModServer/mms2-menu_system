@@ -24,14 +24,62 @@
 
 #	pragma once
 
+#	include <tier0/dbg.h>
+#	include <tier0/platform.h>
 #	include <tier0/utlstring.h>
 #	include <tier1/utlsymbollarge.h>
 #	include <tier1/utlvector.h>
 #	include <tier1/utlmap.h>
+#	include <entity2/entityinstance.h>
 
 #	include <gamedata.hpp>
 
 #	define INVALID_SCHEMA_FIELD_OFFSET -1
+#	define INVALID_SCHEMA_FIELD_ARRAY_SIZE -1
+
+#	ifdef DEBUG
+#		define SCHEMA_FORCEINLINE
+#	else
+#		define SCHEMA_FORCEINLINE FORCEINLINE
+#	endif
+
+#	define SCHEMA_METHOD_ACCESSOR(methodName, classType, fieldAccessor, fieldType, fieldOffsetVar) \
+	SCHEMA_FORCEINLINE fieldAccessor<fieldType> methodName(classType *pInstance) \
+	{ \
+		Assert(fieldOffsetVar != INVALID_SCHEMA_FIELD_OFFSET); \
+	\
+		return {pInstance, static_cast<uintp>(fieldOffsetVar)}; \
+	}
+
+#	define SCHEMA_METHOD_ACCESSOR2(methodName, classType, fieldAccessor, fieldType, fieldOffsetVar) \
+	SCHEMA_FORCEINLINE fieldAccessor<classType, fieldType> methodName(classType *pComponent) \
+	{ \
+		Assert(fieldOffsetVar != INVALID_SCHEMA_FIELD_OFFSET); \
+	\
+		return {pComponent, static_cast<uintp>(fieldOffsetVar)}; \
+	}
+
+#	define SCHEMA_METHOD_ARRAY_ACCESSOR(methodName, classType, fieldAccessor, fieldType, fieldOffsetVar, fieldSizeVar) \
+	SCHEMA_FORCEINLINE fieldAccessor<fieldType> methodName(classType *pInstance) \
+	{ \
+		Assert(fieldOffsetVar != INVALID_SCHEMA_FIELD_OFFSET); \
+	\
+		return {{pInstance, static_cast<uintp>(fieldOffsetVar)}, static_cast<uintp>(fieldSizeVar)}; \
+	}
+
+#	define SCHEMA_METHOD_ARRAY_ACCESSOR2(methodName, classType, fieldAccessor, fieldType, fieldOffsetVar, fieldSizeVar) \
+	SCHEMA_FORCEINLINE fieldAccessor<classType, fieldType> methodName(classType *pComponent) \
+	{ \
+		Assert(fieldOffsetVar != INVALID_SCHEMA_FIELD_OFFSET); \
+	\
+		return {{pComponent, static_cast<uintp>(fieldOffsetVar)}, static_cast<uintp>(fieldSizeVar)}; \
+	}
+
+#	define SCHEMA_COMPONENT_ACCESSOR_METHOD(methodName, classType, fieldType, fieldOffsetVar) SCHEMA_METHOD_ACCESSOR2(methodName, classType, Accessor::CField, fieldType, fieldOffsetVar)
+#	define SCHEMA_COMPONENT_ARRAY_ACCESSOR_METHOD(methodName, classType, fieldType, fieldOffsetVar, fieldSizeVar) SCHEMA_METHOD_ARRAY_ACCESSOR2(methodName, classType, Accessor::CArrayField, fieldType, fieldOffsetVar, fieldSizeVar)
+
+#	define SCHEMA_INSTANCE_ACCESSOR_METHOD(methodName, classType, fieldType, fieldOffsetVar) SCHEMA_METHOD_ACCESSOR(methodName, classType, Accessor::CInstanceField, fieldType, fieldOffsetVar)
+#	define SCHEMA_INSTANCE_ARRAY_ACCESSOR_METHOD(methodName, classType, fieldType, fieldOffsetVar, fieldSizeVar) SCHEMA_METHOD_ARRAY_ACCESSOR(methodName, classType, Accessor::CInstanceArrayField, fieldType, fieldOffsetVar, fieldSizeVar)
 
 class ISchemaSystem;
 class CSchemaClassInfo;
@@ -41,61 +89,171 @@ struct SchemaClassFieldData_t;
 
 namespace MenuSystem
 {
-	class CSchemaSystem_Helper
+	namespace Schema
 	{
-	public:
-		CSchemaSystem_Helper();
-
-	public:
-		bool Init(ISchemaSystem *pSchemaSystem, const CUtlVector<const char *> &vecLoadedLibraries, GameData::CBufferStringVector *pMessages = nullptr);
-		void Destroy();
-
-	public:
-		class CClass
+		class CSystem
 		{
-			friend class CSchemaSystem_Helper;
+		public:
+			CSystem();
 
 		public:
-			using Fields = GameData::Config::Storage<CUtlSymbolLarge, SchemaClassFieldData_t *>;
+			bool Init(ISchemaSystem *pSchemaSystem, const CUtlVector<const char *> &vecLoadedLibraries, GameData::CBufferStringVector *pMessages = nullptr);
+			void Destroy();
 
-			Fields &GetFields();
+		public:
+			class CClass
+			{
+				friend class CSystem;
 
-			SchemaClassFieldData_t *GetField(const CUtlSymbolLarge &sName) const;
-			void SetField(const CUtlSymbolLarge &sName, SchemaClassFieldData_t *pData);
+			public:
+				using Fields = GameData::Config::Storage<CUtlSymbolLarge, SchemaClassFieldData_t *>;
 
-			SchemaClassFieldData_t *FindField(const char *pszName) const;
-			int FindFieldOffset(const char *pszName) const; // Returns -1 if not found.
+				Fields &GetFields();
+
+				SchemaClassFieldData_t *GetField(const CUtlSymbolLarge &sName) const;
+				void SetField(const CUtlSymbolLarge &sName, SchemaClassFieldData_t *pData);
+
+				SchemaClassFieldData_t *FindField(const char *pszName) const;
+				int FindFieldOffset(const char *pszName) const; // Returns -1 if not found.
+
+			protected:
+				void ParseFields(CSchemaClassInfo *pInfo);
+
+			public: // Fields symbols.
+				CUtlSymbolLarge GetFieldSymbol(const char *pszName);
+				CUtlSymbolLarge FindFieldSymbol(const char *pszName) const;
+
+			private:
+				Fields m_aFieldStorage;
+				CUtlSymbolTableLarge m_tableFileds;
+			};
+
+			CClass *GetClass(const char *pszName);
+			CClass *FindClass(const char *pszName);
+			int FindClassFieldOffset(const char *pszClassName, const char *pszFiledName); // Returns -1 if not found.
 
 		protected:
-			void ParseFields(CSchemaClassInfo *pInfo);
+			void ParseClasses(CSchemaSystemTypeScope *pType);
+			void ClearClasses();
 
-		public: // Fields symbols.
-			CUtlSymbolLarge GetFieldSymbol(const char *pszName);
-			CUtlSymbolLarge FindFieldSymbol(const char *pszName) const;
+		public: // Class symbols.
+			CUtlSymbolLarge GetClassSymbol(const char *pszName);
+			CUtlSymbolLarge FindClassSymbol(const char *pszName) const;
 
 		private:
-			Fields m_aFieldStorage;
-			CUtlSymbolTableLarge m_tableFileds;
-		};
+			CUtlVector<CSchemaSystemTypeScope *> m_vecTypeScopes;
 
-		CClass *GetClass(const char *pszName);
-		CClass *FindClass(const char *pszName);
-		int FindClassFieldOffset(const char *pszClassName, const char *pszFiledName); // Returns -1 if not found.
+			CUtlSymbolTableLarge m_tableClasses;
+			CUtlMap<CUtlSymbolLarge, CClass> m_mapClasses;
+		}; // CClass
 
-	protected:
-		void ParseClasses(CSchemaSystemTypeScope *pType);
-		void ClearClasses();
+		namespace Accessor
+		{
+			template<class T, typename F>
+			class CField
+			{
+			public:
+				FORCEINLINE CField(T *pInitTarget, uintp nInitOffset)
+				:  m_pTarget(pInitTarget), 
+				   m_nOffset(nInitOffset)
+				{
+				}
 
-	public: // Class symbols.
-		CUtlSymbolLarge GetClassSymbol(const char *pszName);
-		CUtlSymbolLarge FindClassSymbol(const char *pszName) const;
+			public:
+				FORCEINLINE operator F()
+				{
+					return GetRef();
+				}
 
-	private:
-		CUtlVector<CSchemaSystemTypeScope *> m_vecTypeScopes;
+				FORCEINLINE F *operator->()
+				{
+					return &GetRef();
+				}
 
-		CUtlSymbolTableLarge m_tableClasses;
-		CUtlMap<CUtlSymbolLarge, CClass> m_mapClasses;
-	}; // CSchemaSystem_Helper
+			protected:
+				FORCEINLINE T *GetTarget()
+				{
+					return m_pTarget;
+				}
+
+				FORCEINLINE uintp GetOffset()
+				{
+					return m_nOffset;
+				}
+
+				FORCEINLINE F &GetRef(uintp nExtraOffset = 0)
+				{
+					return *reinterpret_cast<F *>(reinterpret_cast<uintp>(GetTarget()) + GetOffset() + nExtraOffset);
+				}
+
+				FORCEINLINE F &operator=(const F &aData)
+				{
+					return GetRef() = aData;
+				}
+
+			private:
+				T *m_pTarget;
+				uintp m_nOffset;
+			}; // MenuSystem::Schema::Accessor::CField<T, F>
+
+			template<class T, typename F>
+			class CArrayField : virtual public CField<T, F>
+			{
+			public:
+				using Base = CField<T, F>;
+
+				FORCEINLINE CArrayField(const Base &aInitField, uintp nInitSize)
+				 :  Base(aInitField), 
+				    m_nSize(nInitSize)
+				{
+				}
+
+			public:
+				FORCEINLINE F &operator[](uintp nCell)
+				{
+					Assert(nCell < m_nSize);
+
+					return Base::GetRef(nCell * sizeof(F *));
+				}
+
+			private:
+				uintp m_nSize;
+			}; // MenuSystem::Schema::Accessor::CArrayField<T, F>
+
+			template<typename F>
+			using CInstanceFieldBase = CField<CEntityInstance, F>;
+
+			template<typename F>
+			class CInstanceField : virtual public CInstanceFieldBase<F>
+			{
+			public:
+				using Base = CInstanceFieldBase<F>;
+				using Base::Base;
+				using Base::operator=;
+				using Base::operator->;
+
+			public:
+				FORCEINLINE void MarkNetworkChanged()
+				{
+					Base::GetTarget()->NetworkStateChanged(Base::GetOffset());
+				}
+			}; // MenuSystem::Schema::Accessor::CInstanceField<F>
+
+			template<typename F>
+			using CInstanceArrayFieldBase = CArrayField<CEntityInstance, F>;
+
+			template<typename F>
+			class CInstanceArrayField : public CInstanceArrayFieldBase<F>, virtual public CInstanceField<F>
+			{
+			public:
+				using Base = CInstanceArrayFieldBase<F>;
+				using Base::Base;
+				using Base::operator=;
+				using Base::operator->;
+				using Base::operator[];
+			}; // MenuSystem::Schema::Accessor::CInstanceArrayField<F>
+		}; // MenuSystem::Schema::Accessor
+	}; // MenuSystem::Schema
 }; // MenuSystem
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_HPP_

@@ -23,7 +23,7 @@
 
 #include <schemasystem/schemasystem.h>
 
-MenuSystem::Schema::CBodyComponent_Helper::CBodyComponent_Helper(CSchemaSystem_Helper *pSchemaSystemHelper)
+MenuSystem::Schema::CBodyComponent_Helper::CBodyComponent_Helper(CSystem *pSchemaSystemHelper)
 {
 	auto &aCallbacks = m_aClassFieldsClassbacks;
 

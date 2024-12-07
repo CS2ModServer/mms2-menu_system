@@ -26,15 +26,19 @@
 
 #	include <menu_system/schema.hpp>
 
-#	include <tier0/dbg.h>
-#	include <tier0/platform.h>
+#	include <entity2/entityinstance.h>
 
 #	define CBASEENTITY_CLASS_NAME "CBaseEntity"
 
 class QAngle;
 class Vector;
-class CBaseEntity;
 class CBodyComponent;
+
+class CBaseEntity : public CEntityInstance
+{
+public:
+	// ...
+};
 
 namespace MenuSystem
 {
@@ -43,20 +47,20 @@ namespace MenuSystem
 		class CBaseEntity_Helper
 		{
 		public:
-			CBaseEntity_Helper(CSchemaSystem_Helper *pSchemaSystemHelper);
+			CBaseEntity_Helper(CSystem *pSchemaSystemHelper);
 
 		public:
 			void Clear();
 
 		public:
-			FORCEINLINE CBodyComponent **GetBodyComponent(CBaseEntity *pInstance);
-			FORCEINLINE uint *GetEffects(CBaseEntity *pInstance);
-			FORCEINLINE CBaseEntity **GetOwnerEntity(CBaseEntity *pInstance);
-			FORCEINLINE int *GetEFlags(CBaseEntity *pInstance);
+			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetBodyComponentAccessor, CBaseEntity, CBodyComponent *, m_aOffsets.m_nBodyComponent);
+			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetEffectsAccessor, CBaseEntity, uint, m_aOffsets.m_nEffects);
+			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetOwnerEntityAccessor, CBaseEntity, CBaseEntity *, m_aOffsets.m_nOwnerEntity);
+			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetEFlagsAccessor, CBaseEntity, int, m_aOffsets.m_nEFlags);
 
 		private:
-			CSchemaSystem_Helper::CClass *m_pClass;
-			CSchemaSystem_Helper::CClass::Fields::ListenerCallbacksCollector m_aClassFieldsClassbacks;
+			CSystem::CClass *m_pClass;
+			CSystem::CClass::Fields::ListenerCallbacksCollector m_aClassFieldsClassbacks;
 
 			struct
 			{
@@ -68,33 +72,5 @@ namespace MenuSystem
 		}; // MenuSystem::Schema::CBaseEntity_Helper
 	}; // MenuSystem::Schema
 }; // MenuSystem
-
-FORCEINLINE CBodyComponent **MenuSystem::Schema::CBaseEntity_Helper::GetBodyComponent(CBaseEntity *pInstance)
-{
-	Assert(m_aOffsets.m_nBodyComponent != INVALID_SCHEMA_FIELD_OFFSET);
-
-	return reinterpret_cast<CBodyComponent **>(reinterpret_cast<uintp>(pInstance) + m_aOffsets.m_nBodyComponent);
-}
-
-FORCEINLINE uint *MenuSystem::Schema::CBaseEntity_Helper::GetEffects(CBaseEntity *pInstance)
-{
-	Assert(m_aOffsets.m_nEffects != INVALID_SCHEMA_FIELD_OFFSET);
-
-	return reinterpret_cast<uint *>(reinterpret_cast<uintp>(pInstance) + m_aOffsets.m_nEffects);
-}
-
-FORCEINLINE CBaseEntity **MenuSystem::Schema::CBaseEntity_Helper::GetOwnerEntity(CBaseEntity *pInstance)
-{
-	Assert(m_aOffsets.m_nOwnerEntity != INVALID_SCHEMA_FIELD_OFFSET);
-
-	return reinterpret_cast<CBaseEntity **>(reinterpret_cast<uintp>(pInstance) + m_aOffsets.m_nOwnerEntity);
-}
-
-FORCEINLINE int *MenuSystem::Schema::CBaseEntity_Helper::GetEFlags(CBaseEntity *pInstance)
-{
-	Assert(m_aOffsets.m_nEFlags != INVALID_SCHEMA_FIELD_OFFSET);
-
-	return reinterpret_cast<int *>(reinterpret_cast<uintp>(pInstance) + m_aOffsets.m_nEFlags);
-}
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_BASE_ENTITY_HPP_

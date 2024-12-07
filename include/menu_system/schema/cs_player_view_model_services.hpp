@@ -26,8 +26,6 @@
 
 #	include <menu_system/schema.hpp>
 
-#	include <tier0/dbg.h>
-#	include <tier0/platform.h>
 #	include <ehandle.h>
 
 #	define CCSPLAYER_VIEWMODELSERVICES_CLASS_NAME "CCSPlayer_ViewModelServices"
@@ -44,31 +42,28 @@ namespace MenuSystem
 		class CCSPlayer_ViewModelServices_Helper
 		{
 		public:
-			CCSPlayer_ViewModelServices_Helper(CSchemaSystem_Helper *pSchemaSystemHelper);
+			CCSPlayer_ViewModelServices_Helper(CSystem *pSchemaSystemHelper);
 
 		public:
 			void Clear();
 
 		public:
-			FORCEINLINE CHandle<CBaseViewModel> *GetViewModel(CCSPlayer_ViewModelServices *pInstance, int nIndex = 0);
+			SCHEMA_COMPONENT_ARRAY_ACCESSOR_METHOD(GetViewModelAccessor, CCSPlayer_ViewModelServices, CHandle<CBaseViewModel>, m_aOffsets.m_aViewModel.nValue, m_aOffsets.m_aViewModel.nArraySize);
 
 		private:
-			CSchemaSystem_Helper::CClass *m_pClass;
-			CSchemaSystem_Helper::CClass::Fields::ListenerCallbacksCollector m_aClassFieldsClassbacks;
+			CSystem::CClass *m_pClass;
+			CSystem::CClass::Fields::ListenerCallbacksCollector m_aClassFieldsClassbacks;
 
 			struct
 			{
-				int m_nViewModel = INVALID_SCHEMA_FIELD_OFFSET;
+				struct
+				{
+					int nValue = INVALID_SCHEMA_FIELD_OFFSET;
+					int nArraySize = INVALID_SCHEMA_FIELD_ARRAY_SIZE;
+				} m_aViewModel;
 			} m_aOffsets;
 		}; // MenuSystem::Schema::CCSPlayer_ViewModelServices_Helper
 	}; // MenuSystem::Schema
 }; // MenuSystem
-
-FORCEINLINE CHandle<CBaseViewModel> *MenuSystem::Schema::CCSPlayer_ViewModelServices_Helper::GetViewModel(CCSPlayer_ViewModelServices *pInstance, int nIndex)
-{
-	Assert(m_aOffsets.m_nViewModel != INVALID_SCHEMA_FIELD_OFFSET);
-
-	return &reinterpret_cast<CHandle<CBaseViewModel> *>(reinterpret_cast<uintp>(pInstance) + m_aOffsets.m_nViewModel)[nIndex];
-}
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_CS_PLAYER_VIEW_MODEL_SERVICES_BASE_HPP_

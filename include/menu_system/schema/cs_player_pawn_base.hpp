@@ -24,38 +24,39 @@
 
 #	pragma once
 
+#	include <menu_system/schema/base_model_entity.hpp>
 #	include <menu_system/schema.hpp>
-
-#	include <tier0/dbg.h>
-#	include <tier0/platform.h>
 
 #	define CCSPLAYERPAWNBASE_CLASS_NAME "CCSPlayerPawnBase"
 
 class QAngle;
 class Vector;
-class CCSPlayerPawnBase;
 class CPlayer_ViewModelServices;
 class CCSPlayer_ViewModelServices;
+
+class CCSPlayerPawnBase : public CBaseModelEntity // / public CBasePlayerPawn < public CBaseCombatCharacter < public CBaseFlex < public CBaseAnimGraph < public CBaseModelEntity
+{
+};
 
 namespace MenuSystem
 {
 	namespace Schema
 	{
-		class CCSPlayerPawnBase_Helper
+		class CCSPlayerPawnBase_Helper : virtual public CBaseModelEntity_Helper
 		{
 		public:
-			CCSPlayerPawnBase_Helper(CSchemaSystem_Helper *pSchemaSystemHelper);
+			CCSPlayerPawnBase_Helper(CSystem *pSchemaSystemHelper);
 
 		public:
 			void Clear();
 
 		public:
-			FORCEINLINE CPlayer_ViewModelServices **GetViewModelServices(CCSPlayerPawnBase *pInstance);
-			FORCEINLINE QAngle *GetEyeAngles(CCSPlayerPawnBase *pInstance);
+			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetViewModelServicesAccessor, CCSPlayerPawnBase, CPlayer_ViewModelServices *, m_aOffsets.m_nViewModelServices);
+			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetEyeAnglesAccessor, CCSPlayerPawnBase, QAngle, m_aOffsets.m_nEyeAngles);
 
 		private:
-			CSchemaSystem_Helper::CClass *m_pClass;
-			CSchemaSystem_Helper::CClass::Fields::ListenerCallbacksCollector m_aClassFieldsClassbacks;
+			CSystem::CClass *m_pClass;
+			CSystem::CClass::Fields::ListenerCallbacksCollector m_aClassFieldsClassbacks;
 
 			struct
 			{
@@ -65,19 +66,5 @@ namespace MenuSystem
 		}; // MenuSystem::Schema::CCSPlayerPawnBase_Helper
 	}; // MenuSystem::Schema
 }; // MenuSystem
-
-FORCEINLINE CPlayer_ViewModelServices **MenuSystem::Schema::CCSPlayerPawnBase_Helper::GetViewModelServices(CCSPlayerPawnBase *pInstance)
-{
-	Assert(m_aOffsets.m_nViewModelServices != INVALID_SCHEMA_FIELD_OFFSET);
-
-	return reinterpret_cast<CPlayer_ViewModelServices **>(reinterpret_cast<uintp>(pInstance) + m_aOffsets.m_nViewModelServices);
-}
-
-FORCEINLINE QAngle *MenuSystem::Schema::CCSPlayerPawnBase_Helper::GetEyeAngles(CCSPlayerPawnBase *pInstance)
-{
-	Assert(m_aOffsets.m_nEyeAngles != INVALID_SCHEMA_FIELD_OFFSET);
-
-	return reinterpret_cast<QAngle *>(reinterpret_cast<uintp>(pInstance) + m_aOffsets.m_nEyeAngles);
-}
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_CS_PLAYER_PAWN_BASE_HPP_

@@ -23,7 +23,8 @@
 
 #include <schemasystem/schemasystem.h>
 
-MenuSystem::Schema::CBaseViewModel_Helper::CBaseViewModel_Helper(CSchemaSystem_Helper *pSchemaSystemHelper)
+MenuSystem::Schema::CBaseViewModel_Helper::CBaseViewModel_Helper(CSystem *pSchemaSystemHelper)
+ :  CBaseEntity_Helper(pSchemaSystemHelper)
 {
 	auto &aCallbacks = m_aClassFieldsClassbacks;
 

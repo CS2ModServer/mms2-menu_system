@@ -19,50 +19,22 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_BASE_MODEL_ENTITY_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_BASE_MODEL_ENTITY_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_BASE_PLAYER_PAWN_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_BASE_PLAYER_PAWN_HPP_
 
 #	pragma once
 
 #	include <menu_system/schema/base_entity.hpp>
-#	include <menu_system/schema.hpp>
 
-#	define CBASEMODELENTITY_CLASS_NAME "CBaseModelEntity"
+#	define CBASEPLAYERPAWN_CLASS_NAME "CBasePlayerPawn"
 
 class QAngle;
 class Vector;
 
-class CBaseModelEntity : public CBaseEntity
+class CBasePlayerPawn : public CBaseEntity
 {
 public:
 	// ...
 };
 
-namespace MenuSystem
-{
-	namespace Schema
-	{
-		class CBaseModelEntity_Helper : virtual public CBaseEntity_Helper
-		{
-		public:
-			CBaseModelEntity_Helper(CSystem *pSchemaSystemHelper);
-
-		public:
-			void Clear();
-
-		public:
-			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetViewOffsetAccessor, CBaseModelEntity, Vector, m_aOffsets.m_nViewOffset);
-
-		private:
-			CSystem::CClass *m_pClass;
-			CSystem::CClass::Fields::ListenerCallbacksCollector m_aClassFieldsClassbacks;
-
-			struct
-			{
-				int m_nViewOffset = INVALID_SCHEMA_FIELD_OFFSET;
-			} m_aOffsets;
-		}; // MenuSystem::Schema::CBaseModelEntity_Helper
-	}; // MenuSystem::Schema
-}; // MenuSystem
-
-#endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_BASE_MODEL_ENTITY_HPP_
+#endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_BASE_PLAYER_PAWN_HPP_

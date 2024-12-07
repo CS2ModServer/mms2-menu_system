@@ -23,7 +23,8 @@
 
 #include <schemasystem/schemasystem.h>
 
-MenuSystem::Schema::CBasePlayerController_Helper::CBasePlayerController_Helper(CSchemaSystem_Helper *pSchemaSystemHelper)
+MenuSystem::Schema::CBasePlayerController_Helper::CBasePlayerController_Helper(CSystem *pSchemaSystemHelper)
+ :  CBaseEntity_Helper(pSchemaSystemHelper)
 {
 	auto &aCallbacks = m_aClassFieldsClassbacks;
 
