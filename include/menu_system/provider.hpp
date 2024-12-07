@@ -106,7 +106,7 @@ namespace MenuSystem
 
 				AcceptInput_t *m_pAcceptInputMethod = nullptr;
 				ptrdiff_t m_nTeleportOffset = -1;
-			}; // CBaseEntity
+			}; // MenuSystem::Provider::GameStorage::CBaseEntity
 
 			class CBasePlayerPawn
 			{
@@ -126,7 +126,7 @@ namespace MenuSystem
 
 			private: // Addresses.
 				ptrdiff_t m_nGetEyePositionOffset;
-			}; // CBasePlayerPawn
+			}; // MenuSystem::Provider::GameStorage::CBasePlayerPawn
 
 			class CGameResource
 			{
@@ -146,7 +146,7 @@ namespace MenuSystem
 
 			private: // Offsets.
 				ptrdiff_t m_nEntitySystemOffset = -1;
-			}; // CGameResource
+			}; // MenuSystem::Provider::GameStorage::CGameResource
 
 			class CGameSystem
 			{
@@ -168,7 +168,7 @@ namespace MenuSystem
 			private: // Addresses.
 				CBaseGameSystemFactory **m_ppFirst = nullptr;
 				CGameSystemEventDispatcher **m_ppEventDispatcher = nullptr;
-			}; // CGameSystem
+			}; // MenuSystem::Provider::GameStorage::CGameSystem
 
 			class CSource2Server
 			{
@@ -188,7 +188,7 @@ namespace MenuSystem
 
 			private: // Addresses.
 				CGameEventManager **m_ppGameEventManager = nullptr;
-			}; // CSource2Server
+			}; // MenuSystem::Provider::GameStorage::CSource2Server
 
 			const CBaseEntity &GetBaseEntity() const;
 			const CBasePlayerPawn &GetBasePlayerPawn() const;
@@ -202,7 +202,7 @@ namespace MenuSystem
 			CGameResource m_aGameResource;
 			CGameSystem m_aGameSystem;
 			CSource2Server m_aSource2Server;
-		}; // GameDataStorage
+		}; // MenuSystem::Provider::GameDataStorage
 
 		const GameDataStorage &GetGameDataStorage() const;
 
@@ -217,7 +217,7 @@ namespace MenuSystem
 		DynLibUtils::CModule m_aEngine2Library, 
 		                     m_aFileSystemSTDIOLibrary, 
 		                     m_aServerLibrary;
-	}; // Provider
+	}; // MenuSystem::Provider
 }; // MenuSystem
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_PROVIDER_HPP_

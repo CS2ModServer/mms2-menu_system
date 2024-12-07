@@ -85,7 +85,7 @@ public: // Language ones.
 		 * @return              Returns a country code of a language.
 		 */
 		virtual const char *GetCountryCode() const = 0;
-	}; // ILanguage
+	}; // IMenuSystem::ILanguage
 
 public: // Player ones.
 	using LanguageHandleCallback_t = std::function<void (CPlayerSlot, ILanguage *)>;
@@ -113,7 +113,7 @@ public: // Player ones.
 		 *                      otherwise "false" if not exists.
 		 */
 		virtual bool RemoveLanguageListener(const LanguageHandleCallback_t &fnCallback) = 0;
-	}; // IPlayerLanguageCallbacks
+	}; // IMenuSystem::IPlayerLanguageCallbacks
 
 	/**
 	 * @brief A player language interface.
@@ -135,7 +135,7 @@ public: // Player ones.
 		 * @param pData         A language to set.
 		 */
 		virtual void SetLanguage(const ILanguage *pData) = 0;
-	}; // IPlayerLanguage
+	}; // IMenuSystem::IPlayerLanguage
 
 	/**
 	 * @brief A player data interface.
@@ -149,7 +149,7 @@ public: // Player ones.
 		 * @return              Returns a language, otherwise "nullptr" that not been received.
 		 */
 		virtual const ILanguage *GetLanguage() const = 0;
-	}; // IPlayer
+	}; // IMenuSystem::IPlayer
 
 	/**
 	 * @brief Gets a server language.

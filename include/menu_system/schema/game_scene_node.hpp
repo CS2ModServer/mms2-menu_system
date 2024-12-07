@@ -66,8 +66,8 @@ namespace MenuSystem
 				int m_nAbsRotation = INVALID_SCHEMA_FIELD_OFFSET;
 				int m_nHierarchyAttachName = INVALID_SCHEMA_FIELD_OFFSET;
 			} m_aOffsets;
-		}; // CGameSceneNode_Helper
-	}; // Schema
+		}; // MenuSystem::Schema::CGameSceneNode_Helper
+	}; // MenuSystem::Schema
 }; // MenuSystem
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_GAME_SCENE_NODE_HPP_

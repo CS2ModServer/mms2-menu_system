@@ -67,7 +67,7 @@ namespace MenuSystem
 	private:
 		CUtlSymbolTableLarge_CI m_aSymbolTable;
 		CUtlMap<CUtlSymbolLarge, Callback_t> m_mapCallbacks;
-	}; // ChatCommand
+	}; // MenuSystem::ChatCommand
 }; // MenuSystem
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_CHAT_COMMAND_HPP_
