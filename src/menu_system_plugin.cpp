@@ -42,7 +42,7 @@
 #include <shareddefs.h>
 #include <tier0/commonmacros.h>
 #include <usermessages.pb.h>
-#include <cstrike15_usermessages.pb.h>
+// #include <cstrike15_usermessages.pb.h>
 
 #define EF_MENU EF_BONEMERGE | EF_BRIGHTLIGHT | EF_DIMLIGHT | EF_NOINTERP | EF_NOSHADOW | EF_NODRAW | EF_NORECEIVESHADOW | EF_BONEMERGE_FASTCULL | EF_ITEM_BLINK | EF_PARENT_ANIMATES
 
@@ -233,18 +233,6 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 			{
 				Logger::WarningFormat("Failed to get player entity. Client index is %d\n", iClient);
 			}
-		}
-
-		{
-			bool bIsShow = true;
-
-			KeyValues3 aData;
-
-			aData.FindOrCreateMember("1")->SetString("-");
-			aData.FindOrCreateMember("2")->SetString("-");
-			aData.FindOrCreateMember("3")->SetString("-");
-
-			SendVGUIMenuMessage(&aFilter, "test", &bIsShow, &aData);
 		}
 	});
 
@@ -1421,10 +1409,10 @@ bool MenuSystemPlugin::RegisterNetMessages(char *error, size_t maxlen)
 			"CUserMessageTextMsg",
 			&m_pTextMsgMessage,
 		},
-		{
-			"CCSUsrMsg_VGUIMenu",
-			&m_pVGUIMenuMessage,
-		},
+		// {
+		// 	"CCSUsrMsg_VGUIMenu",
+		// 	&m_pVGUIMenuMessage,
+		// },
 	};
 
 	for(const auto &aMessageInitializer : aMessageInitializers)
@@ -2028,101 +2016,101 @@ void MenuSystemPlugin::SendTextMessage(IRecipientFilter *pFilter, int iDestinati
 	delete pMessage;
 }
 
-void MenuSystemPlugin::SendVGUIMenuMessage(IRecipientFilter *pFilter, const char *pszName, const bool *pIsShow, KeyValues3 *pKeys)
-{
-	auto *pVGUIMenuMsg = m_pVGUIMenuMessage;
+// void MenuSystemPlugin::SendVGUIMenuMessage(IRecipientFilter *pFilter, const char *pszName, const bool *pIsShow, KeyValues3 *pKeys)
+// {
+// 	auto *pVGUIMenuMsg = m_pVGUIMenuMessage;
 
-	if(IsChannelEnabled(LV_DETAILED))
-	{
-		const auto &aConcat = s_aEmbedConcat, 
-		           &aConcat2 = s_aEmbed2Concat;
+// 	if(IsChannelEnabled(LV_DETAILED))
+// 	{
+// 		const auto &aConcat = s_aEmbedConcat, 
+// 		           &aConcat2 = s_aEmbed2Concat;
 
-		CBufferStringGrowable<1024> sBuffer;
+// 		CBufferStringGrowable<1024> sBuffer;
 
-		sBuffer.Format("Send message (%s):\n", pVGUIMenuMsg->GetUnscopedName());
-		aConcat.AppendToBuffer(sBuffer, "Name", pszName ? pszName : "<none>");
+// 		sBuffer.Format("Send message (%s):\n", pVGUIMenuMsg->GetUnscopedName());
+// 		aConcat.AppendToBuffer(sBuffer, "Name", pszName ? pszName : "<none>");
 
-		if(pIsShow)
-		{
-			aConcat.AppendToBuffer(sBuffer, "Show", *pIsShow);
-		}
-		else
-		{
-			aConcat.AppendToBuffer(sBuffer, "Show", "<none>");
-		}
+// 		if(pIsShow)
+// 		{
+// 			aConcat.AppendToBuffer(sBuffer, "Show", *pIsShow);
+// 		}
+// 		else
+// 		{
+// 			aConcat.AppendToBuffer(sBuffer, "Show", "<none>");
+// 		}
 
-		if(pKeys)
-		{
-			int iMemberCount = pKeys->GetMemberCount();
+// 		if(pKeys)
+// 		{
+// 			int iMemberCount = pKeys->GetMemberCount();
 
-			if(iMemberCount)
-			{
-				aConcat.AppendToBuffer(sBuffer, "Keys");
+// 			if(iMemberCount)
+// 			{
+// 				aConcat.AppendToBuffer(sBuffer, "Keys");
 
-				KV3MemberId_t i = 0;
+// 				KV3MemberId_t i = 0;
 
-				do
-				{
-					KeyValues3 *pMember = pKeys->GetMember(i);
-					aConcat2.AppendToBuffer(sBuffer, "name", pKeys->GetMemberName(i));
-					aConcat2.AppendToBuffer(sBuffer, "value", pMember->GetString());
+// 				do
+// 				{
+// 					KeyValues3 *pMember = pKeys->GetMember(i);
+// 					aConcat2.AppendToBuffer(sBuffer, "name", pKeys->GetMemberName(i));
+// 					aConcat2.AppendToBuffer(sBuffer, "value", pMember->GetString());
 
-					i++;
-				}
-				while(i < iMemberCount);
-			}
-			else
-			{
-				aConcat.AppendToBuffer(sBuffer, "Keys", "<no members>");
-			}
-		}
-		else
-		{
-			aConcat.AppendToBuffer(sBuffer, "Keys", "<none>");
-		}
+// 					i++;
+// 				}
+// 				while(i < iMemberCount);
+// 			}
+// 			else
+// 			{
+// 				aConcat.AppendToBuffer(sBuffer, "Keys", "<no members>");
+// 			}
+// 		}
+// 		else
+// 		{
+// 			aConcat.AppendToBuffer(sBuffer, "Keys", "<none>");
+// 		}
 
-		Logger::Detailed(sBuffer);
-	}
+// 		Logger::Detailed(sBuffer);
+// 	}
 
-	auto *pMessage = pVGUIMenuMsg->AllocateMessage()->ToPB<CCSUsrMsg_VGUIMenu>();
+// 	auto *pMessage = pVGUIMenuMsg->AllocateMessage()->ToPB<CCSUsrMsg_VGUIMenu>();
 
-	if(pszName)
-	{
-		pMessage->set_name(pszName);
-	}
+// 	if(pszName)
+// 	{
+// 		pMessage->set_name(pszName);
+// 	}
 
-	if(pIsShow)
-	{
-		pMessage->set_show(*pIsShow);
-	}
+// 	if(pIsShow)
+// 	{
+// 		pMessage->set_show(*pIsShow);
+// 	}
 
-	if(pKeys)
-	{
-		int iMemberCount = pKeys->GetMemberCount();
+// 	if(pKeys)
+// 	{
+// 		int iMemberCount = pKeys->GetMemberCount();
 
-		if(iMemberCount)
-		{
-			KV3MemberId_t i = 0;
+// 		if(iMemberCount)
+// 		{
+// 			KV3MemberId_t i = 0;
 
-			do
-			{
-				KeyValues3 *pMember = pKeys->GetMember(i);
+// 			do
+// 			{
+// 				KeyValues3 *pMember = pKeys->GetMember(i);
 
-				auto *pMessageKeys = pMessage->add_keys();
+// 				auto *pMessageKeys = pMessage->add_keys();
 
-				pMessageKeys->set_name(pKeys->GetMemberName(i));
-				pMessageKeys->set_value(pMember->GetString());
+// 				pMessageKeys->set_name(pKeys->GetMemberName(i));
+// 				pMessageKeys->set_value(pMember->GetString());
 
-				i++;
-			}
-			while(i < iMemberCount);
-		}
-	}
+// 				i++;
+// 			}
+// 			while(i < iMemberCount);
+// 		}
+// 	}
 
-	g_pGameEventSystem->PostEventAbstract(-1, false, pFilter, pVGUIMenuMsg, pMessage, 0);
+// 	g_pGameEventSystem->PostEventAbstract(-1, false, pFilter, pVGUIMenuMsg, pMessage, 0);
 
-	delete pMessage;
-}
+// 	delete pMessage;
+// }
 
 void MenuSystemPlugin::OnStartupServer(CNetworkGameServerBase *pNetServer, const GameSessionConfiguration_t &config, ISource2WorldSession *pWorldSession)
 {

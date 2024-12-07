@@ -287,7 +287,7 @@ public: // Utils.
 	void SendCvarValueQuery(IRecipientFilter *pFilter, const char *pszName, int iCookie);
 	void SendChatMessage(IRecipientFilter *pFilter, int iEntityIndex, bool bIsChat, const char *pszChatMessageFormat, const char *pszParam1 = "", const char *pszParam2 = "", const char *pszParam3 = "", const char *pszParam4 = "");
 	void SendTextMessage(IRecipientFilter *pFilter, int iDestination, size_t nParamCount, const char *pszParam, ...);
-	void SendVGUIMenuMessage(IRecipientFilter *pFilter, const char *pszName = nullptr, const bool *pIsShow = nullptr, KeyValues3 *pKeys = nullptr);
+	// void SendVGUIMenuMessage(IRecipientFilter *pFilter, const char *pszName = nullptr, const bool *pIsShow = nullptr, KeyValues3 *pKeys = nullptr);
 
 protected: // Handlers.
 	void OnStartupServer(CNetworkGameServerBase *pNetServer, const GameSessionConfiguration_t &config, ISource2WorldSession *pWorldSession);
@@ -330,7 +330,7 @@ private: // Fields.
 	INetworkMessageInternal *m_pGetCvarValueMessage = NULL;
 	INetworkMessageInternal *m_pSayText2Message = NULL;
 	INetworkMessageInternal *m_pTextMsgMessage = NULL;
-	INetworkMessageInternal *m_pVGUIMenuMessage = NULL;
+	// INetworkMessageInternal *m_pVGUIMenuMessage = NULL;
 
 	CUtlVector<CUtlString> m_vecGameEvents;
 
