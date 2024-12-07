@@ -213,7 +213,7 @@ namespace MenuSystem
 				{
 					Assert(nCell < m_nSize);
 
-					return Base::GetRef(nCell * sizeof(F *));
+					return Base::GetRef(nCell * sizeof(F));
 				}
 
 			private:

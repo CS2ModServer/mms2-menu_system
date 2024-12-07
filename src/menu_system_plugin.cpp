@@ -947,7 +947,7 @@ void MenuSystemPlugin::GetMenuEntitiesPosition(const Vector &vecOrigin, const QA
 	const QAngle angCorrect = {angRotation.x + 16.f, angRotation.y + 53.f, 90.f};
 
 	vecResult = AddToFrontByRotation(vecOrigin, angCorrect, 16.f);
-	vecBackgroundResult = AddToFrontByRotation(vecResult, angCorrect, 0.03125f);
+	vecBackgroundResult = AddToFrontByRotation(vecResult, angCorrect, 0.125f);
 	angResult = {0.f, angRotation.y - 90.f, -angRotation.x + 90.f};
 }
 
@@ -1155,7 +1155,7 @@ bool MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, 
 
 	auto aParentVariant = variant_t("!activator");
 
-	CHandle<CBaseViewModel> hPlayerViewModel = CCSPlayer_ViewModelServices_Helper::GetViewModelAccessor(pCSPlayerViewModelServices)[s_nExtraViewModelSlot];
+	CHandle<CBaseViewModel> &hPlayerViewModel = CCSPlayer_ViewModelServices_Helper::GetViewModelAccessor(pCSPlayerViewModelServices)[s_nExtraViewModelSlot];
 
 	CBaseViewModel *pPlayerViewModel = hPlayerViewModel.Get();
 
