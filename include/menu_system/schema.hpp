@@ -63,6 +63,7 @@
 	SCHEMA_FORCEINLINE fieldAccessor<fieldType> methodName(classType *pInstance) \
 	{ \
 		Assert(fieldOffsetVar != INVALID_SCHEMA_FIELD_OFFSET); \
+		Assert(fieldSizeVar != INVALID_SCHEMA_FIELD_ARRAY_SIZE); \
 	\
 		return {{pInstance, static_cast<uintp>(fieldOffsetVar)}, static_cast<uintp>(fieldSizeVar)}; \
 	}
@@ -71,6 +72,7 @@
 	SCHEMA_FORCEINLINE fieldAccessor<classType, fieldType> methodName(classType *pComponent) \
 	{ \
 		Assert(fieldOffsetVar != INVALID_SCHEMA_FIELD_OFFSET); \
+		Assert(fieldSizeVar != INVALID_SCHEMA_FIELD_ARRAY_SIZE); \
 	\
 		return {{pComponent, static_cast<uintp>(fieldOffsetVar)}, static_cast<uintp>(fieldSizeVar)}; \
 	}

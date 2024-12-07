@@ -24,7 +24,7 @@
 
 #	pragma once
 
-#	include <menu_system/schema/base_model_entity.hpp>
+#	include <menu_system/schema/base_player_pawn.hpp>
 #	include <menu_system/schema.hpp>
 
 #	define CCSPLAYERPAWNBASE_CLASS_NAME "CCSPlayerPawnBase"
@@ -34,7 +34,7 @@ class Vector;
 class CPlayer_ViewModelServices;
 class CCSPlayer_ViewModelServices;
 
-class CCSPlayerPawnBase : public CBaseModelEntity // / public CBasePlayerPawn < public CBaseCombatCharacter < public CBaseFlex < public CBaseAnimGraph < public CBaseModelEntity
+class CCSPlayerPawnBase : public CBasePlayerPawn
 {
 };
 

@@ -24,14 +24,14 @@
 
 #	pragma once
 
-#	include <menu_system/schema/base_entity.hpp>
+#	include <menu_system/schema/base_model_entity.hpp>
 
 #	define CBASEPLAYERPAWN_CLASS_NAME "CBasePlayerPawn"
 
 class QAngle;
 class Vector;
 
-class CBasePlayerPawn : public CBaseEntity
+class CBasePlayerPawn : public CBaseModelEntity  // / public CBaseCombatCharacter < public CBaseFlex < public CBaseAnimGraph < public CBaseModelEntity
 {
 public:
 	// ...
