@@ -125,7 +125,7 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 		return false;
 	}
 
-	if(IsChannelEnabled(LS_DETAILED))
+	if(Logger::IsChannelEnabled(LS_DETAILED))
 	{
 		CBufferStringGrowable<1024> sMessage;
 
@@ -155,7 +155,7 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 		return false;
 	}
 
-	if(IsChannelEnabled(LS_DETAILED))
+	if(Logger::IsChannelEnabled(LS_DETAILED))
 	{
 		CBufferStringGrowable<1024> sMessage;
 
@@ -449,7 +449,7 @@ MenuSystemPlugin::CPlayer &MenuSystemPlugin::GetPlayerData(const CPlayerSlot &aS
 
 bool MenuSystemPlugin::Init()
 {
-	if(IsChannelEnabled(LS_DETAILED))
+	if(Logger::IsChannelEnabled(LS_DETAILED))
 	{
 		Logger::DetailedFormat("%s\n", __FUNCTION__);
 	}
@@ -459,7 +459,7 @@ bool MenuSystemPlugin::Init()
 
 void MenuSystemPlugin::PostInit()
 {
-	if(IsChannelEnabled(LS_DETAILED))
+	if(Logger::IsChannelEnabled(LS_DETAILED))
 	{
 		Logger::DetailedFormat("%s\n", __FUNCTION__);
 	}
@@ -467,7 +467,7 @@ void MenuSystemPlugin::PostInit()
 
 void MenuSystemPlugin::Shutdown()
 {
-	if(IsChannelEnabled(LS_DETAILED))
+	if(Logger::IsChannelEnabled(LS_DETAILED))
 	{
 		Logger::DetailedFormat("%s\n", __FUNCTION__);
 	}
@@ -532,7 +532,7 @@ void MenuSystemPlugin::FireGameEvent(IGameEvent *event)
 			return;
 		}
 
-		if(IsChannelEnabled(LS_DETAILED))
+		if(Logger::IsChannelEnabled(LS_DETAILED))
 		{
 			int iMemberCount = pEventDataKeys->GetMemberCount();
 
@@ -576,7 +576,7 @@ void MenuSystemPlugin::FireGameEvent(IGameEvent *event)
 
 void MenuSystemPlugin::OnSpawnGroupAllocated(SpawnGroupHandle_t hSpawnGroup, ISpawnGroup *pSpawnGroup)
 {
-	if(Logger::IsChannelEnabled(LV_DETAILED))
+	if(Logger::Logger::IsChannelEnabled(LV_DETAILED))
 	{
 		Logger::DetailedFormat("%s(hSpawnGroup = %d, pSpawnGroup = %p)\n", __FUNCTION__, hSpawnGroup, pSpawnGroup);
 	}
@@ -586,7 +586,7 @@ void MenuSystemPlugin::OnSpawnGroupAllocated(SpawnGroupHandle_t hSpawnGroup, ISp
 
 void MenuSystemPlugin::OnSpawnGroupInit(SpawnGroupHandle_t hSpawnGroup, IEntityResourceManifest *pManifest, IEntityPrecacheConfiguration *pConfig, ISpawnGroupPrerequisiteRegistry *pRegistry)
 {
-	if(Logger::IsChannelEnabled(LV_DETAILED))
+	if(Logger::Logger::IsChannelEnabled(LV_DETAILED))
 	{
 		Logger::DetailedFormat("%s(hSpawnGroup = %d, pManifest = %p, pConfig = %p, pRegistry = %p)\n", __FUNCTION__, hSpawnGroup, pManifest, pConfig, pRegistry);
 	}
@@ -599,7 +599,7 @@ void MenuSystemPlugin::OnSpawnGroupInit(SpawnGroupHandle_t hSpawnGroup, IEntityR
 
 void MenuSystemPlugin::OnSpawnGroupCreateLoading(SpawnGroupHandle_t hSpawnGroup, CMapSpawnGroup *pMapSpawnGroup, bool bSynchronouslySpawnEntities, bool bConfirmResourcesLoaded, CUtlVector<const CEntityKeyValues *> &vecKeyValues)
 {
-	if(Logger::IsChannelEnabled(LV_DETAILED))
+	if(Logger::Logger::IsChannelEnabled(LV_DETAILED))
 	{
 		Logger::DetailedFormat("%s(hSpawnGroup = %d, pMapSpawnGroup = %p, bSynchronouslySpawnEntities = %s, bConfirmResourcesLoaded = %s, &vecKeyValues = %p)\n", __FUNCTION__, hSpawnGroup, pMapSpawnGroup, bSynchronouslySpawnEntities ? "true" : "false", bConfirmResourcesLoaded ? "true" : "false", &vecKeyValues);
 	}
@@ -641,7 +641,7 @@ bool MenuSystemPlugin::InitProvider(char *error, size_t maxlen)
 
 	if(vecMessages.Count())
 	{
-		if(IsChannelEnabled(LS_WARNING))
+		if(Logger::IsChannelEnabled(LS_WARNING))
 		{
 			auto aWarnings = Logger::CreateWarningsScope();
 
@@ -678,7 +678,7 @@ bool MenuSystemPlugin::LoadProvider(char *error, size_t maxlen)
 
 	if(vecMessages.Count())
 	{
-		if(IsChannelEnabled(LS_WARNING))
+		if(Logger::IsChannelEnabled(LS_WARNING))
 		{
 			auto aWarnings = Logger::CreateWarningsScope();
 
@@ -715,7 +715,7 @@ bool MenuSystemPlugin::UnloadProvider(char *error, size_t maxlen)
 
 	if(vecMessages.Count())
 	{
-		if(IsChannelEnabled(LS_WARNING))
+		if(Logger::IsChannelEnabled(LS_WARNING))
 		{
 			auto aWarnings = Logger::CreateWarningsScope();
 
@@ -764,7 +764,7 @@ bool MenuSystemPlugin::InitSchema(char *error, size_t maxlen)
 
 	if(vecMessages.Count())
 	{
-		if(IsChannelEnabled(LS_WARNING))
+		if(Logger::IsChannelEnabled(LS_WARNING))
 		{
 			auto aWarnings = Logger::CreateWarningsScope();
 
@@ -855,7 +855,7 @@ bool MenuSystemPlugin::UnloadEntityManager(char *error, size_t maxlen)
 
 bool MenuSystemPlugin::LoadMenuSpawnGroups(const Vector &aWorldOrigin)
 {
-	if(IsChannelEnabled(LS_DETAILED))
+	if(Logger::IsChannelEnabled(LS_DETAILED))
 	{
 		Logger::DetailedFormat("%s\n", __FUNCTION__);
 	}
@@ -964,7 +964,7 @@ void MenuSystemPlugin::GetMenuEntitiesPositionByPlayer(CBasePlayerPawn *pPlayerP
 
 void MenuSystemPlugin::SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKeyValues, IEntityManager::IProviderAgent::IEntityListener *pListener, CUtlVector<CEntityInstance *> *pEntities)
 {
-	if(Logger::IsChannelEnabled(LS_DETAILED))
+	if(Logger::Logger::IsChannelEnabled(LS_DETAILED))
 	{
 		Logger::DetailedFormat("%s\n", __FUNCTION__);
 	}
@@ -988,7 +988,7 @@ void MenuSystemPlugin::SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKe
 
 		if(vecDetails.Count())
 		{
-			if(IsChannelEnabled(LS_DETAILED))
+			if(Logger::IsChannelEnabled(LS_DETAILED))
 			{
 				auto aDetails = Logger::CreateDetailsScope();
 
@@ -1006,7 +1006,7 @@ void MenuSystemPlugin::SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKe
 
 		if(vecWarnings.Count())
 		{
-			if(IsChannelEnabled(LS_WARNING))
+			if(Logger::IsChannelEnabled(LS_WARNING))
 			{
 				auto aWarnings = Logger::CreateWarningsScope();
 
@@ -1126,7 +1126,7 @@ CBaseViewModel *MenuSystemPlugin::SpawnViewModelEntity(const Vector &vecOrigin, 
 	public:
 		void OnEntityCreated(CEntityInstance *pEntity, CEntityKeyValues *pKeyValues)
 		{
-			if(m_pPlugin->IsChannelEnabled(LV_DETAILED))
+			if(m_pPlugin->Logger::IsChannelEnabled(LV_DETAILED))
 			{
 				m_pPlugin->MessageFormat("Setting up \"%s\" entity\n", pEntity->GetClassname());
 			}
@@ -1196,7 +1196,7 @@ bool MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, 
 
 	GetMenuEntitiesPositionByPlayer(pPlayerPawn, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 
-	if(IsChannelEnabled(LV_DETAILED))
+	if(Logger::IsChannelEnabled(LV_DETAILED))
 	{
 		Logger::DetailedFormat("Menus spawns at %.0f %.0f %.0f (%.0f %.0f %.0f)\n", vecMenuAbsOrigin.x, vecMenuAbsOrigin.y, vecMenuAbsOrigin.z, 
 		                                                                            angMenuRotation.x, angMenuRotation.y, angMenuRotation.z);
@@ -1212,7 +1212,7 @@ bool MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, 
 		aBaseEntity.AcceptInput(pExtraPlayerViewModel, "FollowEntity", pPlayerPawn, NULL, &aParentVariant, 0);
 	}
 
-	if(IsChannelEnabled(LV_DETAILED))
+	if(Logger::IsChannelEnabled(LV_DETAILED))
 	{
 		Logger::DetailedFormat("Player view model: \"%s\" (%d)\n", pPlayerViewModel->GetClassname(), pPlayerViewModel->GetEntityIndex().Get());
 	}
@@ -1825,7 +1825,7 @@ void MenuSystemPlugin::OnMenuSelectCommand(const CCommandContext &context, const
 
 void MenuSystemPlugin::OnDispatchConCommandHook(ConCommandHandle hCommand, const CCommandContext &aContext, const CCommand &aArgs)
 {
-	if(IsChannelEnabled(LV_DETAILED))
+	if(Logger::IsChannelEnabled(LV_DETAILED))
 	{
 		Logger::DetailedFormat("%s(%d, %d, %s)\n", __FUNCTION__, hCommand.GetIndex(), aContext.GetPlayerSlot().Get(), aArgs.GetCommandString());
 	}
@@ -1881,7 +1881,7 @@ void MenuSystemPlugin::OnDispatchConCommandHook(ConCommandHandle hCommand, const
 						sArg.Trim(' ');
 					}
 
-					if(IsChannelEnabled(LV_DETAILED))
+					if(Logger::IsChannelEnabled(LV_DETAILED))
 					{
 						const auto &aConcat = s_aEmbedConcat, 
 						           &aConcat2 = s_aEmbed2Concat;
@@ -1971,7 +1971,7 @@ void MenuSystemPlugin::SendChatMessage(IRecipientFilter *pFilter, int iEntityInd
 {
 	auto *pSayText2Message = m_pSayText2Message;
 
-	if(IsChannelEnabled(LV_DETAILED))
+	if(Logger::IsChannelEnabled(LV_DETAILED))
 	{
 		const auto &aConcat = s_aEmbedConcat;
 
@@ -2024,7 +2024,7 @@ void MenuSystemPlugin::SendTextMessage(IRecipientFilter *pFilter, int iDestinati
 {
 	auto *pTextMsg = m_pTextMsgMessage;
 
-	if(IsChannelEnabled(LV_DETAILED))
+	if(Logger::IsChannelEnabled(LV_DETAILED))
 	{
 		const auto &aConcat = s_aEmbedConcat;
 
@@ -2071,7 +2071,7 @@ void MenuSystemPlugin::SendTextMessage(IRecipientFilter *pFilter, int iDestinati
 // {
 // 	auto *pVGUIMenuMsg = m_pVGUIMenuMessage;
 
-// 	if(IsChannelEnabled(LV_DETAILED))
+// 	if(Logger::IsChannelEnabled(LV_DETAILED))
 // 	{
 // 		const auto &aConcat = s_aEmbedConcat, 
 // 		           &aConcat2 = s_aEmbed2Concat;
