@@ -25,8 +25,9 @@
 
 #include <stdint.h>
 
-#include <string>
 #include <exception>
+#include <functional>
+#include <string>
 
 #include <any_config.hpp>
 
@@ -903,8 +904,8 @@ void MenuSystemPlugin::FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV, const 
 	pMenuKV->SetBool("enabled", true);
 	pMenuKV->SetBool("fullbright", true);
 	pMenuKV->SetColor("color", rgbaColor);
-	pMenuKV->SetFloat("world_units_per_pixel", 0.0125f);
-	pMenuKV->SetInt("font_size", 175);
+	pMenuKV->SetFloat("world_units_per_pixel", 0.025f);
+	pMenuKV->SetInt("font_size", 80);
 	pMenuKV->SetString("font_name", pszFontName);
 	pMenuKV->SetInt("justify_horizontal", 0);
 	pMenuKV->SetInt("justify_vertical", 0);
@@ -923,9 +924,11 @@ void MenuSystemPlugin::FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV, const 
 	pMenuKV->SetString("message", pszMessageText);
 }
 
-void MenuSystemPlugin::FillViewModelEntityKeyValues(CEntityKeyValues *pEntityKV)
+void MenuSystemPlugin::FillViewModelEntityKeyValues(CEntityKeyValues *pEntityKV, const Vector &vecOrigin, const QAngle &angRotation)
 {
 	pEntityKV->SetString("classname", "viewmodel");
+	pEntityKV->SetVector("origin", vecOrigin);
+	pEntityKV->SetQAngle("angles", angRotation);
 }
 
 Vector MenuSystemPlugin::GetEntityPosition(CBaseEntity *pEntity, QAngle *pRotation)
@@ -947,7 +950,7 @@ void MenuSystemPlugin::GetMenuEntitiesPosition(const Vector &vecOrigin, const QA
 	const QAngle angCorrect = {angRotation.x + 16.f, angRotation.y + 53.f, 90.f};
 
 	vecResult = AddToFrontByRotation(vecOrigin, angCorrect, 16.f);
-	vecBackgroundResult = AddToFrontByRotation(vecResult, angCorrect, 0.125f);
+	vecBackgroundResult = AddToFrontByRotation(vecResult, angCorrect, 0.04f);
 	angResult = {0.f, angRotation.y - 90.f, -angRotation.x + 90.f};
 }
 
@@ -959,7 +962,7 @@ void MenuSystemPlugin::GetMenuEntitiesPositionByPlayer(CBasePlayerPawn *pPlayerP
 	GetMenuEntitiesPosition(vecResult, angResult, vecBackgroundResult, vecResult, angResult);
 }
 
-void MenuSystemPlugin::SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKeyValues, CUtlVector<CEntityInstance *> *pEntities)
+void MenuSystemPlugin::SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKeyValues, IEntityManager::IProviderAgent::IEntityListener *pListener, CUtlVector<CEntityInstance *> *pEntities)
 {
 	if(Logger::IsChannelEnabled(LS_DETAILED))
 	{
@@ -981,7 +984,7 @@ void MenuSystemPlugin::SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKe
 		CUtlVector<CUtlString> vecDetails, 
 		                       vecWarnings;
 
-		m_pEntityManagerProviderAgent->ExecuteSpawnQueued(hSpawnGroup, pEntities, &vecDetails, &vecWarnings);
+		m_pEntityManagerProviderAgent->ExecuteSpawnQueued(hSpawnGroup, pListener, pEntities, &vecDetails, &vecWarnings);
 
 		if(vecDetails.Count())
 		{
@@ -1084,7 +1087,7 @@ void MenuSystemPlugin::SpawnMenuEntities(const Vector &vecBackgroundOrigin, cons
 	vecKeyValues.AddToTail(pMenuKV2);
 	vecKeyValues.AddToTail(pMenuKV3);
 
-	SpawnEntities(vecKeyValues, pEntities);
+	SpawnEntities(vecKeyValues, nullptr, pEntities);
 }
 
 void MenuSystemPlugin::SpawnMenuEntitiesByPlayer(CBasePlayerPawn *pPlayerPawn, CUtlVector<CEntityInstance *> *pEntities)
@@ -1098,7 +1101,7 @@ void MenuSystemPlugin::SpawnMenuEntitiesByPlayer(CBasePlayerPawn *pPlayerPawn, C
 	SpawnMenuEntities(vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation, pEntities);
 }
 
-CBaseViewModel *MenuSystemPlugin::SpawnViewModelEntity()
+CBaseViewModel *MenuSystemPlugin::SpawnViewModelEntity(const Vector &vecOrigin, const QAngle &angRotation, CBaseEntity *pOwner, const int nSlot)
 {
 	const SpawnGroupHandle_t hSpawnGroup = m_pMySpawnGroupInstance->GetSpawnGroupHandle();
 
@@ -1110,9 +1113,36 @@ CBaseViewModel *MenuSystemPlugin::SpawnViewModelEntity()
 
 	CUtlVector<CEntityInstance *> vecEntities;
 
-	FillViewModelEntityKeyValues(pViewModelKV);
+	class CViewModelEntityListener : public IEntityManager::IProviderAgent::IEntityListener
+	{
+	public:
+		CViewModelEntityListener(MenuSystemPlugin *pInitPlugin, CBaseEntity *pInitOwner, const int nInitSlot)
+		 :  m_pPlugin(pInitPlugin),
+		    m_pOwner(pInitOwner),
+		    m_nSlot(nInitSlot)
+		{
+		}
+
+	public:
+		void OnEntityCreated(CEntityInstance *pEntity, CEntityKeyValues *pKeyValues)
+		{
+			if(m_pPlugin->IsChannelEnabled(LV_DETAILED))
+			{
+				m_pPlugin->MessageFormat("Setting up \"%s\" entity\n", pEntity->GetClassname());
+			}
+
+			m_pPlugin->SettingExtraPlayerViewModel(reinterpret_cast<CBaseViewModel *>(pEntity), m_pOwner, m_nSlot);
+		}
+
+	private:
+		MenuSystemPlugin *m_pPlugin;
+		CBaseEntity *m_pOwner;
+		const int m_nSlot;
+	} aViewModelSetup(this, pOwner, nSlot);
+
+	FillViewModelEntityKeyValues(pViewModelKV, vecOrigin, angRotation);
 	vecKeyValues.AddToTail(pViewModelKV);
-	SpawnEntities(vecKeyValues, &vecEntities);
+	SpawnEntities(vecKeyValues, &aViewModelSetup, &vecEntities);
 
 	return reinterpret_cast<CBaseViewModel *>(vecEntities[0]);
 }
@@ -1159,23 +1189,6 @@ bool MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, 
 
 	CBaseViewModel *pPlayerViewModel = hPlayerViewModel.Get();
 
-	if(!pPlayerViewModel)
-	{
-		auto *pExtraPlayerViewModel = SpawnViewModelEntity();
-
-		hPlayerViewModel.Set(pExtraPlayerViewModel);
-		pPlayerViewModel = pExtraPlayerViewModel;
-
-		SettingExtraPlayerViewModel(pExtraPlayerViewModel, pPlayerPawn, s_nExtraViewModelSlot);
-
-		aBaseEntity.AcceptInput(pExtraPlayerViewModel, "FollowEntity", pPlayerPawn, NULL, &aParentVariant, 0);
-	}
-
-	if(IsChannelEnabled(LV_DETAILED))
-	{
-		Logger::DetailedFormat("Player view model: \"%s\" (%d)\n", pPlayerViewModel->GetClassname(), pPlayerViewModel->GetEntityIndex().Get());
-	}
-
 	Vector vecMenuAbsOriginBackground {},
 	       vecMenuAbsOrigin {};
 
@@ -1187,6 +1200,21 @@ bool MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, 
 	{
 		Logger::DetailedFormat("Menus spawns at %.0f %.0f %.0f (%.0f %.0f %.0f)\n", vecMenuAbsOrigin.x, vecMenuAbsOrigin.y, vecMenuAbsOrigin.z, 
 		                                                                            angMenuRotation.x, angMenuRotation.y, angMenuRotation.z);
+	}
+
+	if(!pPlayerViewModel)
+	{
+		auto *pExtraPlayerViewModel = SpawnViewModelEntity(vecMenuAbsOrigin, angMenuRotation, pPlayerPawn, s_nExtraViewModelSlot);
+
+		hPlayerViewModel.Set(pExtraPlayerViewModel);
+		pPlayerViewModel = pExtraPlayerViewModel;
+
+		aBaseEntity.AcceptInput(pExtraPlayerViewModel, "FollowEntity", pPlayerPawn, NULL, &aParentVariant, 0);
+	}
+
+	if(IsChannelEnabled(LV_DETAILED))
+	{
+		Logger::DetailedFormat("Player view model: \"%s\" (%d)\n", pPlayerViewModel->GetClassname(), pPlayerViewModel->GetEntityIndex().Get());
 	}
 
 	FOR_EACH_VEC(vecEntities, i)
@@ -1204,9 +1232,26 @@ bool MenuSystemPlugin::SettingExtraPlayerViewModel(CBaseViewModel *pViewEntity, 
 {
 	CBaseEntity *pEntity = reinterpret_cast<CBaseEntity *>(pViewEntity);
 
-	CBaseViewModel_Helper::GetViewModelIndexAccessor(pViewEntity) = nSlot;
-	CBaseEntity_Helper::GetOwnerEntityAccessor(pEntity) = pOwner;
-	CBaseEntity_Helper::GetEFlagsAccessor(pEntity) = EF_NODRAW;
+	{
+		auto aViewModelIndexAccessor = CBaseViewModel_Helper::GetViewModelIndexAccessor(pViewEntity);
+
+		aViewModelIndexAccessor = nSlot;
+		aViewModelIndexAccessor.MarkNetworkChanged();
+	}
+
+	{
+		auto aOwnerEntityAccessor = CBaseEntity_Helper::GetOwnerEntityAccessor(pViewEntity);
+
+		aOwnerEntityAccessor = pOwner;
+		aOwnerEntityAccessor.MarkNetworkChanged();
+	}
+
+	{
+		auto aEFlagsAccessor = CBaseEntity_Helper::GetEFlagsAccessor(pEntity);
+
+		aEFlagsAccessor = EF_NODRAW;
+		aEFlagsAccessor.MarkNetworkChanged();
+	}
 
 	return true;
 }

@@ -219,16 +219,16 @@ public: // Entity Manager.
 
 	bool LoadMenuSpawnGroups(const Vector &aWorldOrigin = {0.0f, 0.0f, 0.0f});
 	void FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation, const Vector &vecScales, const Color rgbaColor, const char *pszFontName, const char *pszBackgroundMaterialName, const char *pszMessageText);
-	void FillViewModelEntityKeyValues(CEntityKeyValues *pEntityKV);
+	void FillViewModelEntityKeyValues(CEntityKeyValues *pEntityKV, const Vector &vecOrigin, const QAngle &angRotation);
 
 	Vector GetEntityPosition(CBaseEntity *pEntity, QAngle *pRotation = nullptr);
 	void GetMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
 	void GetMenuEntitiesPositionByPlayer(CBasePlayerPawn *pPlayerPawn, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
 
-	void SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKeyValues, CUtlVector<CEntityInstance *> *pEntities);
+	void SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKeyValues, IEntityManager::IProviderAgent::IEntityListener *pListener, CUtlVector<CEntityInstance *> *pEntities);
 	void SpawnMenuEntities(const Vector &vecBackgroundOrigin, const Vector &vecOrigin, const QAngle &angRotation, CUtlVector<CEntityInstance *> *pEntities);
 	void SpawnMenuEntitiesByPlayer(CBasePlayerPawn *pPlayerPawn, CUtlVector<CEntityInstance *> *pEntities);
-	CBaseViewModel *SpawnViewModelEntity();
+	CBaseViewModel *SpawnViewModelEntity(const Vector &vecOrigin, const QAngle &angRotation, CBaseEntity *pOwner, const int nSlot);
 
 	void TeleportMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities);
 	bool AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities, const char *pszAttachmentName);
