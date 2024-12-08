@@ -50,18 +50,27 @@ const char *ConcatLineString::AppendToBuffer(CBufferString &sMessage, const char
 
 const char *ConcatLineString::AppendToBuffer(CBufferString &sMessage, const char *pszKey, float flValue) const
 {
-	char sValue[21];
+	char sValue[24];
 
 	V_snprintf(sValue, sizeof(sValue), "%f", flValue);
 
 	return AppendToBuffer(sMessage, pszKey, sValue);
 }
 
-const char *ConcatLineString::AppendToBuffer(CBufferString &sMessage, const char *pszKey, double dblValue) const
+const char *ConcatLineString::AppendToBuffer(CBufferString &sMessage, const char *pszKey, const Vector &vecValue) const
 {
-	char sValue[32];
+	char sValue[72];
 
-	V_snprintf(sValue, sizeof(sValue), "%lf", dblValue);
+	V_snprintf(sValue, sizeof(sValue), "%.6f %.6f %.6f", vecValue.x, vecValue.y, vecValue.z);
+
+	return AppendToBuffer(sMessage, pszKey, sValue);
+}
+
+const char *ConcatLineString::AppendToBuffer(CBufferString &sMessage, const char *pszKey, const QAngle &angValue) const
+{
+	char sValue[72];
+
+	V_snprintf(sValue, sizeof(sValue), "%.6f %.6f %.6f", angValue.x, angValue.y, angValue.z);
 
 	return AppendToBuffer(sMessage, pszKey, sValue);
 }

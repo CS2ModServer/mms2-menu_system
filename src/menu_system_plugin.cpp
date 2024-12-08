@@ -947,11 +947,16 @@ Vector MenuSystemPlugin::GetEntityPosition(CBaseEntity *pEntity, QAngle *pRotati
 
 void MenuSystemPlugin::GetMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
-	const QAngle angCorrect = {angRotation.x + 16.f, angRotation.y + 53.f, 90.f};
+	// Correct a rotation to display on the right-side of the screen.
+	const float flPitchOffset = 16.f;
+	const float flYawOffset = 53.f;
+
+	const QAngle angCorrect = {flPitchOffset, AngleNormalize(angRotation.y + flYawOffset), 90.f};
 
 	vecResult = AddToFrontByRotation(vecOrigin, angCorrect, 16.f);
 	vecBackgroundResult = AddToFrontByRotation(vecResult, angCorrect, 0.04f);
-	angResult = {0.f, angRotation.y - 90.f, -angRotation.x + 90.f};
+
+	angResult = {0.f, AngleNormalize(angRotation.y - 90.f), 90.f};
 }
 
 void MenuSystemPlugin::GetMenuEntitiesPositionByPlayer(CBasePlayerPawn *pPlayerPawn, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
@@ -1101,6 +1106,7 @@ void MenuSystemPlugin::SpawnMenuEntitiesByPlayer(CBasePlayerPawn *pPlayerPawn, C
 	SpawnMenuEntities(vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation, pEntities);
 }
 
+// A universal way to create a second view model.
 CBaseViewModel *MenuSystemPlugin::SpawnViewModelEntity(const Vector &vecOrigin, const QAngle &angRotation, CBaseEntity *pOwner, const int nSlot)
 {
 	const SpawnGroupHandle_t hSpawnGroup = m_pMySpawnGroupInstance->GetSpawnGroupHandle();
@@ -1198,10 +1204,17 @@ bool MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, 
 
 	GetMenuEntitiesPositionByPlayer(pPlayerPawn, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 
-	if(Logger::IsChannelEnabled(LV_DETAILED))
+	if(Logger::IsChannelEnabled(LS_DETAILED))
 	{
-		Logger::DetailedFormat("Menus spawns at %.0f %.0f %.0f (%.0f %.0f %.0f)\n", vecMenuAbsOrigin.x, vecMenuAbsOrigin.y, vecMenuAbsOrigin.z, 
-		                                                                            angMenuRotation.x, angMenuRotation.y, angMenuRotation.z);
+		const auto &aConcat = s_aEmbedConcat;
+
+		CBufferStringGrowable<1024> sBuffer;
+
+		sBuffer.Format("Menu entities position:\n");
+		aConcat.AppendToBuffer(sBuffer, "Origin", vecMenuAbsOrigin);
+		aConcat.AppendToBuffer(sBuffer, "Rotation", angMenuRotation);
+
+		Logger::Detailed(sBuffer);
 	}
 
 	if(!pPlayerViewModel)
@@ -1210,11 +1223,9 @@ bool MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, 
 
 		hPlayerViewModel.Set(pExtraPlayerViewModel);
 		pPlayerViewModel = pExtraPlayerViewModel;
-
-		aBaseEntity.AcceptInput(pExtraPlayerViewModel, "FollowEntity", pPlayerPawn, NULL, &aParentVariant, 0);
-
-		aViewModelServicesAccessor.MarkNetworkChanged();
 	}
+
+	aBaseEntity.AcceptInput(pPlayerViewModel, "FollowEntity", pPlayerPawn, NULL, &aParentVariant, 0);
 
 	if(Logger::IsChannelEnabled(LV_DETAILED))
 	{
@@ -1228,6 +1239,8 @@ bool MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, 
 		aBaseEntity.Teleport(pEntity, i ? vecMenuAbsOrigin : vecMenuAbsOriginBackground, angMenuRotation);
 		aBaseEntity.AcceptInput(pEntity, "SetParent", pPlayerViewModel, NULL, &aParentVariant, 0);
 	}
+
+	aViewModelServicesAccessor.MarkNetworkChanged(); // Update CPlayer_ViewModelServices < CCSPlayer_ViewModelServices state of the view model entities.
 
 	return true;
 }
