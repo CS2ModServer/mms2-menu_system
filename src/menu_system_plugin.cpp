@@ -118,7 +118,7 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 {
 	PLUGIN_SAVEVARS();
 
-	MessageFormat("Starting %s plugin...\n", GetName());
+	Logger::MessageFormat("Starting %s plugin...\n", GetName());
 
 	if(!InitGlobals(ismm, error, maxlen))
 	{
@@ -293,7 +293,7 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 
 	ismm->AddListener(static_cast<ISmmPlugin *>(this), static_cast<IMetamodListener *>(this));
 
-	MessageFormat("%s started!\n", GetName());
+	Logger::MessageFormat("%s started!\n", GetName());
 
 	return true;
 }
@@ -1128,7 +1128,7 @@ CBaseViewModel *MenuSystemPlugin::SpawnViewModelEntity(const Vector &vecOrigin, 
 		{
 			if(m_pPlugin->Logger::IsChannelEnabled(LV_DETAILED))
 			{
-				m_pPlugin->MessageFormat("Setting up \"%s\" entity\n", pEntity->GetClassname());
+				m_pPlugin->Logger::MessageFormat("Setting up \"%s\" entity\n", pEntity->GetClassname());
 			}
 
 			m_pPlugin->SettingExtraPlayerViewModel(reinterpret_cast<CBaseViewModel *>(pEntity), m_pOwner, m_nSlot);
