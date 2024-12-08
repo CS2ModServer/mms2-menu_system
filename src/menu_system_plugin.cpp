@@ -444,7 +444,7 @@ MenuSystemPlugin::CPlayer &MenuSystemPlugin::GetPlayerData(const CPlayerSlot &aS
 
 	Assert(0 <= iClient && iClient < ABSOLUTE_PLAYER_LIMIT);
 
-	return m_aPlayers[aSlot.Get()];
+	return m_aPlayers[iClient];
 }
 
 bool MenuSystemPlugin::Init()
