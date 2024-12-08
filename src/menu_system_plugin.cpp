@@ -1170,7 +1170,9 @@ bool MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, 
 {
 	auto &aBaseEntity = GetGameDataStorage().GetBaseEntity();
 
-	CPlayer_ViewModelServices *pPlayerViewModelServices = CCSPlayerPawnBase_Helper::GetViewModelServicesAccessor(reinterpret_cast<CCSPlayerPawnBase *>(pPlayerPawn));
+	auto aViewModelServicesAccessor = CCSPlayerPawnBase_Helper::GetViewModelServicesAccessor(reinterpret_cast<CCSPlayerPawnBase *>(pPlayerPawn));
+
+	CPlayer_ViewModelServices *pPlayerViewModelServices = aViewModelServicesAccessor;
 
 	auto *pCSPlayerViewModelServices = reinterpret_cast<CCSPlayer_ViewModelServices *>(pPlayerViewModelServices);
 
@@ -1210,6 +1212,8 @@ bool MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, 
 		pPlayerViewModel = pExtraPlayerViewModel;
 
 		aBaseEntity.AcceptInput(pExtraPlayerViewModel, "FollowEntity", pPlayerPawn, NULL, &aParentVariant, 0);
+
+		aViewModelServicesAccessor.MarkNetworkChanged();
 	}
 
 	if(Logger::IsChannelEnabled(LV_DETAILED))
