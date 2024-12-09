@@ -332,7 +332,6 @@ private: // Fields.
 	// Run-time things.
 	IEntityManager::IProviderAgent::ISpawnGroupInstance *m_pMySpawnGroupInstance;
 
-	CUtlVector<CEntityInstance *> m_vecMyEntities;
 	CUtlMap<int /* Player slot index. */, CUtlVector<CEntityInstance *>> m_mapPlayerEntities;
 
 	INetworkMessageInternal *m_pGetCvarValueMessage = NULL;
