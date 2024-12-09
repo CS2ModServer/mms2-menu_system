@@ -434,12 +434,12 @@ const IMenuSystem::ILanguage *MenuSystemPlugin::GetLanguageByName(const char *ps
 	return m_mapLanguages.IsValidIndex(iFound) ? &m_mapLanguages.Element(iFound) : nullptr;
 }
 
-IMenuSystem::IPlayer *MenuSystemPlugin::GetPlayer(const CPlayerSlot &aSlot)
+IMenuSystem::IPlayerBase *MenuSystemPlugin::GetPlayer(const CPlayerSlot &aSlot)
 {
 	return &GetPlayerData(aSlot);
 }
 
-MenuSystemPlugin::CPlayer &MenuSystemPlugin::GetPlayerData(const CPlayerSlot &aSlot)
+MenuSystemPlugin::CPlayerBase &MenuSystemPlugin::GetPlayerData(const CPlayerSlot &aSlot)
 {
 	int iClient = aSlot.Get();
 

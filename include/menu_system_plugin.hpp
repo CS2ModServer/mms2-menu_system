@@ -141,12 +141,12 @@ public: // IMenuSystem
 		CUtlString m_sCountryCode;
 	}; // MenuSystemPlugin::CLanguage
 
-	class CPlayer : public IPlayer
+	class CPlayerBase : public IPlayerBase
 	{
-		friend class SamplePlugin;
+		friend class MenuSystemPlugin;
 
 	public:
-		CPlayer();
+		CPlayerBase();
 
 	public: // IMenuSystem::IPlayerLanguageCallbacks
 		bool AddLanguageListener(IPlayerLanguageListener *pListener) override;
@@ -188,12 +188,12 @@ public: // IMenuSystem
 
 	private:
 		TranslatedPhrase m_aYourArgumentPhrase;
-	}; // MenuSystemPlugin::CPlayer
+	}; // MenuSystemPlugin::CPlayerBase
 
 	const IMenuSystem::ILanguage *GetServerLanguage() const override;
 	const IMenuSystem::ILanguage *GetLanguageByName(const char *psz) const override;
-	IPlayer *GetPlayer(const CPlayerSlot &aSlot) override;
-	CPlayer &GetPlayerData(const CPlayerSlot &aSlot);
+	IPlayerBase *GetPlayer(const CPlayerSlot &aSlot) override;
+	CPlayerBase &GetPlayerData(const CPlayerSlot &aSlot);
 
 public: // CBaseGameSystem
 	bool Init() override;
@@ -352,7 +352,7 @@ private: // Fields.
 	CLanguage m_aServerLanguage;
 	CUtlVector<CLanguage> m_vecLanguages;
 
-	CPlayer m_aPlayers[ABSOLUTE_PLAYER_LIMIT];
+	CPlayerBase m_aPlayers[ABSOLUTE_PLAYER_LIMIT];
 }; // MenuSystemPlugin
 
 extern MenuSystemPlugin *g_pMenuSystemPlugin;

@@ -151,7 +151,7 @@ public: // Player ones.
 	/**
 	 * @brief A player data interface.
 	**/
-	class IPlayer : public IPlayerLanguage
+	class IPlayerBase : public IPlayerLanguage
 	{
 	public:
 		/**
@@ -160,7 +160,7 @@ public: // Player ones.
 		 * @return              A server server side client pointer.
 		 */
 		virtual CServerSideClient *GetServerSideClient() = 0;
-	}; // IMenuSystem::IPlayer
+	}; // IMenuSystem::IPlayerBase
 
 	/**
 	 * @brief Gets a server language.
@@ -186,7 +186,7 @@ public: // Player ones.
 	 * 
 	 * @return              Returns a player data.
 	 */
-	virtual IPlayer *GetPlayer(const CPlayerSlot &aSlot) = 0;
+	virtual IPlayerBase *GetPlayer(const CPlayerSlot &aSlot) = 0;
 }; // IMenuSystem
 
 #endif // _INCLUDE_METAMOD_SOURCE_IMENU_HPP_

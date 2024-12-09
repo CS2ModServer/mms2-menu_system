@@ -23,14 +23,14 @@
 
 #include <serversideclient.h>
 
-MenuSystemPlugin::CPlayer::CPlayer()
+MenuSystemPlugin::CPlayerBase::CPlayerBase()
  :  m_pServerSideClient(nullptr), 
     m_pLanguage(nullptr), 
     m_aYourArgumentPhrase({nullptr, nullptr})
 {
 }
 
-bool MenuSystemPlugin::CPlayer::AddLanguageListener(IPlayerLanguageListener *pListener)
+bool MenuSystemPlugin::CPlayerBase::AddLanguageListener(IPlayerLanguageListener *pListener)
 {
 	int iFound = m_vecLanguageCallbacks.Find(pListener);
 
@@ -44,39 +44,39 @@ bool MenuSystemPlugin::CPlayer::AddLanguageListener(IPlayerLanguageListener *pLi
 	return bIsExists;
 }
 
-bool MenuSystemPlugin::CPlayer::RemoveLanguageListener(IPlayerLanguageListener *pListener)
+bool MenuSystemPlugin::CPlayerBase::RemoveLanguageListener(IPlayerLanguageListener *pListener)
 {
 	return m_vecLanguageCallbacks.FindAndRemove(pListener);
 }
 
-const IMenuSystem::ILanguage *MenuSystemPlugin::CPlayer::GetLanguage() const
+const IMenuSystem::ILanguage *MenuSystemPlugin::CPlayerBase::GetLanguage() const
 {
 	return m_pLanguage;
 }
 
-void MenuSystemPlugin::CPlayer::SetLanguage(const ILanguage *pData)
+void MenuSystemPlugin::CPlayerBase::SetLanguage(const ILanguage *pData)
 {
 	m_pLanguage = pData;
 }
 
-CServerSideClient *MenuSystemPlugin::CPlayer::GetServerSideClient()
+CServerSideClient *MenuSystemPlugin::CPlayerBase::GetServerSideClient()
 {
 	return m_pServerSideClient;
 }
 
-void MenuSystemPlugin::CPlayer::OnConnected(CServerSideClient *pClient)
+void MenuSystemPlugin::CPlayerBase::OnConnected(CServerSideClient *pClient)
 {
 	m_pServerSideClient = pClient;
 }
 
-void MenuSystemPlugin::CPlayer::OnDisconnected(CServerSideClient *pClient, ENetworkDisconnectionReason eReason)
+void MenuSystemPlugin::CPlayerBase::OnDisconnected(CServerSideClient *pClient, ENetworkDisconnectionReason eReason)
 {
 	m_pServerSideClient = nullptr;
 	m_pLanguage = nullptr;
 	m_aYourArgumentPhrase = {nullptr, nullptr};
 }
 
-void MenuSystemPlugin::CPlayer::OnLanguageChanged(CPlayerSlot aSlot, CLanguage *pData)
+void MenuSystemPlugin::CPlayerBase::OnLanguageChanged(CPlayerSlot aSlot, CLanguage *pData)
 {
 	SetLanguage(pData);
 
@@ -86,7 +86,7 @@ void MenuSystemPlugin::CPlayer::OnLanguageChanged(CPlayerSlot aSlot, CLanguage *
 	}
 }
 
-void MenuSystemPlugin::CPlayer::TranslatePhrases(const Translations *pTranslations, const CLanguage &aServerLanguage, CUtlVector<CUtlString> &vecMessages)
+void MenuSystemPlugin::CPlayerBase::TranslatePhrases(const Translations *pTranslations, const CLanguage &aServerLanguage, CUtlVector<CUtlString> &vecMessages)
 {
 	const struct
 	{
@@ -148,7 +148,7 @@ void MenuSystemPlugin::CPlayer::TranslatePhrases(const Translations *pTranslatio
 	}
 }
 
-const MenuSystemPlugin::CPlayer::TranslatedPhrase &MenuSystemPlugin::CPlayer::GetYourArgumentPhrase() const
+const MenuSystemPlugin::CPlayerBase::TranslatedPhrase &MenuSystemPlugin::CPlayerBase::GetYourArgumentPhrase() const
 {
 	return m_aYourArgumentPhrase;
 }

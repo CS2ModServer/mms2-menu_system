@@ -96,7 +96,7 @@ set(SOURCE_FILES
 	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/game_scene_node.cpp
 	${SOURCE_MENU_SYSTEM_DIR}/chat_command_system.cpp
 	${SOURCE_MENU_SYSTEM_DIR}/language.cpp
-	${SOURCE_MENU_SYSTEM_DIR}/player.cpp
+	${SOURCE_MENU_SYSTEM_DIR}/player_base.cpp
 	${SOURCE_MENU_SYSTEM_DIR}/provider.cpp
 	${SOURCE_MENU_SYSTEM_DIR}/schema.cpp
 	${SOURCE_DIR}/concat.cpp
