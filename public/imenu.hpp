@@ -88,7 +88,17 @@ public: // Language ones.
 	}; // IMenuSystem::ILanguage
 
 public: // Player ones.
-	using LanguageHandleCallback_t = std::function<void (CPlayerSlot, ILanguage *)>;
+	class IPlayerLanguageListener
+	{
+	public:
+		/**
+		 * @brief Calls then a player language are changed.
+		 * 
+		 * @param aSlot         A player slot (index).
+		 * @param pLanguage     A language pointer, who changed.
+		 */
+		virtual void OnPlayerLanguageChanged(CPlayerSlot aSlot, const ILanguage *pLanguage) = 0;
+	}; // ISample::IPlayerLanguageListener
 
 	/**
 	 * @brief A player language interface.
@@ -98,22 +108,22 @@ public: // Player ones.
 		/**
 		 * @brief Add a language listener.
 		 * 
-		 * @param fnCallback    Callback, who will be called when language has received.
+		 * @param pListener     A listener, who will be called when language has received.
 		 * 
 		 * @return              Returns true if this has listenen.
 		 */
-		virtual bool AddLanguageListener(const LanguageHandleCallback_t &fnCallback) = 0;
+		virtual bool AddLanguageListener(IPlayerLanguageListener *pListener) = 0;
 
 		/**
 		 * @brief Removes a language listener.
 		 * 
-		 * @param fnCallback    A callback to remove a listenen.
+		 * @param fnCallback    A listener to remove.
 		 * 
 		 * @return              Returns "true" if this has removed, 
 		 *                      otherwise "false" if not exists.
 		 */
-		virtual bool RemoveLanguageListener(const LanguageHandleCallback_t &fnCallback) = 0;
-	}; // IMenuSystem::IPlayerLanguageCallbacks
+		virtual bool RemoveLanguageListener(IPlayerLanguageListener *pListener) = 0;
+	}; // ISample::IPlayerLanguageCallbacks
 
 	/**
 	 * @brief A player language interface.

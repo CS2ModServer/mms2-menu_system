@@ -142,7 +142,7 @@ public: // IMenuSystem
 
 	class CPlayer : public IPlayer
 	{
-		friend class MenuSystemPlugin;
+		friend class SamplePlugin;
 
 	public:
 		CPlayer();
@@ -151,16 +151,16 @@ public: // IMenuSystem
 		void Init();
 		void Destroy();
 
-	public: // IPlayerLanguageCallbacks
-		bool AddLanguageListener(const LanguageHandleCallback_t &fnCallback) override;
-		bool RemoveLanguageListener(const LanguageHandleCallback_t &fnCallback) override;
+	public: // ISample::IPlayerLanguageCallbacks
+		bool AddLanguageListener(IPlayerLanguageListener *pListener) override;
+		bool RemoveLanguageListener(IPlayerLanguageListener *pListener) override;
 
-	public: // IPlayerLanguage
+	public: // ISample::IPlayerLanguage
 		const ILanguage *GetLanguage() const override;
 		void SetLanguage(const ILanguage *pData) override;
 
 	public:
-		virtual void OnLanguageReceived(CPlayerSlot aSlot, CLanguage *pData);
+		virtual void OnLanguageChanged(CPlayerSlot aSlot, CLanguage *pData);
 
 	public:
 		struct TranslatedPhrase
@@ -174,7 +174,7 @@ public: // IMenuSystem
 
 	private:
 		const ILanguage *m_pLanguage;
-		CUtlVector<const LanguageHandleCallback_t *> m_vecLanguageCallbacks;
+		CUtlVector<IPlayerLanguageListener *> m_vecLanguageCallbacks;
 
 	private:
 		TranslatedPhrase m_aYourArgumentPhrase;

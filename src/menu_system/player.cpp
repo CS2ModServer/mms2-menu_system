@@ -38,27 +38,23 @@ void MenuSystemPlugin::CPlayer::Destroy()
 	Init();
 }
 
-bool MenuSystemPlugin::CPlayer::AddLanguageListener(const LanguageHandleCallback_t &fnCallback)
+bool MenuSystemPlugin::CPlayer::AddLanguageListener(IPlayerLanguageListener *pListener)
 {
-	const auto *pfnCallback = &fnCallback;
-
-	int iFound = m_vecLanguageCallbacks.Find(pfnCallback);
+	int iFound = m_vecLanguageCallbacks.Find(pListener);
 
 	bool bIsExists = m_vecLanguageCallbacks.IsValidIndex(iFound);
 
 	if(bIsExists)
 	{
-		m_vecLanguageCallbacks.AddToTail(pfnCallback);
+		m_vecLanguageCallbacks.AddToTail(pListener);
 	}
 
 	return bIsExists;
 }
 
-bool MenuSystemPlugin::CPlayer::RemoveLanguageListener(const LanguageHandleCallback_t &fnCallback)
+bool MenuSystemPlugin::CPlayer::RemoveLanguageListener(IPlayerLanguageListener *pListener)
 {
-	const auto *pfnCallback = &fnCallback;
-
-	return m_vecLanguageCallbacks.FindAndRemove(pfnCallback);
+	return m_vecLanguageCallbacks.FindAndRemove(pListener);
 }
 
 const IMenuSystem::ILanguage *MenuSystemPlugin::CPlayer::GetLanguage() const
@@ -71,13 +67,13 @@ void MenuSystemPlugin::CPlayer::SetLanguage(const ILanguage *pData)
 	m_pLanguage = pData;
 }
 
-void MenuSystemPlugin::CPlayer::OnLanguageReceived(CPlayerSlot aSlot, CLanguage *pData)
+void MenuSystemPlugin::CPlayer::OnLanguageChanged(CPlayerSlot aSlot, CLanguage *pData)
 {
 	SetLanguage(pData);
 
 	for(const auto &it : m_vecLanguageCallbacks)
 	{
-		(*it)(aSlot, pData);
+		it->OnPlayerLanguageChanged(aSlot, pData);
 	}
 }
 

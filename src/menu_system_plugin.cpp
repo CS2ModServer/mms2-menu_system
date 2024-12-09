@@ -2291,7 +2291,7 @@ bool MenuSystemPlugin::OnProcessRespondCvarValue(CServerSideClientBase *pClient,
 
 	auto &itLanguage = m_mapLanguages.Element(iLanguageFound);
 
-	aPlayer.OnLanguageReceived(aSlot, &itLanguage);
+	aPlayer.OnLanguageChanged(aSlot, &itLanguage);
 
 	{
 		CUtlVector<CUtlString> vecMessages;
