@@ -1126,7 +1126,7 @@ void MenuSystemPlugin::SpawnMenuEntities(const Vector &vecBackgroundOrigin, cons
 		}
 
 	public:
-		void OnEntityCreated(CEntityInstance *pEntity, CEntityKeyValues *pKeyValues)
+		void OnEntityCreated(CEntityInstance *pEntity, CEntityKeyValues *pKeyValues) override
 		{
 			if(m_pPlugin->Logger::IsChannelEnabled(LV_DETAILED))
 			{
@@ -1178,7 +1178,7 @@ CBaseViewModel *MenuSystemPlugin::SpawnViewModelEntity(const Vector &vecOrigin, 
 		}
 
 	public:
-		void OnEntityCreated(CEntityInstance *pEntity, CEntityKeyValues *pKeyValues)
+		void OnEntityCreated(CEntityInstance *pEntity, CEntityKeyValues *pKeyValues) override
 		{
 			if(m_pPlugin->Logger::IsChannelEnabled(LV_DETAILED))
 			{
