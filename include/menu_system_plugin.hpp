@@ -241,7 +241,7 @@ public: // Entity Manager.
 	void GetMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pCSPlayerPawn, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
 
 	// Spawn entities.
-	void SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKeyValues, IEntityManager::IProviderAgent::IEntityListener *pListener, CUtlVector<CEntityInstance *> *pEntities);
+	void SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKeyValues, CUtlVector<CEntityInstance *> *pEntities = nullptr, IEntityManager::IProviderAgent::IEntityListener *pListener = nullptr);
 	void SpawnMenuEntities(const Vector &vecBackgroundOrigin, const Vector &vecOrigin, const QAngle &angRotation, CUtlVector<CEntityInstance *> *pEntities);
 	void SpawnMenuEntitiesByEntity(CBaseEntity *pEntity, CUtlVector<CEntityInstance *> *pEntities);
 	CBaseViewModel *SpawnViewModelEntity(const Vector &vecOrigin, const QAngle &angRotation, CBaseEntity *pOwner, const int nSlot);
@@ -251,8 +251,8 @@ public: // Entity Manager.
 	bool AttachMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pCSPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities);
 
 	// Setting up the entities.
-	bool SettingExtraPlayerViewModel(CBaseViewModel *pEntity, CBaseEntity *pOwner, const int nSlot);
-	bool SetMenuEntitiesProperties(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities);
+	bool SettingMenuEntity(CEntityInstance *pEntity);
+	bool SettingExtraPlayerViewModelEntity(CBaseViewModel *pEntity, CBaseEntity *pOwner, const int nSlot);
 
 public: // Game Resource.
 	bool RegisterGameResource(char *error = nullptr, size_t maxlen = 0);

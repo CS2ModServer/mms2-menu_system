@@ -224,7 +224,6 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 
 					SpawnMenuEntitiesByEntity(pCSPlayerPawn, &vecEntitites);
 					AttachMenuEntitiesToCSPlayer(pCSPlayerPawn, vecEntitites);
-					//SetMenuEntitiesProperties(pPlayerPawn, vecEntitites);
 					// m_mapPlayerEntities.Insert(iClient, vecEntitites);
 				}
 				else
@@ -993,7 +992,7 @@ void MenuSystemPlugin::GetMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pCSP
 	GetMenuEntitiesPosition(vecResult, angResult, vecBackgroundResult, vecResult, angResult);
 }
 
-void MenuSystemPlugin::SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKeyValues, IEntityManager::IProviderAgent::IEntityListener *pListener, CUtlVector<CEntityInstance *> *pEntities)
+void MenuSystemPlugin::SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKeyValues, CUtlVector<CEntityInstance *> *pEntities, IEntityManager::IProviderAgent::IEntityListener *pListener)
 {
 	if(Logger::Logger::IsChannelEnabled(LS_DETAILED))
 	{
@@ -1015,7 +1014,7 @@ void MenuSystemPlugin::SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKe
 		CUtlVector<CUtlString> vecDetails, 
 		                       vecWarnings;
 
-		m_pEntityManagerProviderAgent->ExecuteSpawnQueued(hSpawnGroup, pListener, pEntities, &vecDetails, &vecWarnings);
+		m_pEntityManagerProviderAgent->ExecuteSpawnQueued(hSpawnGroup, pEntities, pListener, &vecDetails, &vecWarnings);
 
 		if(vecDetails.Count())
 		{
@@ -1118,7 +1117,30 @@ void MenuSystemPlugin::SpawnMenuEntities(const Vector &vecBackgroundOrigin, cons
 	vecKeyValues.AddToTail(pMenuKV2);
 	vecKeyValues.AddToTail(pMenuKV3);
 
-	SpawnEntities(vecKeyValues, nullptr, pEntities);
+	class CMenuEntityListener : public IEntityManager::IProviderAgent::IEntityListener
+	{
+	public:
+		CMenuEntityListener(MenuSystemPlugin *pInitPlugin)
+		 :  m_pPlugin(pInitPlugin)
+		{
+		}
+
+	public:
+		void OnEntityCreated(CEntityInstance *pEntity, CEntityKeyValues *pKeyValues)
+		{
+			if(m_pPlugin->Logger::IsChannelEnabled(LV_DETAILED))
+			{
+				m_pPlugin->Logger::MessageFormat("Setting up \"%s\" menu entity\n", pEntity->GetClassname());
+			}
+
+			m_pPlugin->SettingMenuEntity(reinterpret_cast<CBaseEntity *>(pEntity));
+		}
+
+	private:
+		MenuSystemPlugin *m_pPlugin;
+	} aMenuEntitySetup(this);
+
+	SpawnEntities(vecKeyValues, pEntities, &aMenuEntitySetup);
 }
 
 void MenuSystemPlugin::SpawnMenuEntitiesByEntity(CBaseEntity *pEntity, CUtlVector<CEntityInstance *> *pEntities)
@@ -1160,21 +1182,21 @@ CBaseViewModel *MenuSystemPlugin::SpawnViewModelEntity(const Vector &vecOrigin, 
 		{
 			if(m_pPlugin->Logger::IsChannelEnabled(LV_DETAILED))
 			{
-				m_pPlugin->Logger::MessageFormat("Setting up \"%s\" entity\n", pEntity->GetClassname());
+				m_pPlugin->Logger::MessageFormat("Setting up \"%s\" view model entity\n", pEntity->GetClassname());
 			}
 
-			m_pPlugin->SettingExtraPlayerViewModel(reinterpret_cast<CBaseViewModel *>(pEntity), m_pOwner, m_nSlot);
+			m_pPlugin->SettingExtraPlayerViewModelEntity(reinterpret_cast<CBaseViewModel *>(pEntity), m_pOwner, m_nSlot);
 		}
 
 	private:
 		MenuSystemPlugin *m_pPlugin;
 		CBaseEntity *m_pOwner;
 		const int m_nSlot;
-	} aViewModelSetup(this, pOwner, nSlot);
+	} aViewModelEntitySetup(this, pOwner, nSlot);
 
 	FillViewModelEntityKeyValues(pViewModelKV, vecOrigin, angRotation);
 	vecKeyValues.AddToTail(pViewModelKV);
-	SpawnEntities(vecKeyValues, &aViewModelSetup, &vecEntities);
+	SpawnEntities(vecKeyValues, &vecEntities, &aViewModelEntitySetup);
 
 	return reinterpret_cast<CBaseViewModel *>(vecEntities[0]);
 }
@@ -1269,26 +1291,10 @@ bool MenuSystemPlugin::AttachMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pCSPlayer
 	return true;
 }
 
-bool MenuSystemPlugin::SettingExtraPlayerViewModel(CBaseViewModel *pViewEntity, CBaseEntity *pOwner, const int nSlot)
+bool MenuSystemPlugin::SettingMenuEntity(CEntityInstance *pEntity)
 {
-	CBaseEntity *pEntity = reinterpret_cast<CBaseEntity *>(pViewEntity);
-
 	{
-		auto aViewModelIndexAccessor = CBaseViewModel_Helper::GetViewModelIndexAccessor(pViewEntity);
-
-		aViewModelIndexAccessor = nSlot;
-		aViewModelIndexAccessor.MarkNetworkChanged();
-	}
-
-	{
-		auto aOwnerEntityAccessor = CBaseEntity_Helper::GetOwnerEntityAccessor(pViewEntity);
-
-		aOwnerEntityAccessor = pOwner;
-		aOwnerEntityAccessor.MarkNetworkChanged();
-	}
-
-	{
-		auto aEFlagsAccessor = CBaseEntity_Helper::GetEFlagsAccessor(pEntity);
+		auto aEFlagsAccessor = CBaseEntity_Helper::GetEFlagsAccessor(reinterpret_cast<CBaseEntity *>(pEntity));
 
 		aEFlagsAccessor = EF_NODRAW;
 		aEFlagsAccessor.MarkNetworkChanged();
@@ -1297,11 +1303,27 @@ bool MenuSystemPlugin::SettingExtraPlayerViewModel(CBaseViewModel *pViewEntity, 
 	return true;
 }
 
-bool MenuSystemPlugin::SetMenuEntitiesProperties(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities)
+bool MenuSystemPlugin::SettingExtraPlayerViewModelEntity(CBaseViewModel *pViewModelEntity, CBaseEntity *pOwner, const int nSlot)
 {
-	for(auto *pEntity : vecEntities)
 	{
-		CBaseEntity_Helper::GetEFlagsAccessor(reinterpret_cast<CBaseEntity *>(pEntity)) = EF_MENU;
+		auto aViewModelIndexAccessor = CBaseViewModel_Helper::GetViewModelIndexAccessor(pViewModelEntity);
+
+		aViewModelIndexAccessor = nSlot;
+		aViewModelIndexAccessor.MarkNetworkChanged();
+	}
+
+	{
+		auto aOwnerEntityAccessor = CBaseEntity_Helper::GetOwnerEntityAccessor(pViewModelEntity);
+
+		aOwnerEntityAccessor = pOwner;
+		aOwnerEntityAccessor.MarkNetworkChanged();
+	}
+
+	{
+		auto aEFlagsAccessor = CBaseEntity_Helper::GetEFlagsAccessor(pViewModelEntity);
+
+		aEFlagsAccessor = EF_NODRAW;
+		aEFlagsAccessor.MarkNetworkChanged();
 	}
 
 	return true;
