@@ -24,7 +24,7 @@
 
 #	pragma once
 
-#	include <menu_system/schema/base_entity.hpp>
+#	include <menu_system/schema/cs_player_pawn_base.hpp>
 #	include <menu_system/schema.hpp>
 
 #	include <ehandle.h>
@@ -54,7 +54,7 @@ namespace MenuSystem
 			void Clear();
 
 		public:
-			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetPawnAccessor, CBasePlayerController, CHandle<CBasePlayerPawn>, m_aOffsets.m_nPawn);
+			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetPawnAccessor, CBasePlayerController, CHandle<CCSPlayerPawnBase>, m_aOffsets.m_nPawn);
 
 		private:
 			CSystem::CClass *m_pClass;

@@ -51,7 +51,7 @@ namespace MenuSystem
 			void Clear();
 
 		public:
-			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetViewModelServicesAccessor, CCSPlayerPawnBase, CPlayer_ViewModelServices *, m_aOffsets.m_nViewModelServices);
+			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetViewModelServicesAccessor, CCSPlayerPawnBase, CCSPlayer_ViewModelServices *, m_aOffsets.m_nViewModelServices);
 			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetEyeAnglesAccessor, CCSPlayerPawnBase, QAngle, m_aOffsets.m_nEyeAngles);
 
 		private:

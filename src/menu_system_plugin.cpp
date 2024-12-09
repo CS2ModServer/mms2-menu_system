@@ -220,8 +220,8 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 				{
 					CUtlVector<CEntityInstance *> vecEntitites;
 
-					SpawnMenuEntitiesByPlayer(pPlayerPawn, &vecEntitites);
-					AttachMenuEntitiesToPlayer(pPlayerPawn, vecEntitites, vecArguments.Count() > 1 ? vecArguments[1].Get() : nullptr);
+					SpawnMenuEntitiesByEntity(pPlayerPawn, &vecEntitites);
+					AttachMenuEntitiesToCSPlayer(pPlayerPawn, vecEntitites);
 					//SetMenuEntitiesProperties(pPlayerPawn, vecEntitites);
 					m_mapPlayerEntities.Insert(iClient, vecEntitites);
 				}
@@ -513,7 +513,7 @@ GS_EVENT_MEMBER(MenuSystemPlugin, ServerPostEntityThink)
 
 	// 		if(pPlayerPawn)
 	// 		{
-	// 			TeleportMenuEntitiesToPlayer(pPlayerPawn, m_mapPlayerEntities.Element(i));
+	// 			TeleportMenuEntitiesToCSPlayer(pPlayerPawn, m_mapPlayerEntities.Element(i));
 	// 		}
 	// 	}
 	// }
@@ -959,11 +959,22 @@ void MenuSystemPlugin::GetMenuEntitiesPosition(const Vector &vecOrigin, const QA
 	angResult = {0.f, AngleNormalize(angRotation.y - 90.f), 90.f};
 }
 
-void MenuSystemPlugin::GetMenuEntitiesPositionByPlayer(CBasePlayerPawn *pPlayerPawn, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
+void MenuSystemPlugin::GetMenuEntitiesPositionByEntity(CBaseEntity *pEntity, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
-	vecResult = GetEntityPosition(reinterpret_cast<CBaseEntity *>(pPlayerPawn)),
-	angResult = CCSPlayerPawnBase_Helper::GetEyeAnglesAccessor(reinterpret_cast<CCSPlayerPawnBase *>(pPlayerPawn));
+	vecResult = GetEntityPosition(pEntity, &angResult);
+	GetMenuEntitiesPosition(vecResult, angResult, vecBackgroundResult, vecResult, angResult);
+}
 
+void MenuSystemPlugin::GetMenuEntitiesPositionByViewModel(CBaseViewModel *pViewModel, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
+{
+	vecResult = GetEntityPosition(pViewModel, &angResult);
+	GetMenuEntitiesPosition(vecResult, angResult, vecBackgroundResult, vecResult, angResult);
+}
+
+void MenuSystemPlugin::GetMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pCSPlayerPawn, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
+{
+	vecResult = GetEntityPosition(pCSPlayerPawn) + CBaseModelEntity_Helper::GetViewOffsetAccessor(pCSPlayerPawn);
+	angResult = CCSPlayerPawnBase_Helper::GetEyeAnglesAccessor(pCSPlayerPawn);
 	GetMenuEntitiesPosition(vecResult, angResult, vecBackgroundResult, vecResult, angResult);
 }
 
@@ -1095,14 +1106,14 @@ void MenuSystemPlugin::SpawnMenuEntities(const Vector &vecBackgroundOrigin, cons
 	SpawnEntities(vecKeyValues, nullptr, pEntities);
 }
 
-void MenuSystemPlugin::SpawnMenuEntitiesByPlayer(CBasePlayerPawn *pPlayerPawn, CUtlVector<CEntityInstance *> *pEntities)
+void MenuSystemPlugin::SpawnMenuEntitiesByEntity(CBaseEntity *pEntity, CUtlVector<CEntityInstance *> *pEntities)
 {
 	Vector vecMenuAbsOriginBackground {},
 	       vecMenuAbsOrigin {};
 
 	QAngle angMenuRotation {};
 
-	GetMenuEntitiesPositionByPlayer(pPlayerPawn, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
+	GetMenuEntitiesPositionByEntity(pEntity, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 	SpawnMenuEntities(vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation, pEntities);
 }
 
@@ -1153,7 +1164,7 @@ CBaseViewModel *MenuSystemPlugin::SpawnViewModelEntity(const Vector &vecOrigin, 
 	return reinterpret_cast<CBaseViewModel *>(vecEntities[0]);
 }
 
-void MenuSystemPlugin::TeleportMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities)
+void MenuSystemPlugin::TeleportMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pCSPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities)
 {
 	auto &aBaseEntity = GetGameDataStorage().GetBaseEntity();
 
@@ -1162,7 +1173,7 @@ void MenuSystemPlugin::TeleportMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn
 
 	QAngle angMenuRotation {};
 
-	GetMenuEntitiesPositionByPlayer(pPlayerPawn, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
+	GetMenuEntitiesPositionByCSPlayer(pCSPlayerPawn, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 
 	FOR_EACH_VEC(vecEntities, i)
 	{
@@ -1172,17 +1183,15 @@ void MenuSystemPlugin::TeleportMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn
 	}
 }
 
-bool MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities, const char *pszAttachmentName)
+bool MenuSystemPlugin::AttachMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pCSPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities)
 {
 	auto &aBaseEntity = GetGameDataStorage().GetBaseEntity();
 
-	auto aViewModelServicesAccessor = CCSPlayerPawnBase_Helper::GetViewModelServicesAccessor(reinterpret_cast<CCSPlayerPawnBase *>(pPlayerPawn));
+	auto aViewModelServicesAccessor = CCSPlayerPawnBase_Helper::GetViewModelServicesAccessor(pCSPlayerPawn);
 
-	CPlayer_ViewModelServices *pPlayerViewModelServices = aViewModelServicesAccessor;
+	CCSPlayer_ViewModelServices *pCSPlayerViewModelServices = aViewModelServicesAccessor;
 
-	auto *pCSPlayerViewModelServices = reinterpret_cast<CCSPlayer_ViewModelServices *>(pPlayerViewModelServices);
-
-	if(!pPlayerViewModelServices)
+	if(!pCSPlayerViewModelServices)
 	{
 		Logger::WarningFormat("Failed to get a player view model services\n");
 
@@ -1202,7 +1211,7 @@ bool MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, 
 
 	QAngle angMenuRotation {};
 
-	GetMenuEntitiesPositionByPlayer(pPlayerPawn, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
+	GetMenuEntitiesPositionByEntity(pCSPlayerPawn, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 
 	if(Logger::IsChannelEnabled(LS_DETAILED))
 	{
@@ -1219,13 +1228,13 @@ bool MenuSystemPlugin::AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, 
 
 	if(!pPlayerViewModel)
 	{
-		auto *pExtraPlayerViewModel = SpawnViewModelEntity(vecMenuAbsOrigin, angMenuRotation, pPlayerPawn, s_nExtraViewModelSlot);
+		auto *pExtraPlayerViewModel = SpawnViewModelEntity(vecMenuAbsOrigin, angMenuRotation, pCSPlayerPawn, s_nExtraViewModelSlot);
 
 		hPlayerViewModel.Set(pExtraPlayerViewModel);
 		pPlayerViewModel = pExtraPlayerViewModel;
 	}
 
-	aBaseEntity.AcceptInput(pPlayerViewModel, "FollowEntity", pPlayerPawn, NULL, &aParentVariant, 0);
+	aBaseEntity.AcceptInput(pPlayerViewModel, "FollowEntity", pCSPlayerPawn, NULL, &aParentVariant, 0);
 
 	if(Logger::IsChannelEnabled(LV_DETAILED))
 	{

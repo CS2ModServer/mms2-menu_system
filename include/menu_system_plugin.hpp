@@ -218,20 +218,29 @@ public: // Entity Manager.
 	bool UnloadEntityManager(char *error = nullptr, size_t maxlen = 0);
 
 	bool LoadMenuSpawnGroups(const Vector &aWorldOrigin = {0.0f, 0.0f, 0.0f});
+
+	// Entity keyvalues.
 	void FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation, const Vector &vecScales, const Color rgbaColor, const char *pszFontName, const char *pszBackgroundMaterialName, const char *pszMessageText);
 	void FillViewModelEntityKeyValues(CEntityKeyValues *pEntityKV, const Vector &vecOrigin, const QAngle &angRotation);
 
+	// Get positions.
 	Vector GetEntityPosition(CBaseEntity *pEntity, QAngle *pRotation = nullptr);
 	void GetMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
-	void GetMenuEntitiesPositionByPlayer(CBasePlayerPawn *pPlayerPawn, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
+	void GetMenuEntitiesPositionByEntity(CBaseEntity *pPlayerPawn, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
+	void GetMenuEntitiesPositionByViewModel(CBaseViewModel *pViewModel, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
+	void GetMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pCSPlayerPawn, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
 
+	// Spawn entities.
 	void SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKeyValues, IEntityManager::IProviderAgent::IEntityListener *pListener, CUtlVector<CEntityInstance *> *pEntities);
 	void SpawnMenuEntities(const Vector &vecBackgroundOrigin, const Vector &vecOrigin, const QAngle &angRotation, CUtlVector<CEntityInstance *> *pEntities);
-	void SpawnMenuEntitiesByPlayer(CBasePlayerPawn *pPlayerPawn, CUtlVector<CEntityInstance *> *pEntities);
+	void SpawnMenuEntitiesByEntity(CBaseEntity *pEntity, CUtlVector<CEntityInstance *> *pEntities);
 	CBaseViewModel *SpawnViewModelEntity(const Vector &vecOrigin, const QAngle &angRotation, CBaseEntity *pOwner, const int nSlot);
 
-	void TeleportMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities);
-	bool AttachMenuEntitiesToPlayer(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities, const char *pszAttachmentName);
+	// Menus movement.
+	void TeleportMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pCSPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities);
+	bool AttachMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pCSPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities);
+
+	// Setting up the entities.
 	bool SettingExtraPlayerViewModel(CBaseViewModel *pEntity, CBaseEntity *pOwner, const int nSlot);
 	bool SetMenuEntitiesProperties(CBasePlayerPawn *pPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities);
 
