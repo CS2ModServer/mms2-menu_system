@@ -108,8 +108,7 @@ MenuSystemPlugin::MenuSystemPlugin()
 
     m_aEnableGameEventsDetaillsConVar("mm_" META_PLUGIN_PREFIX "_enable_game_events_details", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable detail messages of game events", false, true, false, true, true),
     m_mapConVarCookies(DefLessFunc(const CUtlSymbolLarge)),
-    m_mapLanguages(DefLessFunc(const CUtlSymbolLarge)),
-	m_mapPlayerEntities(DefLessFunc(const int))
+    m_mapLanguages(DefLessFunc(const CUtlSymbolLarge))
 {
 }
 
@@ -177,7 +176,11 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 		return false;
 	}
 
-	m_vecGameEvents.AddToTail("round_start"); // Hook Round Start event to respawn menu entities. See "FireGameEvent" method.
+	// See "FireGameEvent" method.
+	{
+		// m_vecGameEvents.AddToTail("round_start"); // Hook Round Start event to respawn menu entities.
+		m_vecGameEvents.AddToTail("player_team"); // Hook Player Team to change the menu entities way to display.
+	}
 
 	SH_ADD_HOOK(ICvar, DispatchConCommand, g_pCVar, SH_MEMBER(this, &MenuSystemPlugin::OnDispatchConCommandHook), false);
 	SH_ADD_HOOK_MEMFUNC(INetworkServerService, StartupServer, g_pNetworkServerService, this, &MenuSystemPlugin::OnStartupServerHook, true);
@@ -209,20 +212,20 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 
 		// Spawn & attach menus.
 		{
-			auto *pPlayer = g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient + 1));
+			auto *pPlayerController = reinterpret_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient + 1)));
 
-			if(pPlayer)
+			if(pPlayerController)
 			{
-				auto *pPlayerPawn = CBasePlayerController_Helper::GetPawnAccessor(reinterpret_cast<CBasePlayerController *>(pPlayer))->Get();
+				CCSPlayerPawnBase *pCSPlayerPawn = CBasePlayerController_Helper::GetPawnAccessor(pPlayerController)->Get();
 
-				if(pPlayerPawn)
+				if(pCSPlayerPawn)
 				{
 					CUtlVector<CEntityInstance *> vecEntitites;
 
-					SpawnMenuEntitiesByEntity(pPlayerPawn, &vecEntitites);
-					AttachMenuEntitiesToCSPlayer(pPlayerPawn, vecEntitites);
+					SpawnMenuEntitiesByEntity(pCSPlayerPawn, &vecEntitites);
+					AttachMenuEntitiesToCSPlayer(pCSPlayerPawn, vecEntitites);
 					//SetMenuEntitiesProperties(pPlayerPawn, vecEntitites);
-					m_mapPlayerEntities.Insert(iClient, vecEntitites);
+					// m_mapPlayerEntities.Insert(iClient, vecEntitites);
 				}
 				else
 				{
@@ -240,18 +243,18 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 	{
 		// const SpawnGroupHandle_t hSpawnGroup = m_pMySpawnGroupInstance->GetSpawnGroupHandle();
 
-		FOR_EACH_MAP_FAST(m_mapPlayerEntities, i)
-		{
-			const auto iClient = m_mapPlayerEntities.Key(i);
+		// FOR_EACH_MAP_FAST(m_mapPlayerEntities, i)
+		// {
+		// 	const auto iClient = m_mapPlayerEntities.Key(i);
 
-			for(auto *pEntity : m_mapPlayerEntities.Element(i))
-			{
-				m_pEntityManagerProviderAgent->PushDestroyQueue(pEntity);
-			}
-		}
+		// 	for(auto *pEntity : m_mapPlayerEntities.Element(i))
+		// 	{
+		// 		m_pEntityManagerProviderAgent->PushDestroyQueue(pEntity);
+		// 	}
+		// }
 
-		m_pEntityManagerProviderAgent->ExecuteDestroyQueued();
-		m_mapPlayerEntities.Purge();
+		// m_pEntityManagerProviderAgent->ExecuteDestroyQueued();
+		// m_mapPlayerEntities.Purge();
 	});
 
 	if(late)
@@ -569,8 +572,21 @@ void MenuSystemPlugin::FireGameEvent(IGameEvent *event)
 		}
 	}
 
-	// SpawnMenuEntities();
-	// LoadMenuSpawnGroups();
+	// "round_start"
+	{
+		// SpawnMenuEntities();
+		// LoadMenuSpawnGroups();
+	}
+
+	// "player_team"
+	{
+		if(event->GetInt("team") <= TEAM_SPECTATOR)
+		{
+			int iClient = event->GetPawnEntityIndex("userid").Get() - 1;
+
+
+		}
+	}
 }
 
 void MenuSystemPlugin::OnSpawnGroupAllocated(SpawnGroupHandle_t hSpawnGroup, ISpawnGroup *pSpawnGroup)
@@ -2217,8 +2233,14 @@ void MenuSystemPlugin::OnConnectClient(CNetworkGameServerBase *pNetServer, CServ
 {
 	if(pClient)
 	{
-		SH_ADD_HOOK_MEMFUNC(CServerSideClientBase, ProcessRespondCvarValue, pClient, this, &MenuSystemPlugin::OnProcessRespondCvarValueHook, false);
 		SH_ADD_HOOK_MEMFUNC(CServerSideClientBase, PerformDisconnection, pClient, this, &MenuSystemPlugin::OnDisconectClientHook, false);
+
+		if(pClient->IsFakeClient())
+		{
+			return;
+		}
+
+		SH_ADD_HOOK_MEMFUNC(CServerSideClientBase, ProcessRespondCvarValue, pClient, this, &MenuSystemPlugin::OnProcessRespondCvarValueHook, false);
 	}
 	else
 	{
@@ -2227,9 +2249,11 @@ void MenuSystemPlugin::OnConnectClient(CNetworkGameServerBase *pNetServer, CServ
 		return;
 	}
 
+	auto *pPlayer = reinterpret_cast<CServerSideClient *>(pClient);
+
 	auto aSlot = pClient->GetPlayerSlot();
 
-	[[maybe_unused]] auto &aPlayer = GetPlayerData(aSlot);
+	auto &aPlayer = GetPlayerData(aSlot);
 
 	// Get "cl_language" cvar value from a client.
 	{
@@ -2261,6 +2285,8 @@ void MenuSystemPlugin::OnConnectClient(CNetworkGameServerBase *pNetServer, CServ
 
 		SendCvarValueQuery(&aFilter, pszCvarName, iCookie);
 	}
+
+	aPlayer.OnConnected(pPlayer);
 }
 
 bool MenuSystemPlugin::OnProcessRespondCvarValue(CServerSideClientBase *pClient, const CCLCMsg_RespondCvarValue_t &aMessage)
@@ -2324,14 +2350,22 @@ bool MenuSystemPlugin::OnProcessRespondCvarValue(CServerSideClientBase *pClient,
 
 void MenuSystemPlugin::OnDisconectClient(CServerSideClientBase *pClient, ENetworkDisconnectionReason eReason)
 {
-	SH_REMOVE_HOOK_MEMFUNC(CServerSideClientBase, ProcessRespondCvarValue, pClient, this, &MenuSystemPlugin::OnProcessRespondCvarValueHook, false);
 	SH_REMOVE_HOOK_MEMFUNC(CServerSideClientBase, PerformDisconnection, pClient, this, &MenuSystemPlugin::OnDisconectClientHook, false);
+
+	if(pClient->IsFakeClient())
+	{
+		return;
+	}
+
+	SH_REMOVE_HOOK_MEMFUNC(CServerSideClientBase, ProcessRespondCvarValue, pClient, this, &MenuSystemPlugin::OnProcessRespondCvarValueHook, false);
+
+	auto *pPlayer = reinterpret_cast<CServerSideClient *>(pClient);
 
 	auto aSlot = pClient->GetPlayerSlot();
 
 	auto &aPlayer = GetPlayerData(aSlot);
 
-	aPlayer.Destroy();
+	aPlayer.OnDisconnected(pPlayer, eReason);
 }
 
 CUtlSymbolLarge MenuSystemPlugin::GetConVarSymbol(const char *pszName)

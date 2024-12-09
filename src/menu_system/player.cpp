@@ -21,21 +21,13 @@
 
 #include <menu_system_plugin.hpp>
 
+#include <serversideclient.h>
+
 MenuSystemPlugin::CPlayer::CPlayer()
- :  m_pLanguage(nullptr), 
+ :  m_pServerSideClient(nullptr), 
+    m_pLanguage(nullptr), 
     m_aYourArgumentPhrase({nullptr, nullptr})
 {
-}
-
-void MenuSystemPlugin::CPlayer::Init()
-{
-	m_pLanguage = nullptr;
-	m_aYourArgumentPhrase = {nullptr, nullptr};
-}
-
-void MenuSystemPlugin::CPlayer::Destroy()
-{
-	Init();
 }
 
 bool MenuSystemPlugin::CPlayer::AddLanguageListener(IPlayerLanguageListener *pListener)
@@ -65,6 +57,23 @@ const IMenuSystem::ILanguage *MenuSystemPlugin::CPlayer::GetLanguage() const
 void MenuSystemPlugin::CPlayer::SetLanguage(const ILanguage *pData)
 {
 	m_pLanguage = pData;
+}
+
+CServerSideClient *MenuSystemPlugin::CPlayer::GetServerSideClient()
+{
+	return m_pServerSideClient;
+}
+
+void MenuSystemPlugin::CPlayer::OnConnected(CServerSideClient *pClient)
+{
+	m_pServerSideClient = pClient;
+}
+
+void MenuSystemPlugin::CPlayer::OnDisconnected(CServerSideClient *pClient, ENetworkDisconnectionReason eReason)
+{
+	m_pServerSideClient = nullptr;
+	m_pLanguage = nullptr;
+	m_aYourArgumentPhrase = {nullptr, nullptr};
 }
 
 void MenuSystemPlugin::CPlayer::OnLanguageChanged(CPlayerSlot aSlot, CLanguage *pData)

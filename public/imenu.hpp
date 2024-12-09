@@ -35,6 +35,7 @@
 
 class CGameEntitySystem;
 class CBaseGameSystemFactory;
+class CServerSideClient;
 class IGameEventManager2;
 
 /**
@@ -154,11 +155,11 @@ public: // Player ones.
 	{
 	public:
 		/**
-		 * @brief Gets a language.
+		 * @brief Gets a server side client of the player.
 		 * 
-		 * @return              Returns a language, otherwise "nullptr" that not been received.
+		 * @return              A server server side client pointer.
 		 */
-		virtual const ILanguage *GetLanguage() const = 0;
+		virtual CServerSideClient *GetServerSideClient() = 0;
 	}; // IMenuSystem::IPlayer
 
 	/**

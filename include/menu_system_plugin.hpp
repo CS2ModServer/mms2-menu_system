@@ -61,6 +61,7 @@
 #	include <tier1/utlmap.h>
 #	include <tier1/keyvalues3.h>
 #	include <entity2/entitykeyvalues.h>
+#	include <network_connection.pb.h>
 
 #	define MENU_SYSTEM_LOGGINING_COLOR {127, 255, 0, 191} // Green (Chartreuse)
 #	define MENU_SYSTEM_MAX_MESSAGE_TEXT_LENGTH 512
@@ -138,7 +139,7 @@ public: // IMenuSystem
 	private:
 		CUtlSymbolLarge m_sName;
 		CUtlString m_sCountryCode;
-	}; // CLanguage
+	}; // MenuSystemPlugin::CLanguage
 
 	class CPlayer : public IPlayer
 	{
@@ -147,17 +148,20 @@ public: // IMenuSystem
 	public:
 		CPlayer();
 
-	public:
-		void Init();
-		void Destroy();
-
-	public: // ISample::IPlayerLanguageCallbacks
+	public: // IMenuSystem::IPlayerLanguageCallbacks
 		bool AddLanguageListener(IPlayerLanguageListener *pListener) override;
 		bool RemoveLanguageListener(IPlayerLanguageListener *pListener) override;
 
-	public: // ISample::IPlayerLanguage
+	public: // IMenuSystem::IPlayerLanguage
 		const ILanguage *GetLanguage() const override;
 		void SetLanguage(const ILanguage *pData) override;
+
+	public: // IMenuSystem::IPlayer
+		CServerSideClient *GetServerSideClient() override;
+
+	public:
+		virtual void OnConnected(CServerSideClient *pClient);
+		virtual void OnDisconnected(CServerSideClient *pClient, ENetworkDisconnectionReason eReason);
 
 	public:
 		virtual void OnLanguageChanged(CPlayerSlot aSlot, CLanguage *pData);
@@ -173,12 +177,18 @@ public: // IMenuSystem
 		const TranslatedPhrase &GetYourArgumentPhrase() const;
 
 	private:
+		CServerSideClient *m_pServerSideClient;
+
+	private:
 		const ILanguage *m_pLanguage;
 		CUtlVector<IPlayerLanguageListener *> m_vecLanguageCallbacks;
 
+	// private: // Menus data.
+	// 	CUtlVector<CEntityInstance *> m_vecMenuEntities;
+
 	private:
 		TranslatedPhrase m_aYourArgumentPhrase;
-	}; // CPlayer
+	}; // MenuSystemPlugin::CPlayer
 
 	const IMenuSystem::ILanguage *GetServerLanguage() const override;
 	const IMenuSystem::ILanguage *GetLanguageByName(const char *psz) const override;
@@ -331,8 +341,6 @@ private: // Fields.
 
 	// Run-time things.
 	IEntityManager::IProviderAgent::ISpawnGroupInstance *m_pMySpawnGroupInstance;
-
-	CUtlMap<int /* Player slot index. */, CUtlVector<CEntityInstance *>> m_mapPlayerEntities;
 
 	INetworkMessageInternal *m_pGetCvarValueMessage = NULL;
 	INetworkMessageInternal *m_pSayText2Message = NULL;
