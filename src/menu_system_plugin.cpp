@@ -1296,7 +1296,7 @@ bool MenuSystemPlugin::SettingMenuEntity(CEntityInstance *pEntity)
 	{
 		auto aEFlagsAccessor = CBaseEntity_Helper::GetEFlagsAccessor(reinterpret_cast<CBaseEntity *>(pEntity));
 
-		aEFlagsAccessor = EF_NODRAW;
+		aEFlagsAccessor = EF_MENU;
 		aEFlagsAccessor.MarkNetworkChanged();
 	}
 
