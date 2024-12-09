@@ -141,22 +141,22 @@ public: // IMenuSystem
 		CUtlString m_sCountryCode;
 	}; // MenuSystemPlugin::CLanguage
 
-	class CPlayerBase : public IPlayerBase
+	class CPlayerBase : public ISample::IPlayerBase
 	{
 		friend class MenuSystemPlugin;
 
 	public:
 		CPlayerBase();
 
-	public: // IMenuSystem::IPlayerLanguageCallbacks
+	public: // ISample::IPlayerLanguageCallbacks
 		bool AddLanguageListener(IPlayerLanguageListener *pListener) override;
 		bool RemoveLanguageListener(IPlayerLanguageListener *pListener) override;
 
-	public: // IMenuSystem::IPlayerLanguage
-		const ILanguage *GetLanguage() const override;
-		void SetLanguage(const ILanguage *pData) override;
+	public: // ISample::IPlayerLanguage
+		const ISample::ILanguage *GetLanguage() const override;
+		void SetLanguage(const ISample::ILanguage *pData) override;
 
-	public: // IMenuSystem::IPlayer
+	public: // ISample::IPlayer
 		CServerSideClient *GetServerSideClient() override;
 
 	public:
@@ -180,8 +180,8 @@ public: // IMenuSystem
 		CServerSideClient *m_pServerSideClient;
 
 	private:
-		const ILanguage *m_pLanguage;
-		CUtlVector<IPlayerLanguageListener *> m_vecLanguageCallbacks;
+		const ISample::ILanguage *m_pLanguage;
+		CUtlVector<ISample::IPlayerLanguageListener *> m_vecLanguageCallbacks;
 
 	// private: // Menus data.
 	// 	CUtlVector<CEntityInstance *> m_vecMenuEntities;
@@ -190,9 +190,9 @@ public: // IMenuSystem
 		TranslatedPhrase m_aYourArgumentPhrase;
 	}; // MenuSystemPlugin::CPlayerBase
 
-	const IMenuSystem::ILanguage *GetServerLanguage() const override;
-	const IMenuSystem::ILanguage *GetLanguageByName(const char *psz) const override;
-	IPlayerBase *GetPlayer(const CPlayerSlot &aSlot) override;
+	const ISample::ILanguage *GetServerLanguage() const override;
+	const ISample::ILanguage *GetLanguageByName(const char *psz) const override;
+	ISample::IPlayerBase *GetPlayer(const CPlayerSlot &aSlot) override;
 	CPlayerBase &GetPlayerData(const CPlayerSlot &aSlot);
 
 public: // CBaseGameSystem

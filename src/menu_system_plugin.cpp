@@ -427,14 +427,14 @@ IGameEventManager2 **MenuSystemPlugin::GetGameEventManagerPointer() const
 	return reinterpret_cast<IGameEventManager2 **>(GetGameDataStorage().GetSource2Server().GetGameEventManagerPointer());
 }
 
-const IMenuSystem::ILanguage *MenuSystemPlugin::GetLanguageByName(const char *psz) const
+const ISample::ILanguage *MenuSystemPlugin::GetLanguageByName(const char *psz) const
 {
 	auto iFound = m_mapLanguages.Find(FindLanguageSymbol(psz));
 
 	return m_mapLanguages.IsValidIndex(iFound) ? &m_mapLanguages.Element(iFound) : nullptr;
 }
 
-IMenuSystem::IPlayerBase *MenuSystemPlugin::GetPlayer(const CPlayerSlot &aSlot)
+ISample::IPlayerBase *MenuSystemPlugin::GetPlayer(const CPlayerSlot &aSlot)
 {
 	return &GetPlayerData(aSlot);
 }
