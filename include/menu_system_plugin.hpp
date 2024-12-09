@@ -282,7 +282,6 @@ private: // Commands.
 	CON_COMMAND_MEMBER_F(MenuSystemPlugin, "menuselect", OnMenuSelectCommand, "", FCVAR_LINKED_CONCOMMAND | FCVAR_CLIENT_CAN_EXECUTE);
 
 private: // ConVars. See the constructor
-	ConVar<bool> m_aEnableFrameDetailsConVar;
 	ConVar<bool> m_aEnableGameEventsDetaillsConVar;
 
 public: // SourceHooks.
