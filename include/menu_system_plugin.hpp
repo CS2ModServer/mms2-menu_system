@@ -192,7 +192,7 @@ public: // IMenuSystem
 
 	const ISample::ILanguage *GetServerLanguage() const override;
 	const ISample::ILanguage *GetLanguageByName(const char *psz) const override;
-	ISample::IPlayerBase *GetPlayer(const CPlayerSlot &aSlot) override;
+	ISample::IPlayerBase *GetPlayerBase(const CPlayerSlot &aSlot) override;
 	CPlayerBase &GetPlayerData(const CPlayerSlot &aSlot);
 
 public: // CBaseGameSystem

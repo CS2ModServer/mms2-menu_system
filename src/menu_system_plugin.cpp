@@ -434,7 +434,7 @@ const ISample::ILanguage *MenuSystemPlugin::GetLanguageByName(const char *psz) c
 	return m_mapLanguages.IsValidIndex(iFound) ? &m_mapLanguages.Element(iFound) : nullptr;
 }
 
-ISample::IPlayerBase *MenuSystemPlugin::GetPlayer(const CPlayerSlot &aSlot)
+ISample::IPlayerBase *MenuSystemPlugin::GetPlayerBase(const CPlayerSlot &aSlot)
 {
 	return &GetPlayerData(aSlot);
 }
