@@ -23,14 +23,15 @@
 
 #include <serversideclient.h>
 
-MenuSystemPlugin::CPlayerBase::CPlayerBase()
+MenuSystemPlugin::CPlayer::CPlayer()
  :  m_pServerSideClient(nullptr), 
+    m_vecMenuEntities(), 
     m_pLanguage(nullptr), 
     m_aYourArgumentPhrase({nullptr, nullptr})
 {
 }
 
-bool MenuSystemPlugin::CPlayerBase::AddLanguageListener(IPlayerLanguageListener *pListener)
+bool MenuSystemPlugin::CPlayer::AddLanguageListener(IPlayerLanguageListener *pListener)
 {
 	int iFound = m_vecLanguageCallbacks.Find(pListener);
 
@@ -44,39 +45,51 @@ bool MenuSystemPlugin::CPlayerBase::AddLanguageListener(IPlayerLanguageListener 
 	return bIsExists;
 }
 
-bool MenuSystemPlugin::CPlayerBase::RemoveLanguageListener(IPlayerLanguageListener *pListener)
+bool MenuSystemPlugin::CPlayer::RemoveLanguageListener(IPlayerLanguageListener *pListener)
 {
 	return m_vecLanguageCallbacks.FindAndRemove(pListener);
 }
 
-const IMenuSystem::ILanguage *MenuSystemPlugin::CPlayerBase::GetLanguage() const
+const IMenuSystem::ILanguage *MenuSystemPlugin::CPlayer::GetLanguage() const
 {
 	return m_pLanguage;
 }
 
-void MenuSystemPlugin::CPlayerBase::SetLanguage(const ILanguage *pData)
+void MenuSystemPlugin::CPlayer::SetLanguage(const ILanguage *pData)
 {
 	m_pLanguage = pData;
 }
 
-CServerSideClient *MenuSystemPlugin::CPlayerBase::GetServerSideClient()
+bool MenuSystemPlugin::CPlayer::IsConnected()
+{
+	return m_pServerSideClient != nullptr;
+}
+
+CServerSideClient *MenuSystemPlugin::CPlayer::GetServerSideClient()
 {
 	return m_pServerSideClient;
 }
 
-void MenuSystemPlugin::CPlayerBase::OnConnected(CServerSideClient *pClient)
+CUtlVector<CEntityInstance *> &MenuSystemPlugin::CPlayer::GetMenuEntities()
+{
+	return m_vecMenuEntities;
+}
+
+void MenuSystemPlugin::CPlayer::OnConnected(CServerSideClient *pClient)
 {
 	m_pServerSideClient = pClient;
 }
 
-void MenuSystemPlugin::CPlayerBase::OnDisconnected(CServerSideClient *pClient, ENetworkDisconnectionReason eReason)
+void MenuSystemPlugin::CPlayer::OnDisconnected(CServerSideClient *pClient, ENetworkDisconnectionReason eReason)
 {
 	m_pServerSideClient = nullptr;
+	m_vecMenuEntities.Purge();
+
 	m_pLanguage = nullptr;
 	m_aYourArgumentPhrase = {nullptr, nullptr};
 }
 
-void MenuSystemPlugin::CPlayerBase::OnLanguageChanged(CPlayerSlot aSlot, CLanguage *pData)
+void MenuSystemPlugin::CPlayer::OnLanguageChanged(CPlayerSlot aSlot, CLanguage *pData)
 {
 	SetLanguage(pData);
 
@@ -86,7 +99,7 @@ void MenuSystemPlugin::CPlayerBase::OnLanguageChanged(CPlayerSlot aSlot, CLangua
 	}
 }
 
-void MenuSystemPlugin::CPlayerBase::TranslatePhrases(const Translations *pTranslations, const CLanguage &aServerLanguage, CUtlVector<CUtlString> &vecMessages)
+void MenuSystemPlugin::CPlayer::TranslatePhrases(const Translations *pTranslations, const CLanguage &aServerLanguage, CUtlVector<CUtlString> &vecMessages)
 {
 	const struct
 	{
@@ -148,7 +161,7 @@ void MenuSystemPlugin::CPlayerBase::TranslatePhrases(const Translations *pTransl
 	}
 }
 
-const MenuSystemPlugin::CPlayerBase::TranslatedPhrase &MenuSystemPlugin::CPlayerBase::GetYourArgumentPhrase() const
+const MenuSystemPlugin::CPlayer::TranslatedPhrase &MenuSystemPlugin::CPlayer::GetYourArgumentPhrase() const
 {
 	return m_aYourArgumentPhrase;
 }

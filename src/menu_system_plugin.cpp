@@ -224,7 +224,15 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 
 					SpawnMenuEntitiesByEntity(pCSPlayerPawn, &vecEntitites);
 					AttachMenuEntitiesToCSPlayer(pCSPlayerPawn, vecEntitites);
-					// m_mapPlayerEntities.Insert(iClient, vecEntitites);
+
+					{
+						auto aPlayer = GetPlayerData(aSlot);
+
+						if(aPlayer.IsConnected())
+						{
+							aPlayer.GetMenuEntities().AddVectorToTail(vecEntitites);
+						}
+					}
 				}
 				else
 				{
@@ -240,20 +248,20 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 
 	MenuSystem::ChatCommandSystem::Register("menu_clear", [&](CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments)
 	{
-		// const SpawnGroupHandle_t hSpawnGroup = m_pMySpawnGroupInstance->GetSpawnGroupHandle();
+		auto aPlayer = GetPlayerData(aSlot);
 
-		// FOR_EACH_MAP_FAST(m_mapPlayerEntities, i)
-		// {
-		// 	const auto iClient = m_mapPlayerEntities.Key(i);
+		if(aPlayer.IsConnected()) // Are connected.
+		{
+			auto &vecMenuEntities = aPlayer.GetMenuEntities();
 
-		// 	for(auto *pEntity : m_mapPlayerEntities.Element(i))
-		// 	{
-		// 		m_pEntityManagerProviderAgent->PushDestroyQueue(pEntity);
-		// 	}
-		// }
+			for(auto *pMenuEntity : vecMenuEntities)
+			{
+				m_pEntityManagerProviderAgent->PushDestroyQueue(pMenuEntity);
+			}
 
-		// m_pEntityManagerProviderAgent->ExecuteDestroyQueued();
-		// m_mapPlayerEntities.Purge();
+			m_pEntityManagerProviderAgent->ExecuteDestroyQueued();
+			vecMenuEntities.Purge();
+		}
 	});
 
 	if(late)
@@ -436,10 +444,15 @@ const ISample::ILanguage *MenuSystemPlugin::GetLanguageByName(const char *psz) c
 
 ISample::IPlayerBase *MenuSystemPlugin::GetPlayerBase(const CPlayerSlot &aSlot)
 {
+	return GetPlayer(aSlot);
+}
+
+IMenuSystem::IPlayer *MenuSystemPlugin::GetPlayer(const CPlayerSlot &aSlot)
+{
 	return &GetPlayerData(aSlot);
 }
 
-MenuSystemPlugin::CPlayerBase &MenuSystemPlugin::GetPlayerData(const CPlayerSlot &aSlot)
+MenuSystemPlugin::CPlayer &MenuSystemPlugin::GetPlayerData(const CPlayerSlot &aSlot)
 {
 	int iClient = aSlot.Get();
 

@@ -27,7 +27,11 @@
 
 #	include "imenu/isample.hpp"
 
+#	include <tier1/utlvector.h>
+
 #	define MENU_SYSTEM_INTERFACE_NAME "Menu System v1.0.0"
+
+class CEntityInstance;
 
 /**
  * @brief A Menu System interface.
@@ -36,6 +40,28 @@
 class IMenuSystem : public ISample
 {
 public:
+	/**
+	 * @brief A player interface.
+	**/
+	class IPlayer : public IPlayerBase
+	{
+	public:
+		/**
+		 * @brief Gets menu entities of the player.
+		 * 
+		 * @return              A vector of menu entities.
+		 */
+		virtual CUtlVector<CEntityInstance *> &GetMenuEntities() = 0;
+	};
+
+	/**
+	 * @brief Gets a player data.
+	 * 
+	 * @param aSlot         A player slot.
+	 * 
+	 * @return              Returns a player data.
+	 */
+	virtual IPlayer *GetPlayer(const CPlayerSlot &aSlot) = 0;
 }; // IMenuSystem
 
 #endif // _INCLUDE_METAMOD_SOURCE_IMENU_HPP_

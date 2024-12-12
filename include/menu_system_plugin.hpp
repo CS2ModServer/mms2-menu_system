@@ -24,21 +24,21 @@
 
 #	pragma once
 
-#	include <imenu.hpp>
-#	include <ientitymgr.hpp>
-#	include <menu_system/chat_command_system.hpp>
-#	include <menu_system/provider.hpp>
-#	include <menu_system/schema.hpp>
-#	include <menu_system/schema/base_entity.hpp>
-#	include <menu_system/schema/base_model_entity.hpp>
-#	include <menu_system/schema/base_player_controller.hpp>
-#	include <menu_system/schema/base_player_pawn.hpp>
-#	include <menu_system/schema/base_view_model.hpp>
-#	include <menu_system/schema/body_component.hpp>
-#	include <menu_system/schema/cs_player_pawn_base.hpp>
-#	include <menu_system/schema/cs_player_view_model_services.hpp>
-#	include <menu_system/schema/game_scene_node.hpp>
-#	include <concat.hpp>
+#	include "imenu.hpp"
+#	include "ientitymgr.hpp"
+#	include "menu_system/chat_command_system.hpp"
+#	include "menu_system/provider.hpp"
+#	include "menu_system/schema.hpp"
+#	include "menu_system/schema/base_entity.hpp"
+#	include "menu_system/schema/base_model_entity.hpp"
+#	include "menu_system/schema/base_player_controller.hpp"
+#	include "menu_system/schema/base_player_pawn.hpp"
+#	include "menu_system/schema/base_view_model.hpp"
+#	include "menu_system/schema/body_component.hpp"
+#	include "menu_system/schema/cs_player_pawn_base.hpp"
+#	include "menu_system/schema/cs_player_view_model_services.hpp"
+#	include "menu_system/schema/game_scene_node.hpp"
+#	include "concat.hpp"
 
 #	include <logger.hpp>
 #	include <translations.hpp>
@@ -141,23 +141,27 @@ public: // IMenuSystem
 		CUtlString m_sCountryCode;
 	}; // MenuSystemPlugin::CLanguage
 
-	class CPlayerBase : public ISample::IPlayerBase
+	class CPlayer : public IPlayer
 	{
 		friend class MenuSystemPlugin;
 
 	public:
-		CPlayerBase();
+		CPlayer();
 
 	public: // ISample::IPlayerLanguageCallbacks
 		bool AddLanguageListener(IPlayerLanguageListener *pListener) override;
 		bool RemoveLanguageListener(IPlayerLanguageListener *pListener) override;
 
 	public: // ISample::IPlayerLanguage
-		const ISample::ILanguage *GetLanguage() const override;
-		void SetLanguage(const ISample::ILanguage *pData) override;
+		const ILanguage *GetLanguage() const override;
+		void SetLanguage(const ILanguage *pData) override;
 
-	public: // ISample::IPlayer
+	public: // ISample::IPlayerBase
+		bool IsConnected() override;
 		CServerSideClient *GetServerSideClient() override;
+
+	public: // IMenuSystem::IPlayer
+		CUtlVector<CEntityInstance *> &GetMenuEntities() override;
 
 	public:
 		virtual void OnConnected(CServerSideClient *pClient);
@@ -179,21 +183,22 @@ public: // IMenuSystem
 	private:
 		CServerSideClient *m_pServerSideClient;
 
-	private:
-		const ISample::ILanguage *m_pLanguage;
-		CUtlVector<ISample::IPlayerLanguageListener *> m_vecLanguageCallbacks;
+	private: // Menus data.
+		CUtlVector<CEntityInstance *> m_vecMenuEntities;
 
-	// private: // Menus data.
-	// 	CUtlVector<CEntityInstance *> m_vecMenuEntities;
+	private:
+		const ILanguage *m_pLanguage;
+		CUtlVector<IPlayerLanguageListener *> m_vecLanguageCallbacks;
 
 	private:
 		TranslatedPhrase m_aYourArgumentPhrase;
 	}; // MenuSystemPlugin::CPlayerBase
 
-	const ISample::ILanguage *GetServerLanguage() const override;
-	const ISample::ILanguage *GetLanguageByName(const char *psz) const override;
-	ISample::IPlayerBase *GetPlayerBase(const CPlayerSlot &aSlot) override;
-	CPlayerBase &GetPlayerData(const CPlayerSlot &aSlot);
+	const ILanguage *GetServerLanguage() const override;
+	const ILanguage *GetLanguageByName(const char *psz) const override;
+	IPlayerBase *GetPlayerBase(const CPlayerSlot &aSlot) override;
+	IPlayer *GetPlayer(const CPlayerSlot &aSlot) override;
+	CPlayer &GetPlayerData(const CPlayerSlot &aSlot);
 
 public: // CBaseGameSystem
 	bool Init() override;
@@ -352,7 +357,7 @@ private: // Fields.
 	CLanguage m_aServerLanguage;
 	CUtlVector<CLanguage> m_vecLanguages;
 
-	CPlayerBase m_aPlayers[ABSOLUTE_PLAYER_LIMIT];
+	CPlayer m_aPlayers[ABSOLUTE_PLAYER_LIMIT];
 }; // MenuSystemPlugin
 
 extern MenuSystemPlugin *g_pMenuSystemPlugin;
