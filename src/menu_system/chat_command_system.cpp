@@ -72,9 +72,9 @@ bool MenuSystem::ChatCommandSystem::Handle(CPlayerSlot aSlot, bool bIsSilent, co
 
 	if(!vecArgs.Count())
 	{
-		if(IsChannelEnabled(LS_DETAILED))
+		if(Logger::IsChannelEnabled(LS_DETAILED))
 		{
-			Detailed("Chat command arguments is empty\n");
+			Logger::Detailed("Chat command arguments is empty\n");
 		}
 
 		return false;
@@ -86,17 +86,17 @@ bool MenuSystem::ChatCommandSystem::Handle(CPlayerSlot aSlot, bool bIsSilent, co
 
 	if(iFound == m_mapCallbacks.InvalidIndex())
 	{
-		if(IsChannelEnabled(LS_DETAILED))
+		if(Logger::IsChannelEnabled(LS_DETAILED))
 		{
-			DetailedFormat("Can't be found \"%s\" command\n", pszName);
+			Logger::DetailedFormat("Can't be found \"%s\" command\n", pszName);
 		}
 
 		return false;
 	}
 
-	if(IsChannelEnabled(LS_DETAILED))
+	if(Logger::IsChannelEnabled(LS_DETAILED))
 	{
-		DetailedFormat(u8"Handling \"%s\" command…\n", pszName);
+		Logger::DetailedFormat(u8"Handling \"%s\" command…\n", pszName);
 	}
 
 	OnCallback_t it = m_mapCallbacks[iFound];
