@@ -34,7 +34,7 @@ const char *MenuSystem::ChatCommandSystem::GetName()
 	return "MenuSystem - Chat Command System";
 }
 
-bool MenuSystem::ChatCommandSystem::Register(const char *pszName, Callback_t fnCallback)
+bool MenuSystem::ChatCommandSystem::Register(const char *pszName, const CollectorChangedSharedCallback &fnCallback)
 {
 	m_mapCallbacks.Insert(m_aSymbolTable.AddString(pszName), fnCallback);
 
@@ -82,9 +82,9 @@ bool MenuSystem::ChatCommandSystem::Handle(CPlayerSlot aSlot, bool bIsSilent, co
 
 	const char *pszName = vecArgs[0];
 
-	auto iFoundIndex = m_mapCallbacks.Find(FindSymbol(pszName));
+	auto iFound = m_mapCallbacks.Find(FindSymbol(pszName));
 
-	if(iFoundIndex == m_mapCallbacks.InvalidIndex())
+	if(iFound == m_mapCallbacks.InvalidIndex())
 	{
 		if(IsChannelEnabled(LS_DETAILED))
 		{
@@ -99,7 +99,9 @@ bool MenuSystem::ChatCommandSystem::Handle(CPlayerSlot aSlot, bool bIsSilent, co
 		DetailedFormat(u8"Handling \"%s\" command…\n", pszName);
 	}
 
-	m_mapCallbacks.Element(iFoundIndex)(aSlot, bIsSilent, vecArgs);
+	OnCallback_t it = m_mapCallbacks[iFound];
+
+	it(aSlot, bIsSilent, vecArgs);
 
 	return true;
 }

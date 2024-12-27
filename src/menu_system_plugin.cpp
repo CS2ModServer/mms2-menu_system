@@ -186,7 +186,7 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 	SH_ADD_HOOK_MEMFUNC(INetworkServerService, StartupServer, g_pNetworkServerService, this, &MenuSystemPlugin::OnStartupServerHook, true);
 
 	// Register chat commands.
-	MenuSystem::ChatCommandSystem::Register("menu", [&](CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments)
+	MenuSystem::ChatCommandSystem::Register("menu", {[&](CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments)
 	{
 		CSingleRecipientFilter aFilter(aSlot);
 
@@ -226,7 +226,7 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 					AttachMenuEntitiesToCSPlayer(pCSPlayerPawn, vecEntitites);
 
 					{
-						auto aPlayer = GetPlayerData(aSlot);
+						auto &aPlayer = GetPlayerData(aSlot);
 
 						if(aPlayer.IsConnected())
 						{
@@ -244,11 +244,11 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 				Logger::WarningFormat("Failed to get player entity. Client index is %d\n", iClient);
 			}
 		}
-	});
+	}});
 
-	MenuSystem::ChatCommandSystem::Register("menu_clear", [&](CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments)
+	MenuSystem::ChatCommandSystem::Register("menu_clear", {[&](CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments)
 	{
-		auto aPlayer = GetPlayerData(aSlot);
+		auto &aPlayer = GetPlayerData(aSlot);
 
 		if(aPlayer.IsConnected()) // Are connected.
 		{
@@ -262,7 +262,7 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 			m_pEntityManagerProviderAgent->ExecuteDestroyQueued();
 			vecMenuEntities.Purge();
 		}
-	});
+	}});
 
 	if(late)
 	{
