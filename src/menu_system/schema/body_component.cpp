@@ -33,10 +33,10 @@ MenuSystem::Schema::CBodyComponent_Helper::CBodyComponent_Helper(CSystem *pSchem
 
 	auto &aFields = m_pClass->GetFields();
 
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_pSceneNode"), [&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_pSceneNode"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
 	{
 		m_aOffsets.m_nSceneNode = pField->m_nSingleInheritanceOffset;
-	});
+	}});
 
 	aFields.AddListener(&aCallbacks);
 }

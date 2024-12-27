@@ -29,10 +29,10 @@ MenuSystem::Provider::GameDataStorage::CBaseEntity::CBaseEntity()
 	{
 		auto &aCallbacks = m_aAddressCallbacks;
 
-		aCallbacks.Insert(m_aGameConfig.GetSymbol("CEntityInstance::AcceptInput"), [&](const CUtlSymbolLarge &aKey, const DynLibUtils::CMemory &aAddress)
+		aCallbacks.Insert(m_aGameConfig.GetSymbol("CEntityInstance::AcceptInput"), {[&](const CUtlSymbolLarge &aKey, const DynLibUtils::CMemory &aAddress)
 		{
 			m_pAcceptInputMethod = aAddress.RCast<AcceptInput_t *>();
-		});
+		}});
 
 		m_aGameConfig.GetAddresses().AddListener(&aCallbacks);
 	}
@@ -40,10 +40,10 @@ MenuSystem::Provider::GameDataStorage::CBaseEntity::CBaseEntity()
 	{
 		auto &aCallbacks = m_aOffsetCallbacks;
 
-		aCallbacks.Insert(m_aGameConfig.GetSymbol("CBaseEntity::Teleport"), [&](const CUtlSymbolLarge &aKey, const ptrdiff_t &nOffset)
+		aCallbacks.Insert(m_aGameConfig.GetSymbol("CBaseEntity::Teleport"), {[&](const CUtlSymbolLarge &aKey, const ptrdiff_t &nOffset)
 		{
 			m_nTeleportOffset = nOffset;
-		});
+		}});
 
 		m_aGameConfig.GetOffsets().AddListener(&aCallbacks);
 	}

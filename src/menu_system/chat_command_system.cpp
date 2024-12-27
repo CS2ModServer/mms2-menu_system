@@ -34,7 +34,7 @@ const char *MenuSystem::ChatCommandSystem::GetName()
 	return "MenuSystem - Chat Command System";
 }
 
-bool MenuSystem::ChatCommandSystem::Register(const char *pszName, const Callback_t &fnCallback)
+bool MenuSystem::ChatCommandSystem::Register(const char *pszName, Callback_t fnCallback)
 {
 	m_mapCallbacks.Insert(m_aSymbolTable.AddString(pszName), fnCallback);
 

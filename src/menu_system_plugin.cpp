@@ -603,7 +603,7 @@ void MenuSystemPlugin::FireGameEvent(IGameEvent *event)
 
 void MenuSystemPlugin::OnSpawnGroupAllocated(SpawnGroupHandle_t hSpawnGroup, ISpawnGroup *pSpawnGroup)
 {
-	if(Logger::Logger::IsChannelEnabled(LV_DETAILED))
+	if(Logger::IsChannelEnabled(LV_DETAILED))
 	{
 		Logger::DetailedFormat("%s(hSpawnGroup = %d, pSpawnGroup = %p)\n", __FUNCTION__, hSpawnGroup, pSpawnGroup);
 	}
@@ -613,7 +613,7 @@ void MenuSystemPlugin::OnSpawnGroupAllocated(SpawnGroupHandle_t hSpawnGroup, ISp
 
 void MenuSystemPlugin::OnSpawnGroupInit(SpawnGroupHandle_t hSpawnGroup, IEntityResourceManifest *pManifest, IEntityPrecacheConfiguration *pConfig, ISpawnGroupPrerequisiteRegistry *pRegistry)
 {
-	if(Logger::Logger::IsChannelEnabled(LV_DETAILED))
+	if(Logger::IsChannelEnabled(LV_DETAILED))
 	{
 		Logger::DetailedFormat("%s(hSpawnGroup = %d, pManifest = %p, pConfig = %p, pRegistry = %p)\n", __FUNCTION__, hSpawnGroup, pManifest, pConfig, pRegistry);
 	}
@@ -626,24 +626,24 @@ void MenuSystemPlugin::OnSpawnGroupInit(SpawnGroupHandle_t hSpawnGroup, IEntityR
 
 void MenuSystemPlugin::OnSpawnGroupCreateLoading(SpawnGroupHandle_t hSpawnGroup, CMapSpawnGroup *pMapSpawnGroup, bool bSynchronouslySpawnEntities, bool bConfirmResourcesLoaded, CUtlVector<const CEntityKeyValues *> &vecKeyValues)
 {
-	if(Logger::Logger::IsChannelEnabled(LV_DETAILED))
+	if(Logger::IsChannelEnabled(LV_DETAILED))
 	{
 		Logger::DetailedFormat("%s(hSpawnGroup = %d, pMapSpawnGroup = %p, bSynchronouslySpawnEntities = %s, bConfirmResourcesLoaded = %s, &vecKeyValues = %p)\n", __FUNCTION__, hSpawnGroup, pMapSpawnGroup, bSynchronouslySpawnEntities ? "true" : "false", bConfirmResourcesLoaded ? "true" : "false", &vecKeyValues);
 	}
 
-	const Vector vecBackgroundOrigin = {-42.0f, 30.0f, -159.875f}, 
-	             vecOrigin = {-42.0f, 30.0f, -160.0f};
+	const Vector vecBackgroundOrigin {-42.0f, 30.0f, -159.875f}, 
+	             vecOrigin {-42.0f, 30.0f, -160.0f};
 
-	const QAngle angRotation = {180.0f, 0.0f, 0.0f};
+	const QAngle angRotation {180.0f, 0.0f, 0.0f};
 
-	const Vector vecScales = {1.f, 1.f, 1.f};
+	const Vector vecScales {1.f, 1.f, 1.f};
 
 	CEntityKeyValues *pMenuKV = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL),
 	                 *pMenuKV2 = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL), 
 	                 *pMenuKV3 = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL);
 
 	FillMenuEntityKeyValues(pMenuKV, vecBackgroundOrigin, angRotation, vecScales, MENU_SYSTEM_BACKGROUND_COLOR, MENU_SYSTEM_DEFAULT_FONT_FAMILY, MENU_SYSTEM_BACKGROUND_MATERIAL_NAME, "Title\n\n1. Active");
-	FillMenuEntityKeyValues(pMenuKV2, vecOrigin, angRotation, vecScales, MENU_SYSTEM_ACTIVE_COLOR, MENU_SYSTEM_DEFAULT_FONT_FAMILY, MENU_SYSTEM_EMPTY_BACKGROUND_MATERIAL_NAME, "\n\n1 Active");
+	FillMenuEntityKeyValues(pMenuKV2, vecOrigin, angRotation, vecScales, MENU_SYSTEM_ACTIVE_COLOR, MENU_SYSTEM_DEFAULT_FONT_FAMILY, MENU_SYSTEM_EMPTY_BACKGROUND_MATERIAL_NAME, "\n\n1. Active");
 	FillMenuEntityKeyValues(pMenuKV3, vecOrigin, angRotation, vecScales, MENU_SYSTEM_INACTIVE_COLOR, MENU_SYSTEM_DEFAULT_FONT_FAMILY, MENU_SYSTEM_EMPTY_BACKGROUND_MATERIAL_NAME, "Title");
 
 	g_pEntitySystem->AddRefKeyValues(pMenuKV);
@@ -978,7 +978,7 @@ void MenuSystemPlugin::GetMenuEntitiesPosition(const Vector &vecOrigin, const QA
 	const float flPitchOffset = 16.f;
 	const float flYawOffset = 53.f;
 
-	const QAngle angCorrect = {flPitchOffset, AngleNormalize(angRotation.y + flYawOffset), 90.f};
+	const QAngle angCorrect {flPitchOffset, AngleNormalize(angRotation.y + flYawOffset), 90.f};
 
 	vecResult = AddToFrontByRotation(vecOrigin, angCorrect, 16.f);
 	vecBackgroundResult = AddToFrontByRotation(vecResult, angCorrect, 0.04f);
@@ -1007,7 +1007,7 @@ void MenuSystemPlugin::GetMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pCSP
 
 void MenuSystemPlugin::SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKeyValues, CUtlVector<CEntityInstance *> *pEntities, IEntityManager::IProviderAgent::IEntityListener *pListener)
 {
-	if(Logger::Logger::IsChannelEnabled(LS_DETAILED))
+	if(Logger::IsChannelEnabled(LS_DETAILED))
 	{
 		Logger::DetailedFormat("%s\n", __FUNCTION__);
 	}
@@ -1081,7 +1081,7 @@ void MenuSystemPlugin::SpawnMenuEntities(const Vector &vecBackgroundOrigin, cons
 
 	CUtlVector<CEntityKeyValues *> vecKeyValues;
 
-	const Vector vecScales = {0.25f, 0.25f, 0.25f};
+	const Vector vecScales {0.25f, 0.25f, 0.25f};
 
 	static const char szMessageTextFull[] = "Заголовок\n"
 	                                        "\n"
@@ -1139,7 +1139,7 @@ void MenuSystemPlugin::SpawnMenuEntities(const Vector &vecBackgroundOrigin, cons
 		}
 
 	public:
-		void OnEntityCreated(CEntityInstance *pEntity, CEntityKeyValues *pKeyValues) override
+		void OnEntityCreated(CEntityInstance *pEntity, const CEntityKeyValues *pKeyValues) override
 		{
 			if(m_pPlugin->Logger::IsChannelEnabled(LV_DETAILED))
 			{
@@ -1191,7 +1191,7 @@ CBaseViewModel *MenuSystemPlugin::SpawnViewModelEntity(const Vector &vecOrigin, 
 		}
 
 	public:
-		void OnEntityCreated(CEntityInstance *pEntity, CEntityKeyValues *pKeyValues) override
+		void OnEntityCreated(CEntityInstance *pEntity, const CEntityKeyValues *pKeyValues) override
 		{
 			if(m_pPlugin->Logger::IsChannelEnabled(LV_DETAILED))
 			{

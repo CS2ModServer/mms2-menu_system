@@ -33,15 +33,15 @@ MenuSystem::Schema::CCSPlayerPawnBase_Helper::CCSPlayerPawnBase_Helper(CSystem *
 
 	auto &aFields = m_pClass->GetFields();
 
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_pViewModelServices"), [&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_pViewModelServices"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
 	{
 		m_aOffsets.m_nViewModelServices = pField->m_nSingleInheritanceOffset;
-	});
+	}});
 
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_angEyeAngles"), [&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_angEyeAngles"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
 	{
 		m_aOffsets.m_nEyeAngles = pField->m_nSingleInheritanceOffset;
-	});
+	}});
 
 	aFields.AddListener(&aCallbacks);
 }

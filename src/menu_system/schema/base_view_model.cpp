@@ -33,10 +33,10 @@ MenuSystem::Schema::CBaseViewModel_Helper::CBaseViewModel_Helper(CSystem *pSchem
 
 	auto &aFields = m_pClass->GetFields();
 
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_nViewModelIndex"), [&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_nViewModelIndex"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
 	{
 		m_aOffsets.m_nViewModelIndex = pField->m_nSingleInheritanceOffset;
-	});
+	}});
 
 	aFields.AddListener(&aCallbacks);
 }

@@ -49,7 +49,7 @@ namespace MenuSystem
 		const char *GetName();
 
 	public:
-		bool Register(const char *pszName, const Callback_t &fnCallback);
+		bool Register(const char *pszName, Callback_t fnCallback);
 		bool Unregister(const char *pszName);
 		void UnregisterAll();
 

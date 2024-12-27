@@ -33,25 +33,25 @@ MenuSystem::Schema::CBaseEntity_Helper::CBaseEntity_Helper(CSystem *pSchemaSyste
 
 	auto &aFields = m_pClass->GetFields();
 
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_CBodyComponent"), [&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_CBodyComponent"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
 	{
 		m_aOffsets.m_nBodyComponent = pField->m_nSingleInheritanceOffset;
-	});
+	}});
 
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_fEffects"), [&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_fEffects"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
 	{
 		m_aOffsets.m_nEffects = pField->m_nSingleInheritanceOffset;
-	});
+	}});
 
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_hOwnerEntity"), [&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_hOwnerEntity"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
 	{
 		m_aOffsets.m_nOwnerEntity = pField->m_nSingleInheritanceOffset;
-	});
+	}});
 
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_iEFlags"), [&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_iEFlags"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
 	{
 		m_aOffsets.m_nEFlags = pField->m_nSingleInheritanceOffset;
-	});
+	}});
 
 	aFields.AddListener(&aCallbacks);
 }

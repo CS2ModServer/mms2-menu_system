@@ -33,7 +33,7 @@ MenuSystem::Schema::CCSPlayer_ViewModelServices_Helper::CCSPlayer_ViewModelServi
 
 	auto &aFields = m_pClass->GetFields();
 
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_hViewModel"), [&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_hViewModel"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
 	{
 		m_aOffsets.m_aViewModel.nValue = pField->m_nSingleInheritanceOffset;
 
@@ -44,7 +44,7 @@ MenuSystem::Schema::CCSPlayer_ViewModelServices_Helper::CCSPlayer_ViewModelServi
 			pField->m_pType->GetSizeAndAlignment(nSize, nAlignment);
 			m_aOffsets.m_aViewModel.nArraySize = nSize / sizeof(CHandle<CBaseViewModel>);
 		}
-	});
+	}});
 
 	aFields.AddListener(&aCallbacks);
 }

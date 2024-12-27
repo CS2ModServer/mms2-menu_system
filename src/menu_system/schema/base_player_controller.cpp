@@ -33,10 +33,10 @@ MenuSystem::Schema::CBasePlayerController_Helper::CBasePlayerController_Helper(C
 
 	auto &aFields = m_pClass->GetFields();
 
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_hPawn"), [&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_hPawn"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
 	{
 		m_aOffsets.m_nPawn = pField->m_nSingleInheritanceOffset;
-	});
+	}});
 
 	aFields.AddListener(&aCallbacks);
 }
