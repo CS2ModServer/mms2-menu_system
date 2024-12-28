@@ -320,11 +320,11 @@ bool MenuSystemPlugin::Unload(char *error, size_t maxlen)
 
 	SH_REMOVE_HOOK_MEMFUNC(INetworkServerService, StartupServer, g_pNetworkServerService, this, &MenuSystemPlugin::OnStartupServerHook, true);
 
-	Assert(UnhookGameEvents());
+	UnhookGameEvents();
 
-	Assert(ClearGameEvents());
-	Assert(ClearLanguages());
-	Assert(ClearTranslations());
+	ClearGameEvents();
+	ClearLanguages();
+	ClearTranslations();
 
 	if(!UnloadProvider(error, maxlen))
 	{
