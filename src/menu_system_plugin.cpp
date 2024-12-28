@@ -430,6 +430,11 @@ CBaseGameSystemFactory **MenuSystemPlugin::GetFirstGameSystemPointer() const
 	return GetGameDataStorage().GetGameSystem().GetFirstPointer();
 }
 
+CGameSystemEventDispatcher **MenuSystemPlugin::GetGameSystemEventDispatcherPointer() const
+{
+	return GetGameDataStorage().GetGameSystem().GetEventDispatcher();
+}
+
 IGameEventManager2 **MenuSystemPlugin::GetGameEventManagerPointer() const
 {
 	return reinterpret_cast<IGameEventManager2 **>(GetGameDataStorage().GetSource2Server().GetGameEventManagerPointer());
@@ -1384,7 +1389,7 @@ bool MenuSystemPlugin::UnregisterGameResource(char *error, size_t maxlen)
 
 bool MenuSystemPlugin::RegisterGameFactory(char *error, size_t maxlen)
 {
-	CBaseGameSystemFactory **ppFactory = GetGameDataStorage().GetGameSystem().GetFirstPointer();
+	CBaseGameSystemFactory **ppFactory = GetFirstGameSystemPointer();
 
 	if(!ppFactory)
 	{
@@ -1421,7 +1426,7 @@ bool MenuSystemPlugin::UnregisterGameFactory(char *error, size_t maxlen)
 		{
 			const auto *pGameSystem = m_pFactory->GetStaticGameSystem();
 
-			auto **ppDispatcher = GetGameDataStorage().GetGameSystem().GetEventDispatcher();
+			auto **ppDispatcher = GetGameSystemEventDispatcherPointer();
 
 			Assert(ppDispatcher);
 

@@ -119,6 +119,7 @@ public: // IMetamodListener
 public: // IMenuSystem
 	CGameEntitySystem **GetGameEntitySystemPointer() const override;
 	CBaseGameSystemFactory **GetFirstGameSystemPointer() const override;
+	CGameSystemEventDispatcher **GetGameSystemEventDispatcherPointer() const override;
 	IGameEventManager2 **GetGameEventManagerPointer() const override;
 
 	class CLanguage : public IMenuSystem::ILanguage
