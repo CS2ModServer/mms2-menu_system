@@ -158,7 +158,7 @@ public: // IMenuSystem
 		void SetLanguage(const ILanguage *pData) override;
 
 	public: // ISample::IPlayerBase
-		bool IsConnected() const override;
+		bool IsConnected() override;
 		CServerSideClient *GetServerSideClient() override;
 
 	public: // IMenuSystem::IPlayer

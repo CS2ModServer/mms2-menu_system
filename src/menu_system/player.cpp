@@ -60,7 +60,7 @@ void MenuSystemPlugin::CPlayer::SetLanguage(const ILanguage *pData)
 	m_pLanguage = pData;
 }
 
-bool MenuSystemPlugin::CPlayer::IsConnected() const
+bool MenuSystemPlugin::CPlayer::IsConnected()
 {
 	return m_pServerSideClient != nullptr;
 }
