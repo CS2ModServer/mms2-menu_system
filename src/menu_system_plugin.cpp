@@ -520,22 +520,32 @@ GS_EVENT_MEMBER(MenuSystemPlugin, GameDeactivate)
 
 GS_EVENT_MEMBER(MenuSystemPlugin, ServerPostEntityThink)
 {
-	// FOR_EACH_MAP_FAST(m_mapPlayerEntities, i)
-	// {
-	// 	const auto iClient = m_mapPlayerEntities.Key(i);
+	for(auto &aPlayer : m_aPlayers)
+	{
+		if(aPlayer.IsConnected())
+		{
+			auto *pServerSideClient = aPlayer.GetServerSideClient();
 
-	// 	auto *pPlayer = g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient + 1));
+			int iClient = pServerSideClient->GetPlayerSlot().Get();
 
-	// 	if(pPlayer)
-	// 	{
-	// 		auto *pPlayerPawn = CBasePlayerController_Helper::GetPawn(reinterpret_cast<CBasePlayerController *>(pPlayer))->Get();
+			auto *pPlayerController = reinterpret_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient + 1)));
 
-	// 		if(pPlayerPawn)
-	// 		{
-	// 			TeleportMenuEntitiesToCSPlayer(pPlayerPawn, m_mapPlayerEntities.Element(i));
-	// 		}
-	// 	}
-	// }
+			if(pPlayerController)
+			{
+				uint8 iTeam = CBaseEntity_Helper::GetTeamNumAccessor(pPlayerController);
+
+				if(iTeam == TEAM_SPECTATOR)
+				{
+					CCSPlayerPawnBase *pCSPlayerPawn = CBasePlayerController_Helper::GetPawnAccessor(pPlayerController)->Get();
+
+					if(pCSPlayerPawn)
+					{
+						TeleportMenuEntitiesToCSPlayer(pCSPlayerPawn, aPlayer.GetMenuEntities());
+					}
+				}
+			}
+		}
+	}
 }
 
 void MenuSystemPlugin::FireGameEvent(IGameEvent *event)

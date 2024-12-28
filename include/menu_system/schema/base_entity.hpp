@@ -54,6 +54,7 @@ namespace MenuSystem
 
 		public:
 			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetBodyComponentAccessor, CBaseEntity, CBodyComponent *, m_aOffsets.m_nBodyComponent);
+			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetTeamNumAccessor, CBaseEntity, uint8, m_aOffsets.m_nTeamNum);
 			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetEffectsAccessor, CBaseEntity, uint, m_aOffsets.m_nEffects);
 			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetOwnerEntityAccessor, CBaseEntity, CBaseEntity *, m_aOffsets.m_nOwnerEntity);
 			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetEFlagsAccessor, CBaseEntity, int, m_aOffsets.m_nEFlags);
@@ -65,6 +66,7 @@ namespace MenuSystem
 			struct
 			{
 				int m_nBodyComponent = INVALID_SCHEMA_FIELD_OFFSET;
+				int m_nTeamNum = INVALID_SCHEMA_FIELD_OFFSET;
 				int m_nEffects = INVALID_SCHEMA_FIELD_OFFSET;
 				int m_nOwnerEntity = INVALID_SCHEMA_FIELD_OFFSET;
 				int m_nEFlags = INVALID_SCHEMA_FIELD_OFFSET;

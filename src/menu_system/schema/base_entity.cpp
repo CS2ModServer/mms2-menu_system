@@ -38,6 +38,11 @@ MenuSystem::Schema::CBaseEntity_Helper::CBaseEntity_Helper(CSystem *pSchemaSyste
 		m_aOffsets.m_nBodyComponent = pField->m_nSingleInheritanceOffset;
 	}});
 
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_iTeamNum"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
+	{
+		m_aOffsets.m_nTeamNum = pField->m_nSingleInheritanceOffset;
+	}});
+
 	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_fEffects"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
 	{
 		m_aOffsets.m_nEffects = pField->m_nSingleInheritanceOffset;
