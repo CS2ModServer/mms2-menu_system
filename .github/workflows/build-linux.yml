@@ -27,6 +27,8 @@ on:
       - 'trigger-build.txt'
 
 env:
+  SOURCESDK_DIR: external/sourcesdk
+
   CMAKE_DEBUG_PRESET_NAME: Debug
   CMAKE_DEBUG_CONFIG_NAME: Debug
   CMAKE_DEBUG_OUTPUT_PATTERN: build/Linux/Debug/*.so
@@ -63,11 +65,19 @@ jobs:
       fail-fast: false
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Configure Git to treat current directory as safe
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+    - name: Checkout - Repository
+      uses: actions/checkout@v4
       with:
-        submodules: recursive
-        fetch-depth: 0
+        submodules: true
+        fetch-depth: 1
         fetch-tags: true
+
+    - name: Checkout - Source SDK recursively
+      run:
+        git submodule update --init --recursive ${{ env.SOURCESDK_DIR }}
 
     - name: Install dependencies
       run: |
@@ -78,9 +88,6 @@ jobs:
       run: |
         echo "ABSOLUTE_PATH=$(pwd)" >> $GITHUB_ENV
         echo "REPOSITORY_NAME=$(basename ${GITHUB_REPOSITORY})" >> $GITHUB_ENV
-
-    - name: Configure Git to treat current directory as safe
-      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
     - name: Get latest tag
       id: get-latest-tag

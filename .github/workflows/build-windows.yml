@@ -27,6 +27,8 @@ on:
       - 'trigger-build.txt'
 
 env:
+  SOURCESDK_DIR: external/sourcesdk
+
   CMAKE_DEBUG_PRESET_NAME: VisualStudio/Debug
   CMAKE_DEBUG_PRESET_PUBLIC_NAME: Debug
   CMAKE_DEBUG_CONFIG_NAME: Debug
@@ -54,20 +56,25 @@ jobs:
       fail-fast: false
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Configure Git to treat current directory as safe
+      run: git config --global --add safe.directory $env:GITHUB_WORKSPACE
+      shell: pwsh
+
+    - name: Checkout - Repository
+      uses: actions/checkout@v4
       with:
-        submodules: recursive
-        fetch-depth: 0
+        submodules: true
+        fetch-depth: 1
         fetch-tags: true
+
+    - name: Checkout - Source SDK recursively
+      run:
+        git submodule update --init --recursive ${{ env.SOURCESDK_DIR }}
 
     - name: Set up environment variables
       run: |
         echo "REPOSITORY_NAME=$(basename ${env:GITHUB_REPOSITORY})" | Out-File -FilePath $env:GITHUB_ENV -Append
         echo "ABSOLUTE_PATH=${env:GITHUB_WORKSPACE}" | Out-File -FilePath $env:GITHUB_ENV -Append
-      shell: pwsh
-
-    - name: Configure Git to treat current directory as safe
-      run: git config --global --add safe.directory $env:GITHUB_WORKSPACE
       shell: pwsh
 
     - name: Get latest tag
