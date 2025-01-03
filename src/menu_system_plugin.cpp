@@ -194,7 +194,7 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 
 		Assert(0 <= iClient && iClient < ABSOLUTE_PLAYER_LIMIT);
 
-		const auto &aPlayer = m_aPlayers[iClient];
+		auto &aPlayer = m_aPlayers[iClient];
 
 		const auto &aPhrase = aPlayer.GetYourArgumentPhrase();
 
@@ -214,35 +214,41 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 		{
 			auto *pPlayerController = reinterpret_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient + 1)));
 
-			if(pPlayerController)
+			if(!pPlayerController)
 			{
-				CCSPlayerPawnBase *pCSPlayerPawn = CBasePlayerController_Helper::GetPawnAccessor(pPlayerController)->Get();
+				Logger::WarningFormat("Failed to get player entity. Client index is %d\n", iClient);
 
-				if(pCSPlayerPawn)
-				{
-					CUtlVector<CEntityInstance *> vecEntitites;
+				return;
+			}
 
-					SpawnMenuEntitiesByEntity(pCSPlayerPawn, &vecEntitites);
-					AttachMenuEntitiesToCSPlayer(pCSPlayerPawn, vecEntitites);
+			CBasePlayerPawn *pPlayerPawn = CBasePlayerController_Helper::GetPawnAccessor(pPlayerController)->Get();
 
-					{
-						auto &aPlayer = GetPlayerData(aSlot);
+			if(!pPlayerPawn)
+			{
+				Logger::WarningFormat("Failed to get player pawn. Client index is %d\n", iClient);
 
-						if(aPlayer.IsConnected())
-						{
-							aPlayer.GetMenuEntities().AddVectorToTail(vecEntitites);
-						}
-					}
-				}
-				else
-				{
-					Logger::WarningFormat("Failed to get player pawn. Client index is %d\n", iClient);
-				}
+				return;
+			}
+
+			CUtlVector<CEntityInstance *> vecEntitites;
+
+			SpawnMenuEntitiesByEntity(pPlayerPawn, &vecEntitites);
+
+			uint8 iTeam = CBaseEntity_Helper::GetTeamNumAccessor(pPlayerController);
+
+			auto *pCSPlayerPawn = reinterpret_cast<CCSPlayerPawnBase *>(pPlayerPawn);
+
+			if(iTeam <= TEAM_SPECTATOR)
+			{
+				AttachMenuEntitiesToEntity(pPlayerPawn, vecEntitites);
+				TeleportMenuEntitiesToCSPlayer(pCSPlayerPawn, vecEntitites);
 			}
 			else
 			{
-				Logger::WarningFormat("Failed to get player entity. Client index is %d\n", iClient);
+				AttachMenuEntitiesToCSPlayer(pCSPlayerPawn, vecEntitites);
 			}
+
+			aPlayer.GetMenuEntities().AddVectorToTail(vecEntitites);
 		}
 	}});
 
@@ -520,31 +526,49 @@ GS_EVENT_MEMBER(MenuSystemPlugin, GameDeactivate)
 
 GS_EVENT_MEMBER(MenuSystemPlugin, ServerPostEntityThink)
 {
+	// Teleport menu entities of active spectate players each think.
 	for(auto &aPlayer : m_aPlayers)
 	{
-		if(aPlayer.IsConnected())
+		if(!aPlayer.IsConnected())
 		{
-			auto *pServerSideClient = aPlayer.GetServerSideClient();
-
-			int iClient = pServerSideClient->GetPlayerSlot().Get();
-
-			auto *pPlayerController = reinterpret_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient + 1)));
-
-			if(pPlayerController)
-			{
-				uint8 iTeam = CBaseEntity_Helper::GetTeamNumAccessor(pPlayerController);
-
-				if(iTeam == TEAM_SPECTATOR)
-				{
-					CCSPlayerPawnBase *pCSPlayerPawn = CBasePlayerController_Helper::GetPawnAccessor(pPlayerController)->Get();
-
-					if(pCSPlayerPawn)
-					{
-						TeleportMenuEntitiesToCSPlayer(pCSPlayerPawn, aPlayer.GetMenuEntities());
-					}
-				}
-			}
+			continue;
 		}
+
+		const auto &vecMenuEntities = aPlayer.GetMenuEntities();
+
+		if(!vecMenuEntities.Count())
+		{
+			continue;
+		}
+
+		auto *pServerSideClient = aPlayer.GetServerSideClient();
+
+		int iClient = pServerSideClient->GetPlayerSlot().Get();
+
+		auto *pPlayerController = reinterpret_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient + 1)));
+
+		if(!pPlayerController)
+		{
+			continue;
+		}
+
+		uint8 iTeam = CBaseEntity_Helper::GetTeamNumAccessor(pPlayerController);
+
+		if(iTeam != TEAM_SPECTATOR)
+		{
+			continue;
+		}
+
+		CBasePlayerPawn *pPlayerPawn = CBasePlayerController_Helper::GetPawnAccessor(pPlayerController)->Get();
+
+		if(!pPlayerPawn)
+		{
+			continue;
+		}
+
+		auto *pCSPlayerPawn = reinterpret_cast<CCSPlayerPawnBase *>(pPlayerPawn);
+
+		TeleportMenuEntitiesToCSPlayer(pCSPlayerPawn, vecMenuEntities);
 	}
 }
 
@@ -607,13 +631,55 @@ void MenuSystemPlugin::FireGameEvent(IGameEvent *event)
 
 	// "player_team"
 	{
-		if(event->GetInt("team") <= TEAM_SPECTATOR)
-		{
-			int iClient = event->GetPawnEntityIndex("userid").Get() - 1;
-
-
-		}
+		OnPlayerTeam(event);
 	}
+}
+
+bool MenuSystemPlugin::OnPlayerTeam(IGameEvent *event)
+{
+	auto aPlayerSlot = event->GetPlayerSlot("userid");
+
+	if(aPlayerSlot == CPlayerSlot::InvalidIndex())
+	{
+		return false;
+	}
+
+	auto &aPlayerData = GetPlayerData(aPlayerSlot);
+
+	const auto &vecMenuEntities = aPlayerData.GetMenuEntities();
+
+	if(!vecMenuEntities.Count())
+	{
+		return false;
+	}
+
+	auto *pPlayerPawn = reinterpret_cast<CBasePlayerPawn *>(event->GetPlayerPawn("userid"));
+
+	if(!pPlayerPawn)
+	{
+		return false;
+	}
+
+	if(event->GetBool("disconnect") || event->GetBool("isbot"))
+	{
+		return false;
+	}
+
+	int iNewTeam = event->GetInt("team"), 
+	    iOldTeam = event->GetInt("oldteam");
+
+	if(iNewTeam <= TEAM_SPECTATOR)
+	{
+		AttachMenuEntitiesToEntity(pPlayerPawn, vecMenuEntities);
+	}
+	else
+	{
+		auto *pCSPlayerPawn = reinterpret_cast<CCSPlayerPawnBase *>(pPlayerPawn);
+
+		AttachMenuEntitiesToCSPlayer(pCSPlayerPawn, vecMenuEntities);
+	}
+
+	return true;
 }
 
 void MenuSystemPlugin::OnSpawnGroupAllocated(SpawnGroupHandle_t hSpawnGroup, ISpawnGroup *pSpawnGroup)
@@ -987,37 +1053,37 @@ Vector MenuSystemPlugin::GetEntityPosition(CBaseEntity *pEntity, QAngle *pRotati
 	return CGameSceneNode_Helper::GetAbsOriginAccessor(pEntitySceneNode);
 }
 
-void MenuSystemPlugin::GetMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
+void MenuSystemPlugin::CalculateMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
 	// Correct a rotation to display on the right-side of the screen.
 	const float flPitchOffset = 16.f;
 	const float flYawOffset = 53.f;
 
-	const QAngle angCorrect {flPitchOffset, AngleNormalize(angRotation.y + flYawOffset), 90.f};
+	const QAngle angCorrect {flPitchOffset, AngleNormalize(angRotation.y + flYawOffset), 0.f};
 
 	vecResult = AddToFrontByRotation(vecOrigin, angCorrect, 16.f);
 	vecBackgroundResult = AddToFrontByRotation(vecResult, angCorrect, 0.04f);
 
-	angResult = {0.f, AngleNormalize(angRotation.y - 90.f), 90.f};
+	angResult = {0.f, AngleNormalize(angRotation.y - 90.f), AngleNormalize(-angRotation.x + 90.f)};
 }
 
-void MenuSystemPlugin::GetMenuEntitiesPositionByEntity(CBaseEntity *pEntity, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
+void MenuSystemPlugin::CalculateMenuEntitiesPositionByEntity(CBaseEntity *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
-	vecResult = GetEntityPosition(pEntity, &angResult);
-	GetMenuEntitiesPosition(vecResult, angResult, vecBackgroundResult, vecResult, angResult);
+	vecResult = GetEntityPosition(pTarget, &angResult);
+	CalculateMenuEntitiesPosition(vecResult, angResult, vecBackgroundResult, vecResult, angResult);
 }
 
-void MenuSystemPlugin::GetMenuEntitiesPositionByViewModel(CBaseViewModel *pViewModel, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
+void MenuSystemPlugin::CalculateMenuEntitiesPositionByViewModel(CBaseViewModel *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
-	vecResult = GetEntityPosition(pViewModel, &angResult);
-	GetMenuEntitiesPosition(vecResult, angResult, vecBackgroundResult, vecResult, angResult);
+	vecResult = GetEntityPosition(pTarget, &angResult);
+	CalculateMenuEntitiesPosition(vecResult, angResult, vecBackgroundResult, vecResult, angResult);
 }
 
-void MenuSystemPlugin::GetMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pCSPlayerPawn, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
+void MenuSystemPlugin::CalculateMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
-	vecResult = GetEntityPosition(pCSPlayerPawn) + CBaseModelEntity_Helper::GetViewOffsetAccessor(pCSPlayerPawn);
-	angResult = CCSPlayerPawnBase_Helper::GetEyeAnglesAccessor(pCSPlayerPawn);
-	GetMenuEntitiesPosition(vecResult, angResult, vecBackgroundResult, vecResult, angResult);
+	vecResult = GetEntityPosition(pTarget) + CBaseModelEntity_Helper::GetViewOffsetAccessor(pTarget);
+	angResult = CCSPlayerPawnBase_Helper::GetEyeAnglesAccessor(pTarget);
+	CalculateMenuEntitiesPosition(vecResult, angResult, vecBackgroundResult, vecResult, angResult);
 }
 
 void MenuSystemPlugin::SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKeyValues, CUtlVector<CEntityInstance *> *pEntities, IEntityManager::IProviderAgent::IEntityListener *pListener)
@@ -1031,7 +1097,7 @@ void MenuSystemPlugin::SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKe
 
 	const SpawnGroupHandle_t hSpawnGroup = m_pMySpawnGroupInstance->GetSpawnGroupHandle();
 
-	static_assert(INVALID_SPAWN_GROUP == ANY_SPAWN_GROUP);
+	COMPILE_TIME_ASSERT(INVALID_SPAWN_GROUP == ANY_SPAWN_GROUP);
 
 	for(auto *pKeyValues : vecKeyValues)
 	{
@@ -1171,14 +1237,14 @@ void MenuSystemPlugin::SpawnMenuEntities(const Vector &vecBackgroundOrigin, cons
 	SpawnEntities(vecKeyValues, pEntities, &aMenuEntitySetup);
 }
 
-void MenuSystemPlugin::SpawnMenuEntitiesByEntity(CBaseEntity *pEntity, CUtlVector<CEntityInstance *> *pEntities)
+void MenuSystemPlugin::SpawnMenuEntitiesByEntity(CBaseEntity *pTarget, CUtlVector<CEntityInstance *> *pEntities)
 {
 	Vector vecMenuAbsOriginBackground {},
 	       vecMenuAbsOrigin {};
 
 	QAngle angMenuRotation {};
 
-	GetMenuEntitiesPositionByEntity(pEntity, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
+	CalculateMenuEntitiesPositionByEntity(pTarget, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 	SpawnMenuEntities(vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation, pEntities);
 }
 
@@ -1229,7 +1295,7 @@ CBaseViewModel *MenuSystemPlugin::SpawnViewModelEntity(const Vector &vecOrigin, 
 	return reinterpret_cast<CBaseViewModel *>(vecEntities[0]);
 }
 
-void MenuSystemPlugin::TeleportMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pCSPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities)
+void MenuSystemPlugin::TeleportMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pTarget, const CUtlVector<CEntityInstance *> &vecEntities)
 {
 	auto &aBaseEntity = GetGameDataStorage().GetBaseEntity();
 
@@ -1238,7 +1304,7 @@ void MenuSystemPlugin::TeleportMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pCSPlay
 
 	QAngle angMenuRotation {};
 
-	GetMenuEntitiesPositionByCSPlayer(pCSPlayerPawn, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
+	CalculateMenuEntitiesPositionByCSPlayer(pTarget, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 
 	FOR_EACH_VEC(vecEntities, i)
 	{
@@ -1248,11 +1314,23 @@ void MenuSystemPlugin::TeleportMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pCSPlay
 	}
 }
 
-bool MenuSystemPlugin::AttachMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pCSPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities)
+void MenuSystemPlugin::AttachMenuEntitiesToEntity(CBaseEntity *pTarget, const CUtlVector<CEntityInstance *> &vecEntities)
 {
 	auto &aBaseEntity = GetGameDataStorage().GetBaseEntity();
 
-	auto aViewModelServicesAccessor = CCSPlayerPawnBase_Helper::GetViewModelServicesAccessor(pCSPlayerPawn);
+	auto aParentVariant = variant_t("!activator");
+
+	for(auto *pEntity : vecEntities)
+	{
+		aBaseEntity.AcceptInput(pEntity, "SetParent", pTarget, NULL, &aParentVariant, 0);
+	}
+}
+
+bool MenuSystemPlugin::AttachMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pTarget, const CUtlVector<CEntityInstance *> &vecEntities)
+{
+	auto &aBaseEntity = GetGameDataStorage().GetBaseEntity();
+
+	auto aViewModelServicesAccessor = CCSPlayerPawnBase_Helper::GetViewModelServicesAccessor(pTarget);
 
 	CCSPlayer_ViewModelServices *pCSPlayerViewModelServices = aViewModelServicesAccessor;
 
@@ -1276,13 +1354,13 @@ bool MenuSystemPlugin::AttachMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pCSPlayer
 
 	QAngle angMenuRotation {};
 
-	GetMenuEntitiesPositionByEntity(pCSPlayerPawn, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
+	CalculateMenuEntitiesPositionByEntity(pTarget, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 
 	if(Logger::IsChannelEnabled(LS_DETAILED))
 	{
 		const auto &aConcat = s_aEmbedConcat;
 
-		CBufferStringGrowable<1024> sBuffer;
+		CBufferStringGrowable<256> sBuffer;
 
 		sBuffer.Format("Menu entities position:\n");
 		aConcat.AppendToBuffer(sBuffer, "Origin", vecMenuAbsOrigin);
@@ -1293,13 +1371,13 @@ bool MenuSystemPlugin::AttachMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pCSPlayer
 
 	if(!pPlayerViewModel)
 	{
-		auto *pExtraPlayerViewModel = SpawnViewModelEntity(vecMenuAbsOrigin, angMenuRotation, pCSPlayerPawn, s_nExtraViewModelSlot);
+		auto *pExtraPlayerViewModel = SpawnViewModelEntity(vecMenuAbsOrigin, angMenuRotation, pTarget, s_nExtraViewModelSlot);
 
 		hPlayerViewModel.Set(pExtraPlayerViewModel);
 		pPlayerViewModel = pExtraPlayerViewModel;
 	}
 
-	aBaseEntity.AcceptInput(pPlayerViewModel, "FollowEntity", pCSPlayerPawn, NULL, &aParentVariant, 0);
+	aBaseEntity.AcceptInput(pPlayerViewModel, "FollowEntity", pTarget, NULL, &aParentVariant, 0);
 
 	if(Logger::IsChannelEnabled(LV_DETAILED))
 	{
@@ -1314,7 +1392,7 @@ bool MenuSystemPlugin::AttachMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pCSPlayer
 		aBaseEntity.AcceptInput(pEntity, "SetParent", pPlayerViewModel, NULL, &aParentVariant, 0);
 	}
 
-	aViewModelServicesAccessor.MarkNetworkChanged(); // Update CPlayer_ViewModelServices < CCSPlayer_ViewModelServices state of the view model entities.
+	aViewModelServicesAccessor.MarkNetworkChanged(); // Update CCSPlayer_ViewModelServices < CPlayer_ViewModelServices state of the view model entities.
 
 	return true;
 }

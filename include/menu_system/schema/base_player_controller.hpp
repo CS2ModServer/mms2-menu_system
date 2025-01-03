@@ -54,7 +54,7 @@ namespace MenuSystem
 			void Clear();
 
 		public:
-			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetPawnAccessor, CBasePlayerController, CHandle<CCSPlayerPawnBase>, m_aOffsets.m_nPawn);
+			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetPawnAccessor, CBasePlayerController, CHandle<CBasePlayerPawn>, m_aOffsets.m_nPawn);
 
 		private:
 			CSystem::CClass *m_pClass;

@@ -212,6 +212,7 @@ public: // CBaseGameSystem
 
 public: // IGameEventListener2
 	void FireGameEvent(IGameEvent *event) override;
+	bool OnPlayerTeam(IGameEvent *event);
 
 public: // IEntityManager::IProviderAgent::ISpawnGroupNotifications
 	void OnSpawnGroupAllocated(SpawnGroupHandle_t hSpawnGroup, ISpawnGroup *pSpawnGroup) override;
@@ -239,22 +240,23 @@ public: // Entity Manager.
 	void FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation, const Vector &vecScales, const Color rgbaColor, const char *pszFontName, const char *pszBackgroundMaterialName, const char *pszMessageText);
 	void FillViewModelEntityKeyValues(CEntityKeyValues *pEntityKV, const Vector &vecOrigin, const QAngle &angRotation);
 
-	// Get positions.
-	Vector GetEntityPosition(CBaseEntity *pEntity, QAngle *pRotation = nullptr);
-	void GetMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
-	void GetMenuEntitiesPositionByEntity(CBaseEntity *pPlayerPawn, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
-	void GetMenuEntitiesPositionByViewModel(CBaseViewModel *pViewModel, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
-	void GetMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pCSPlayerPawn, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
+	// Get & calculate positions.
+	Vector GetEntityPosition(CBaseEntity *pTarget, QAngle *pRotation = nullptr);
+	void CalculateMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
+	void CalculateMenuEntitiesPositionByEntity(CBaseEntity *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
+	void CalculateMenuEntitiesPositionByViewModel(CBaseViewModel *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
+	void CalculateMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
 
 	// Spawn entities.
 	void SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKeyValues, CUtlVector<CEntityInstance *> *pEntities = nullptr, IEntityManager::IProviderAgent::IEntityListener *pListener = nullptr);
 	void SpawnMenuEntities(const Vector &vecBackgroundOrigin, const Vector &vecOrigin, const QAngle &angRotation, CUtlVector<CEntityInstance *> *pEntities);
-	void SpawnMenuEntitiesByEntity(CBaseEntity *pEntity, CUtlVector<CEntityInstance *> *pEntities);
+	void SpawnMenuEntitiesByEntity(CBaseEntity *pTarget, CUtlVector<CEntityInstance *> *pEntities);
 	CBaseViewModel *SpawnViewModelEntity(const Vector &vecOrigin, const QAngle &angRotation, CBaseEntity *pOwner, const int nSlot);
 
 	// Menus movement.
-	void TeleportMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pCSPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities);
-	bool AttachMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pCSPlayerPawn, const CUtlVector<CEntityInstance *> &vecEntities);
+	void TeleportMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pTarget, const CUtlVector<CEntityInstance *> &vecEntities);
+	void AttachMenuEntitiesToEntity(CBaseEntity *pTarget, const CUtlVector<CEntityInstance *> &vecEntities);
+	bool AttachMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pTarget, const CUtlVector<CEntityInstance *> &vecEntities);
 
 	// Setting up the entities.
 	bool SettingMenuEntity(CEntityInstance *pEntity);
