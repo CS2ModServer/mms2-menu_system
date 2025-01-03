@@ -65,7 +65,7 @@ bool MenuSystem::ChatCommandSystem::Handle(CPlayerSlot aSlot, bool bIsSilent, co
 {
 	if(aSlot == CPlayerSlot::InvalidIndex())
 	{
-		Message("Type the chat command from root console?\n");
+		Logger::Message("Type the chat command from root console?\n");
 
 		return false;
 	}
