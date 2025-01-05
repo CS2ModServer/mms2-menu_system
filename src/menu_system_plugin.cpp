@@ -42,6 +42,8 @@
 #include <serversideclient.h>
 #include <shareddefs.h>
 #include <tier0/commonmacros.h>
+#include <mathlib/mathlib.h>
+
 #include <usermessages.pb.h>
 // #include <cstrike15_usermessages.pb.h>
 
@@ -102,6 +104,7 @@ MenuSystemPlugin::MenuSystemPlugin()
     CBasePlayerController_Helper(this),
     CBaseViewModel_Helper(this),
     CBodyComponent_Helper(this),
+    CCSPlayerBase_CameraServices_Helper(this),
     CCSPlayerPawnBase_Helper(this),
     CGameSceneNode_Helper(this),
     CCSPlayer_ViewModelServices_Helper(this),
@@ -131,6 +134,7 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 		Logger::Detailed(sMessage);
 	}
 
+	MathLib_Init();
 	ConVar_Register(FCVAR_RELEASE | FCVAR_GAMEDLL);
 
 	if(!InitProvider(error, maxlen))
@@ -1053,16 +1057,12 @@ Vector MenuSystemPlugin::GetEntityPosition(CBaseEntity *pEntity, QAngle *pRotati
 	return CGameSceneNode_Helper::GetAbsOriginAccessor(pEntitySceneNode);
 }
 
-void MenuSystemPlugin::CalculateMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
+void MenuSystemPlugin::CalculateMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, const float flPitchOffset, const float flYawOffset, const float flAddDistance, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
-	// Correct a rotation to display on the right-side of the screen.
-	const float flPitchOffset = 16.f;
-	const float flYawOffset = 53.f;
+	const QAngle angOffset {AngleNormalize(angRotation.x + flPitchOffset), AngleNormalize(angRotation.y + flYawOffset), 0.f};
 
-	const QAngle angCorrect {flPitchOffset, AngleNormalize(angRotation.y + flYawOffset), 0.f};
-
-	vecResult = AddToFrontByRotation(vecOrigin, angCorrect, 16.f);
-	vecBackgroundResult = AddToFrontByRotation(vecResult, angCorrect, 0.04f);
+	vecResult = AddToFrontByRotation2(vecOrigin, angOffset, flAddDistance);
+	vecBackgroundResult = AddToFrontByRotation2(vecResult, angOffset, 0.04f);
 
 	angResult = {0.f, AngleNormalize(angRotation.y - 90.f), AngleNormalize(-angRotation.x + 90.f)};
 }
@@ -1070,20 +1070,20 @@ void MenuSystemPlugin::CalculateMenuEntitiesPosition(const Vector &vecOrigin, co
 void MenuSystemPlugin::CalculateMenuEntitiesPositionByEntity(CBaseEntity *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
 	vecResult = GetEntityPosition(pTarget, &angResult);
-	CalculateMenuEntitiesPosition(vecResult, angResult, vecBackgroundResult, vecResult, angResult);
+	CalculateMenuEntitiesPosition(vecResult, angResult, sm_flPitchOffset, sm_flYawOffset, sm_flAddDistance, vecBackgroundResult, vecResult, angResult);
 }
 
 void MenuSystemPlugin::CalculateMenuEntitiesPositionByViewModel(CBaseViewModel *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
 	vecResult = GetEntityPosition(pTarget, &angResult);
-	CalculateMenuEntitiesPosition(vecResult, angResult, vecBackgroundResult, vecResult, angResult);
+	CalculateMenuEntitiesPosition(vecResult, angResult, 0.f, 0.f, sm_flAddDistance / 1.5f, vecBackgroundResult, vecResult, angResult);
 }
 
 void MenuSystemPlugin::CalculateMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
 	vecResult = GetEntityPosition(pTarget) + CBaseModelEntity_Helper::GetViewOffsetAccessor(pTarget);
 	angResult = CCSPlayerPawnBase_Helper::GetEyeAnglesAccessor(pTarget);
-	CalculateMenuEntitiesPosition(vecResult, angResult, vecBackgroundResult, vecResult, angResult);
+	CalculateMenuEntitiesPosition(vecResult, angResult, 0.f, 0.f, sm_flAddDistance / 1.5f, vecBackgroundResult, vecResult, angResult);
 }
 
 void MenuSystemPlugin::SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKeyValues, CUtlVector<CEntityInstance *> *pEntities, IEntityManager::IProviderAgent::IEntityListener *pListener)

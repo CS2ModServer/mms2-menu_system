@@ -25,15 +25,16 @@
 #	pragma once
 
 #	include <tier0/platform.h>
+#	include <mathlib/mathlib.h>
 #	include <mathlib/vector.h>
 
-const float g_flUnitRadians = 180.f / M_PI_F;
+const float g_flDegreesRadians = 180.f / M_PI_F;
 
 template<class T = Vector>
 FORCEINLINE T GetDirectionFromAngle(const QAngle &angRotation)
 {
-	const float flPitchRadians = angRotation.x / g_flUnitRadians;
-	const float flYawRadians = angRotation.y / g_flUnitRadians;
+	const float flPitchRadians = angRotation.x / g_flDegreesRadians;
+	const float flYawRadians = angRotation.y / g_flDegreesRadians;
 
 	float flPitchSine, flPitchCosine, 
 	      flYawSine, flYawCosine;
@@ -46,7 +47,16 @@ FORCEINLINE T GetDirectionFromAngle(const QAngle &angRotation)
 
 FORCEINLINE Vector AddToFrontByRotation(const Vector &vecOrigin, const QAngle &angRotation, float flDistance)
 {
-	return vecOrigin + (GetDirectionFromAngle<>(angRotation) * flDistance);
+	return vecOrigin + GetDirectionFromAngle<>(angRotation) * flDistance;
+}
+
+FORCEINLINE Vector AddToFrontByRotation2(const Vector &vecOrigin, const QAngle &angRotation, float flDistance)
+{
+	matrix3x4_t matRotation;
+
+	matRotation.Init(angRotation);
+
+	return vecOrigin + matRotation.GetForward() * flDistance;
 }
 
 #endif //_INCLUDE_METAMOD_SOURCE_MATH_HPP_

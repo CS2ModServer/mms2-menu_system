@@ -35,6 +35,7 @@
 #	include "menu_system/schema/base_player_pawn.hpp"
 #	include "menu_system/schema/base_view_model.hpp"
 #	include "menu_system/schema/body_component.hpp"
+#	include "menu_system/schema/cs_player_base_camera_services.hpp"
 #	include "menu_system/schema/cs_player_pawn_base.hpp"
 #	include "menu_system/schema/cs_player_view_model_services.hpp"
 #	include "menu_system/schema/game_scene_node.hpp"
@@ -92,7 +93,7 @@ class INetworkMessageInternal;
 
 class MenuSystemPlugin final : public ISmmPlugin, public IMetamodListener, public IMenuSystem, public CBaseGameSystem, public IGameEventListener2, public IEntityManager::IProviderAgent::ISpawnGroupNotifications, // Interfaces.
                                public MenuSystem::ChatCommandSystem, public MenuSystem::Provider, virtual public MenuSystem::Schema::CSystem, virtual public Logger, public Translations, // Conponents.
-                               virtual public MenuSystem::Schema::CBaseEntity_Helper, virtual public MenuSystem::Schema::CBaseModelEntity_Helper, virtual public MenuSystem::Schema::CBasePlayerController_Helper, virtual public MenuSystem::Schema::CBaseViewModel_Helper, virtual public MenuSystem::Schema::CBodyComponent_Helper, virtual public MenuSystem::Schema::CCSPlayerPawnBase_Helper, virtual public MenuSystem::Schema::CGameSceneNode_Helper, virtual public MenuSystem::Schema::CCSPlayer_ViewModelServices_Helper // Schema helpers.
+                               virtual public MenuSystem::Schema::CBaseEntity_Helper, virtual public MenuSystem::Schema::CBaseModelEntity_Helper, virtual public MenuSystem::Schema::CBasePlayerController_Helper, virtual public MenuSystem::Schema::CBaseViewModel_Helper, virtual public MenuSystem::Schema::CBodyComponent_Helper, virtual public MenuSystem::Schema::CCSPlayerBase_CameraServices_Helper, virtual public MenuSystem::Schema::CCSPlayerPawnBase_Helper, virtual public MenuSystem::Schema::CGameSceneNode_Helper, virtual public MenuSystem::Schema::CCSPlayer_ViewModelServices_Helper // Schema helpers.
 {
 public:
 	MenuSystemPlugin();
@@ -240,9 +241,14 @@ public: // Entity Manager.
 	void FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation, const Vector &vecScales, const Color rgbaColor, const char *pszFontName, const char *pszBackgroundMaterialName, const char *pszMessageText);
 	void FillViewModelEntityKeyValues(CEntityKeyValues *pEntityKV, const Vector &vecOrigin, const QAngle &angRotation);
 
+	// Offset a rotation to display on the left-side of the screen.
+	static constexpr float sm_flPitchOffset = 16.f;
+	static constexpr float sm_flYawOffset = 53.f;
+	static constexpr float sm_flAddDistance = 16.f;
+
 	// Get & calculate positions.
 	Vector GetEntityPosition(CBaseEntity *pTarget, QAngle *pRotation = nullptr);
-	void CalculateMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
+	void CalculateMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, const float flPitchOffset, const float flYawOffset, const float flAddDistance, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
 	void CalculateMenuEntitiesPositionByEntity(CBaseEntity *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
 	void CalculateMenuEntitiesPositionByViewModel(CBaseViewModel *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
 	void CalculateMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);

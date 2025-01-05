@@ -91,6 +91,7 @@ set(SOURCE_FILES
 	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/base_player_controller.cpp
 	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/base_view_model.cpp
 	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/body_component.cpp
+	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/cs_player_base_camera_services.cpp
 	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/cs_player_pawn_base.cpp
 	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/cs_player_view_model_services.cpp
 	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/game_scene_node.cpp

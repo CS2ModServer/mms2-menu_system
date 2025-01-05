@@ -19,42 +19,36 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_CS_PLAYER_PAWN_BASE_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_CS_PLAYER_PAWN_BASE_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_CS_PLAYER_BASE_CAMERA_SERVICES_BASE_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_CS_PLAYER_BASE_CAMERA_SERVICES_BASE_HPP_
 
 #	pragma once
 
-#	include <menu_system/schema/base_player_pawn.hpp>
 #	include <menu_system/schema.hpp>
 
-#	define CCSPLAYERPAWNBASE_CLASS_NAME "CCSPlayerPawnBase"
+#	include <ehandle.h>
+
+#	define CCSPLAYERBASE_CAMERASERVICES_CLASS_NAME "CCSPlayerBase_CameraServices"
 
 class QAngle;
 class Vector;
-class CPlayer_ViewModelServices;
-class CCSPlayer_ViewModelServices;
+class CBaseViewModel;
 class CCSPlayerBase_CameraServices;
-
-class CCSPlayerPawnBase : public CBasePlayerPawn
-{
-};
 
 namespace MenuSystem
 {
 	namespace Schema
 	{
-		class CCSPlayerPawnBase_Helper
+		class CCSPlayerBase_CameraServices_Helper
 		{
 		public:
-			CCSPlayerPawnBase_Helper(CSystem *pSchemaSystemHelper);
+			CCSPlayerBase_CameraServices_Helper(CSystem *pSchemaSystemHelper);
 
 		public:
 			void Clear();
 
 		public:
-			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetViewModelServicesAccessor, CCSPlayerPawnBase, CCSPlayer_ViewModelServices *, m_aOffsets.m_nViewModelServices);
-			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetCameraServicesAccessor, CCSPlayerPawnBase, CCSPlayerBase_CameraServices *, m_aOffsets.m_nCameraServices);
-			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetEyeAnglesAccessor, CCSPlayerPawnBase, QAngle, m_aOffsets.m_nEyeAngles);
+			SCHEMA_COMPONENT_ACCESSOR_METHOD(GetFOVAccessor, CCSPlayerBase_CameraServices, uint32, m_aOffsets.m_nFOV);
 
 		private:
 			CSystem::CClass *m_pClass;
@@ -62,12 +56,10 @@ namespace MenuSystem
 
 			struct
 			{
-				int m_nViewModelServices = INVALID_SCHEMA_FIELD_OFFSET;
-				int m_nCameraServices = INVALID_SCHEMA_FIELD_OFFSET;
-				int m_nEyeAngles = INVALID_SCHEMA_FIELD_OFFSET;
+				int m_nFOV = INVALID_SCHEMA_FIELD_OFFSET;
 			} m_aOffsets;
-		}; // MenuSystem::Schema::CCSPlayerPawnBase_Helper
+		}; // MenuSystem::Schema::CCSPlayerBase_CameraServices_Helper
 	}; // MenuSystem::Schema
 }; // MenuSystem
 
-#endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_CS_PLAYER_PAWN_BASE_HPP_
+#endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_SCHEMA_CS_PLAYER_BASE_CAMERA_SERVICES_BASE_HPP_
