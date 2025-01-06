@@ -216,7 +216,7 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 
 		// Spawn & attach menus.
 		{
-			auto *pPlayerController = reinterpret_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient + 1)));
+			auto *pPlayerController = entity_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient + 1)));
 
 			if(!pPlayerController)
 			{
@@ -240,7 +240,7 @@ bool MenuSystemPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxl
 
 			uint8 iTeam = CBaseEntity_Helper::GetTeamNumAccessor(pPlayerController);
 
-			auto *pCSPlayerPawn = reinterpret_cast<CCSPlayerPawnBase *>(pPlayerPawn);
+			auto *pCSPlayerPawn = entity_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
 
 			if(iTeam <= TEAM_SPECTATOR)
 			{
@@ -549,7 +549,7 @@ GS_EVENT_MEMBER(MenuSystemPlugin, ServerPostEntityThink)
 
 		int iClient = pServerSideClient->GetPlayerSlot().Get();
 
-		auto *pPlayerController = reinterpret_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient + 1)));
+		auto *pPlayerController = entity_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient + 1)));
 
 		if(!pPlayerController)
 		{
@@ -570,7 +570,7 @@ GS_EVENT_MEMBER(MenuSystemPlugin, ServerPostEntityThink)
 			continue;
 		}
 
-		auto *pCSPlayerPawn = reinterpret_cast<CCSPlayerPawnBase *>(pPlayerPawn);
+		auto *pCSPlayerPawn = entity_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
 
 		TeleportMenuEntitiesToCSPlayer(pCSPlayerPawn, vecMenuEntities);
 	}
@@ -657,7 +657,7 @@ bool MenuSystemPlugin::OnPlayerTeam(IGameEvent *event)
 		return false;
 	}
 
-	auto *pPlayerPawn = reinterpret_cast<CBasePlayerPawn *>(event->GetPlayerPawn("userid"));
+	auto *pPlayerPawn = entity_upper_cast<CBasePlayerPawn *>(event->GetPlayerPawn("userid"));
 
 	if(!pPlayerPawn)
 	{
@@ -678,7 +678,7 @@ bool MenuSystemPlugin::OnPlayerTeam(IGameEvent *event)
 	}
 	else
 	{
-		auto *pCSPlayerPawn = reinterpret_cast<CCSPlayerPawnBase *>(pPlayerPawn);
+		auto *pCSPlayerPawn = entity_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
 
 		AttachMenuEntitiesToCSPlayer(pCSPlayerPawn, vecMenuEntities);
 	}
@@ -1227,7 +1227,7 @@ void MenuSystemPlugin::SpawnMenuEntities(const Vector &vecBackgroundOrigin, cons
 				m_pPlugin->Logger::MessageFormat("Setting up \"%s\" menu entity\n", pEntity->GetClassname());
 			}
 
-			m_pPlugin->SettingMenuEntity(reinterpret_cast<CBaseEntity *>(pEntity));
+			m_pPlugin->SettingMenuEntity(entity_upper_cast<CBaseEntity *>(pEntity));
 		}
 
 	private:
@@ -1279,7 +1279,7 @@ CBaseViewModel *MenuSystemPlugin::SpawnViewModelEntity(const Vector &vecOrigin, 
 				m_pPlugin->Logger::MessageFormat("Setting up \"%s\" view model entity\n", pEntity->GetClassname());
 			}
 
-			m_pPlugin->SettingExtraPlayerViewModelEntity(reinterpret_cast<CBaseViewModel *>(pEntity), m_pOwner, m_nSlot);
+			m_pPlugin->SettingExtraPlayerViewModelEntity(entity_upper_cast<CBaseViewModel *>(pEntity), m_pOwner, m_nSlot);
 		}
 
 	private:
@@ -1292,7 +1292,7 @@ CBaseViewModel *MenuSystemPlugin::SpawnViewModelEntity(const Vector &vecOrigin, 
 	vecKeyValues.AddToTail(pViewModelKV);
 	SpawnEntities(vecKeyValues, &vecEntities, &aViewModelEntitySetup);
 
-	return reinterpret_cast<CBaseViewModel *>(vecEntities[0]);
+	return entity_upper_cast<CBaseViewModel *>(vecEntities[0]);
 }
 
 void MenuSystemPlugin::TeleportMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pTarget, const CUtlVector<CEntityInstance *> &vecEntities)
@@ -1400,7 +1400,7 @@ bool MenuSystemPlugin::AttachMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pTarget, 
 bool MenuSystemPlugin::SettingMenuEntity(CEntityInstance *pEntity)
 {
 	{
-		auto aEFlagsAccessor = CBaseEntity_Helper::GetEFlagsAccessor(reinterpret_cast<CBaseEntity *>(pEntity));
+		auto aEFlagsAccessor = CBaseEntity_Helper::GetEFlagsAccessor(entity_upper_cast<CBaseEntity *>(pEntity));
 
 		aEFlagsAccessor = EF_MENU;
 		aEFlagsAccessor.MarkNetworkChanged();

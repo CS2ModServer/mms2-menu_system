@@ -24,6 +24,8 @@
 
 #	pragma once
 
+#	include <type_traits>
+
 #	include <tier0/dbg.h>
 #	include <tier0/platform.h>
 #	include <tier0/utlstring.h>
@@ -88,6 +90,17 @@ class CSchemaClassInfo;
 class CSchemaSystemTypeScope;
 class CSchemaType_DeclaredClass;
 struct SchemaClassFieldData_t;
+
+template<class T, class CLASS>
+T entity_upper_cast(CLASS aEntity)
+{
+	if constexpr (std::is_pointer_v<T>)
+	{
+		return reinterpret_cast<T>(aEntity);
+	}
+
+	return static_cast<T>(aEntity);
+}
 
 namespace MenuSystem
 {
