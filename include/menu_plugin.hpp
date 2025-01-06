@@ -27,6 +27,7 @@
 #	include "imenu.hpp"
 #	include "ientitymgr.hpp"
 #	include "menu/chat_command_system.hpp"
+#	include "menu/game_event_system.hpp"
 #	include "menu/provider.hpp"
 #	include "menu/schema.hpp"
 #	include "menu/schema/base_entity.hpp"
@@ -91,8 +92,8 @@
 class CBasePlayerController;
 class INetworkMessageInternal;
 
-class MenuPlugin final : public ISmmPlugin, public IMetamodListener, public IMenuPlugin, public CBaseGameSystem, public IGameEventListener2, public IEntityManager::IProviderAgent::ISpawnGroupNotifications, // Interfaces.
-                         public Menu::ChatCommandSystem, public Menu::Provider, virtual public Menu::Schema::CSystem, virtual public Logger, public Translations, // Conponents.
+class MenuPlugin final : public ISmmPlugin, public IMetamodListener, public IMenuPlugin, public CBaseGameSystem, public IEntityManager::IProviderAgent::ISpawnGroupNotifications, // Interfaces.
+                         public Menu::ChatCommandSystem, public Menu::GameEventSystem, public Menu::Provider, virtual public Menu::Schema::CSystem, virtual public Logger, public Translations, // Conponents.
                          virtual public Menu::Schema::CBaseEntity_Helper, virtual public Menu::Schema::CBaseModelEntity_Helper, virtual public Menu::Schema::CBasePlayerController_Helper, virtual public Menu::Schema::CBaseViewModel_Helper, virtual public Menu::Schema::CBodyComponent_Helper, virtual public Menu::Schema::CCSPlayerBase_CameraServices_Helper, virtual public Menu::Schema::CCSPlayerPawnBase_Helper, virtual public Menu::Schema::CGameSceneNode_Helper, virtual public Menu::Schema::CCSPlayer_ViewModelServices_Helper // Schema helpers.
 {
 public:
@@ -212,7 +213,6 @@ public: // CBaseGameSystem
 	GS_EVENT(ServerPostEntityThink);
 
 public: // IGameEventListener2
-	void FireGameEvent(IGameEvent *event) override;
 	bool OnPlayerTeam(IGameEvent *event);
 
 public: // IEntityManager::IProviderAgent::ISpawnGroupNotifications
@@ -294,19 +294,12 @@ public: // Translations.
 	bool ClearTranslations(char *error = nullptr, size_t maxlen = 0);
 
 public: // Event actions.
-	bool ParseGameEvents();
-	bool ParseGameEvents(KeyValues3 *pData, CUtlVector<CUtlString> &vecMessages); // Parse the structure of events.
-	bool ClearGameEvents();
-
-	bool HookGameEvents();
-	bool UnhookGameEvents();
+	bool HookGameEvents(char *error = nullptr, size_t maxlen = 0);
+	bool UnhookGameEvents(char *error = nullptr, size_t maxlen = 0);
 
 private: // Commands.
 	CON_COMMAND_MEMBER_F(MenuPlugin, "mm_" META_PLUGIN_PREFIX "_reload_gamedata", OnReloadGameDataCommand, "Reload gamedata configs", FCVAR_LINKED_CONCOMMAND);
 	CON_COMMAND_MEMBER_F(MenuPlugin, "menuselect", OnMenuSelectCommand, "", FCVAR_LINKED_CONCOMMAND | FCVAR_CLIENT_CAN_EXECUTE);
-
-private: // ConVars. See the constructor
-	ConVar<bool> m_aEnableGameEventsDetaillsConVar;
 
 public: // SourceHooks.
 	void OnStartupServerHook(const GameSessionConfiguration_t &config, ISource2WorldSession *pWorldSession, const char *);
@@ -359,9 +352,7 @@ private: // Fields.
 	INetworkMessageInternal *m_pGetCvarValueMessage = NULL;
 	INetworkMessageInternal *m_pSayText2Message = NULL;
 	INetworkMessageInternal *m_pTextMsgMessage = NULL;
-	// INetworkMessageInternal *m_pVGUIMenuPluginMessage = NULL;
-
-	CUtlVector<CUtlString> m_vecGameEvents;
+	// INetworkMessageInternal *m_pVGUIMenuMessage = NULL;
 
 	CLanguage m_aServerLanguage;
 	CUtlVector<CLanguage> m_vecLanguages;

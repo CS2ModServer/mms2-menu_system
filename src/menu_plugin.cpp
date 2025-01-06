@@ -109,10 +109,152 @@ MenuPlugin::MenuPlugin()
     CGameSceneNode_Helper(this),
     CCSPlayer_ViewModelServices_Helper(this),
 
-    m_aEnableGameEventsDetaillsConVar("mm_" META_PLUGIN_PREFIX "_enable_game_events_details", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable detail messages of game events", false, true, false, true, true),
     m_mapConVarCookies(DefLessFunc(const CUtlSymbolLarge)),
     m_mapLanguages(DefLessFunc(const CUtlSymbolLarge))
 {
+	// Register game events.
+	{
+		Menu::GameEventSystem::Register("player_team", {[&](IGameEvent *pEvent) -> void
+		{
+			auto aPlayerSlot = pEvent->GetPlayerSlot("userid");
+
+			if(aPlayerSlot == CPlayerSlot::InvalidIndex())
+			{
+				return;
+			}
+
+			auto &aPlayerData = GetPlayerData(aPlayerSlot);
+
+			const auto &vecMenuEntities = aPlayerData.GetMenuEntities();
+
+			if(!vecMenuEntities.Count())
+			{
+				return;
+			}
+
+			auto *pPlayerPawn = entity_upper_cast<CBasePlayerPawn *>(pEvent->GetPlayerPawn("userid"));
+
+			if(!pPlayerPawn)
+			{
+				return;
+			}
+
+			if(pEvent->GetBool("disconnect") || pEvent->GetBool("isbot"))
+			{
+				return;
+			}
+
+			DebuggerBreak();
+
+			int iNewTeam = pEvent->GetInt("team"), 
+			    iOldTeam = pEvent->GetInt("oldteam");
+
+			if(iNewTeam <= TEAM_SPECTATOR)
+			{
+				AttachMenuEntitiesToEntity(pPlayerPawn, vecMenuEntities);
+			}
+			else
+			{
+				auto *pCSPlayerPawn = entity_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
+
+				AttachMenuEntitiesToCSPlayer(pCSPlayerPawn, vecMenuEntities);
+			}
+		}});
+	}
+
+	// Register chat commands.
+	{
+		Menu::ChatCommandSystem::Register("menu", {[&](CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments) -> void
+		{
+			CSingleRecipientFilter aFilter(aSlot);
+
+			int iClient = aSlot.Get();
+
+			Assert(0 <= iClient && iClient < ABSOLUTE_PLAYER_LIMIT);
+
+			auto &aPlayer = m_aPlayers[iClient];
+
+			if(!aPlayer.IsConnected())
+			{
+				return;
+			}
+
+			const auto &aPhrase = aPlayer.GetYourArgumentPhrase();
+
+			if(aPhrase.m_pFormat && aPhrase.m_pContent)
+			{
+				for(const auto &sArgument : vecArguments)
+				{
+					SendTextMessage(&aFilter, HUD_PRINTTALK, 1, aPhrase.m_pContent->Format(*aPhrase.m_pFormat, 1, sArgument.Get()).Get());
+				}
+			}
+			else
+			{
+				Logger::Warning("Not found a your argument phrase\n");
+			}
+
+			// Spawn & attach menus.
+			{
+				auto *pPlayerController = entity_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient + 1)));
+
+				if(!pPlayerController)
+				{
+					Logger::WarningFormat("Failed to get player entity. Client index is %d\n", iClient);
+
+					return;
+				}
+
+				CBasePlayerPawn *pPlayerPawn = CBasePlayerController_Helper::GetPawnAccessor(pPlayerController)->Get();
+
+				if(!pPlayerPawn)
+				{
+					Logger::WarningFormat("Failed to get player pawn. Client index is %d\n", iClient);
+
+					return;
+				}
+
+				CUtlVector<CEntityInstance *> vecEntitites;
+
+				SpawnMenuEntitiesByEntity(pPlayerPawn, &vecEntitites);
+
+				uint8 iTeam = CBaseEntity_Helper::GetTeamNumAccessor(pPlayerController);
+
+				auto *pCSPlayerPawn = entity_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
+
+				if(iTeam <= TEAM_SPECTATOR)
+				{
+					AttachMenuEntitiesToEntity(pPlayerPawn, vecEntitites);
+					TeleportMenuEntitiesToCSPlayer(pCSPlayerPawn, vecEntitites);
+				}
+				else
+				{
+					AttachMenuEntitiesToCSPlayer(pCSPlayerPawn, vecEntitites);
+				}
+
+				aPlayer.GetMenuEntities().AddVectorToTail(vecEntitites);
+			}
+		}});
+
+		Menu::ChatCommandSystem::Register("menu_clear", {[&](CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments) -> void
+		{
+			auto &aPlayer = GetPlayerData(aSlot);
+
+			if(!aPlayer.IsConnected())
+			{
+				return;
+			}
+
+			auto &vecMenuEntities = aPlayer.GetMenuEntities();
+
+			for(auto *pMenuEntity : vecMenuEntities)
+			{
+				m_pEntityManagerProviderAgent->PushDestroyQueue(pMenuEntity);
+			}
+
+			m_pEntityManagerProviderAgent->ExecuteDestroyQueued();
+			vecMenuEntities.Purge();
+		}});
+	}
 }
 
 bool MenuPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool late)
@@ -180,99 +322,8 @@ bool MenuPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bo
 		return false;
 	}
 
-	// See "FireGameEvent" method.
-	{
-		// m_vecGameEvents.AddToTail("round_start"); // Hook Round Start event to respawn menu entities.
-		m_vecGameEvents.AddToTail("player_team"); // Hook Player Team to change the menu entities way to display.
-	}
-
 	SH_ADD_HOOK(ICvar, DispatchConCommand, g_pCVar, SH_MEMBER(this, &MenuPlugin::OnDispatchConCommandHook), false);
 	SH_ADD_HOOK_MEMFUNC(INetworkServerService, StartupServer, g_pNetworkServerService, this, &MenuPlugin::OnStartupServerHook, true);
-
-	// Register chat commands.
-	Menu::ChatCommandSystem::Register("menu", {[&](CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments)
-	{
-		CSingleRecipientFilter aFilter(aSlot);
-
-		int iClient = aSlot.Get();
-
-		Assert(0 <= iClient && iClient < ABSOLUTE_PLAYER_LIMIT);
-
-		auto &aPlayer = m_aPlayers[iClient];
-
-		const auto &aPhrase = aPlayer.GetYourArgumentPhrase();
-
-		if(aPhrase.m_pFormat && aPhrase.m_pContent)
-		{
-			for(const auto &sArgument : vecArguments)
-			{
-				SendTextMessage(&aFilter, HUD_PRINTTALK, 1, aPhrase.m_pContent->Format(*aPhrase.m_pFormat, 1, sArgument.Get()).Get());
-			}
-		}
-		else
-		{
-			Logger::Warning("Not found a your argument phrase\n");
-		}
-
-		// Spawn & attach menus.
-		{
-			auto *pPlayerController = entity_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient + 1)));
-
-			if(!pPlayerController)
-			{
-				Logger::WarningFormat("Failed to get player entity. Client index is %d\n", iClient);
-
-				return;
-			}
-
-			CBasePlayerPawn *pPlayerPawn = CBasePlayerController_Helper::GetPawnAccessor(pPlayerController)->Get();
-
-			if(!pPlayerPawn)
-			{
-				Logger::WarningFormat("Failed to get player pawn. Client index is %d\n", iClient);
-
-				return;
-			}
-
-			CUtlVector<CEntityInstance *> vecEntitites;
-
-			SpawnMenuEntitiesByEntity(pPlayerPawn, &vecEntitites);
-
-			uint8 iTeam = CBaseEntity_Helper::GetTeamNumAccessor(pPlayerController);
-
-			auto *pCSPlayerPawn = entity_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
-
-			if(iTeam <= TEAM_SPECTATOR)
-			{
-				AttachMenuEntitiesToEntity(pPlayerPawn, vecEntitites);
-				TeleportMenuEntitiesToCSPlayer(pCSPlayerPawn, vecEntitites);
-			}
-			else
-			{
-				AttachMenuEntitiesToCSPlayer(pCSPlayerPawn, vecEntitites);
-			}
-
-			aPlayer.GetMenuEntities().AddVectorToTail(vecEntitites);
-		}
-	}});
-
-	Menu::ChatCommandSystem::Register("menu_clear", {[&](CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments)
-	{
-		auto &aPlayer = GetPlayerData(aSlot);
-
-		if(aPlayer.IsConnected()) // Are connected.
-		{
-			auto &vecMenuEntities = aPlayer.GetMenuEntities();
-
-			for(auto *pMenuEntity : vecMenuEntities)
-			{
-				m_pEntityManagerProviderAgent->PushDestroyQueue(pMenuEntity);
-			}
-
-			m_pEntityManagerProviderAgent->ExecuteDestroyQueued();
-			vecMenuEntities.Purge();
-		}
-	}});
 
 	if(late)
 	{
@@ -332,7 +383,6 @@ bool MenuPlugin::Unload(char *error, size_t maxlen)
 
 	UnhookGameEvents();
 
-	ClearGameEvents();
 	ClearLanguages();
 	ClearTranslations();
 
@@ -574,116 +624,6 @@ GS_EVENT_MEMBER(MenuPlugin, ServerPostEntityThink)
 
 		TeleportMenuEntitiesToCSPlayer(pCSPlayerPawn, vecMenuEntities);
 	}
-}
-
-void MenuPlugin::FireGameEvent(IGameEvent *event)
-{
-	if(m_aEnableGameEventsDetaillsConVar.GetValue())
-	{
-		KeyValues3 *pEventDataKeys = event->GetDataKeys();
-
-		if(!pEventDataKeys)
-		{
-			Logger::WarningFormat("Data keys is empty at \"%s\" event\n", event->GetName());
-
-			return;
-		}
-
-		if(Logger::IsChannelEnabled(LS_DETAILED))
-		{
-			int iMemberCount = pEventDataKeys->GetMemberCount();
-
-			if(!iMemberCount)
-			{
-				Logger::WarningFormat("No members at \"%s\" event\n", event->GetName());
-
-				return;
-			}
-
-			{
-				auto aDetails = Logger::CreateDetailsScope();
-
-				aDetails.PushFormat("\"%s\":", event->GetName());
-				aDetails.Push("{");
-
-				for(KV3MemberId_t id = 0; id < iMemberCount; id++)
-				{
-					const char *pEventMemberName = pEventDataKeys->GetMemberName(id);
-
-					KeyValues3 *pEventMember = pEventDataKeys->GetMember(id);
-
-					CBufferStringGrowable<128> sEventMember;
-
-					pEventMember->ToString(sEventMember, KV3_TO_STRING_DONT_CLEAR_BUFF);
-					aDetails.PushFormat("\t\"%s\":\t%s", pEventMemberName, sEventMember.Get());
-				}
-
-				aDetails.Push("}");
-				aDetails.Send([&](const CUtlString &sMessage)
-				{
-					Logger::Detailed(sMessage);
-				});
-			}
-		}
-	}
-
-	// "round_start"
-	{
-		// SpawnMenuEntities();
-		// LoadMenuSpawnGroups();
-	}
-
-	// "player_team"
-	{
-		OnPlayerTeam(event);
-	}
-}
-
-bool MenuPlugin::OnPlayerTeam(IGameEvent *event)
-{
-	auto aPlayerSlot = event->GetPlayerSlot("userid");
-
-	if(aPlayerSlot == CPlayerSlot::InvalidIndex())
-	{
-		return false;
-	}
-
-	auto &aPlayerData = GetPlayerData(aPlayerSlot);
-
-	const auto &vecMenuEntities = aPlayerData.GetMenuEntities();
-
-	if(!vecMenuEntities.Count())
-	{
-		return false;
-	}
-
-	auto *pPlayerPawn = entity_upper_cast<CBasePlayerPawn *>(event->GetPlayerPawn("userid"));
-
-	if(!pPlayerPawn)
-	{
-		return false;
-	}
-
-	if(event->GetBool("disconnect") || event->GetBool("isbot"))
-	{
-		return false;
-	}
-
-	int iNewTeam = event->GetInt("team"), 
-	    iOldTeam = event->GetInt("oldteam");
-
-	if(iNewTeam <= TEAM_SPECTATOR)
-	{
-		AttachMenuEntitiesToEntity(pPlayerPawn, vecMenuEntities);
-	}
-	else
-	{
-		auto *pCSPlayerPawn = entity_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
-
-		AttachMenuEntitiesToCSPlayer(pCSPlayerPawn, vecMenuEntities);
-	}
-
-	return true;
 }
 
 void MenuPlugin::OnSpawnGroupAllocated(SpawnGroupHandle_t hSpawnGroup, ISpawnGroup *pSpawnGroup)
@@ -1842,137 +1782,27 @@ bool MenuPlugin::ClearTranslations(char *error, size_t maxlen)
 	return true;
 }
 
-bool MenuPlugin::ParseGameEvents()
+
+bool MenuPlugin::HookGameEvents(char *error, size_t maxlen)
 {
-	const char *pszPathID = MENU_SYSTEM_BASE_PATHID;
-
-	CUtlVector<CUtlString> vecGameEventFiles;
-
-	CUtlVector<CUtlString> vecSubmessages;
-
-	CUtlString sMessage;
-
-	auto aWarnings = Logger::CreateWarningsScope();
-
-	AnyConfig::LoadFromFile_Generic_t aLoadPresets({{&sMessage, NULL, pszPathID}, g_KV3Format_Generic});
-
-	g_pFullFileSystem->FindFileAbsoluteList(vecGameEventFiles, MENU_SYSTEM_GAME_EVENTS_FILES, pszPathID);
-
-	for(const auto &sFile : vecGameEventFiles)
+	if(!Menu::GameEventSystem::HookAll())
 	{
-		const char *pszFilename = sFile.Get();
-
-		AnyConfig::Anyone aGameEventConfig;
-
-		aLoadPresets.m_pszFilename = pszFilename;
-
-		if(!aGameEventConfig.Load(aLoadPresets))
-		{
-			aWarnings.PushFormat("\"%s\": %s", pszFilename, sMessage.Get());
-
-			continue;
-		}
-
-		if(!ParseGameEvents(aGameEventConfig.Get(), vecSubmessages))
-		{
-			aWarnings.PushFormat("\"%s\":", pszFilename);
-
-			for(const auto &sSubmessage : vecSubmessages)
-			{
-				aWarnings.PushFormat("\t%s", sSubmessage.Get());
-			}
-
-			continue;
-		}
-
-		// ...
-	}
-
-	if(aWarnings.Count())
-	{
-		aWarnings.Send([&](const CUtlString &sMessage)
-		{
-			Logger::Warning(sMessage);
-		});
-	}
-
-	return true;
-}
-
-bool MenuPlugin::ParseGameEvents(KeyValues3 *pData, CUtlVector<CUtlString> &vecMessages)
-{
-	int iMemberCount = pData->GetMemberCount();
-
-	if(!iMemberCount)
-	{
-		vecMessages.AddToTail("No members");
+		strncpy(error, "Failed to hook game events", maxlen);
 
 		return false;
 	}
 
-	CUtlString sMessage;
-
-	for(KV3MemberId_t n = 0; n < iMemberCount; n++)
-	{
-		const char *pszEvent = pData->GetMemberName(n);
-
-		if(!pszEvent)
-		{
-			sMessage.Format("No member name at #%d", n);
-			vecMessages.AddToTail(sMessage);
-
-			continue;
-		}
-
-		m_vecGameEvents.AddToTail(pszEvent);
-	}
-
-	return iMemberCount;
-}
-
-bool MenuPlugin::ClearGameEvents()
-{
-	m_vecGameEvents.Purge();
-
 	return true;
 }
 
-bool MenuPlugin::HookGameEvents()
+bool MenuPlugin::UnhookGameEvents(char *error, size_t maxlen)
 {
-	auto aWarnings = Logger::CreateWarningsScope();
-
-	static const char *pszWarningFormat = "Failed to hook \"%s\" event";
-
-	for(const auto &sEvent : m_vecGameEvents)
+	if(!Menu::GameEventSystem::UnhookAll())
 	{
-		const char *pszEvent = sEvent.Get();
+		strncpy(error, "Failed to unhook game events", maxlen);
 
-		if(g_pGameEventManager->AddListener(static_cast<IGameEventListener2 *>(this), pszEvent, true) == -1)
-		{
-			aWarnings.PushFormat(pszWarningFormat, pszEvent);
-
-			continue;
-		}
-
-#ifdef DEBUG
-		Logger::DetailedFormat("Hooked \"%s\" event\n", pszEvent);
-#endif
+		return false;
 	}
-
-	if(aWarnings.Count())
-	{
-		aWarnings.Send([&](const CUtlString &sMessage)
-		{
-			Logger::Warning(sMessage);
-		});
-	}
-
-	return true;
-}
-
-bool MenuPlugin::UnhookGameEvents()
-{
-	g_pGameEventManager->RemoveListener(this);
 
 	return true;
 }
@@ -2341,16 +2171,9 @@ void MenuPlugin::OnStartupServer(CNetworkGameServerBase *pNetServer, const GameS
 	{
 		char sMessage[256];
 
-		if(RegisterSource2Server(sMessage, sizeof(sMessage)))
-		{
-			HookGameEvents();
-		}
-		else
-		{
-			Logger::WarningFormat("%s\n", sMessage);
-		}
-
-		if(!RegisterNetMessages(sMessage, sizeof(sMessage)))
+		if(!RegisterSource2Server(sMessage, sizeof(sMessage)) ||
+		   !HookGameEvents(sMessage, sizeof(sMessage)) ||
+		   !RegisterNetMessages(sMessage, sizeof(sMessage)))
 		{
 			Logger::WarningFormat("%s\n", sMessage);
 		}

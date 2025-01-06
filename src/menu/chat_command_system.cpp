@@ -34,9 +34,9 @@ const char *Menu::ChatCommandSystem::GetName()
 	return "Menu - Chat Command System";
 }
 
-bool Menu::ChatCommandSystem::Register(const char *pszName, const CollectorChangedSharedCallback &fnCallback)
+bool Menu::ChatCommandSystem::Register(const char *pszName, const SharedCallback &fnCallback)
 {
-	m_mapCallbacks.Insert(m_aSymbolTable.AddString(pszName), fnCallback);
+	m_mapCallbacks.Insert(GetSymbol(pszName), fnCallback);
 
 	return true;
 }
@@ -82,7 +82,14 @@ bool Menu::ChatCommandSystem::Handle(CPlayerSlot aSlot, bool bIsSilent, const CU
 
 	const char *pszName = vecArgs[0];
 
-	auto iFound = m_mapCallbacks.Find(FindSymbol(pszName));
+	CUtlSymbolLarge sName = FindSymbol(pszName);
+
+	if(!sName.IsValid())
+	{
+		return false;
+	}
+
+	auto iFound = m_mapCallbacks.Find(sName);
 
 	if(iFound == m_mapCallbacks.InvalidIndex())
 	{
