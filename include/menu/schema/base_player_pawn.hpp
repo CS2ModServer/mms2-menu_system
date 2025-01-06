@@ -19,49 +19,22 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-
-#ifndef _INCLUDE_METAMOD_SOURCE_IMENU_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_IMENU_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASE_PLAYER_PAWN_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASE_PLAYER_PAWN_HPP_
 
 #	pragma once
 
-#	include "imenu/isample.hpp"
+#	include <menu/schema/base_model_entity.hpp>
 
-#	include <tier1/utlvector.h>
+#	define CBASEPLAYERPAWN_CLASS_NAME "CBasePlayerPawn"
 
-#	define MENU_SYSTEM_INTERFACE_NAME "Menu System v1.0.0"
+class QAngle;
+class Vector;
 
-class CEntityInstance;
-
-/**
- * @brief A Menu System interface.
- * Note: gets with "ismm->MetaFactory(MENU_SYSTEM_INTERFACE_NAME, NULL, NULL);"
-**/
-class IMenuPlugin : public ISample
+class CBasePlayerPawn : public CBaseModelEntity  // / public CBaseCombatCharacter < public CBaseFlex < public CBaseAnimGraph < public CBaseModelEntity
 {
 public:
-	/**
-	 * @brief A player interface.
-	**/
-	class IPlayer : public IPlayerBase
-	{
-	public:
-		/**
-		 * @brief Gets menu entities of the player.
-		 * 
-		 * @return              A vector of menu entities.
-		 */
-		virtual CUtlVector<CEntityInstance *> &GetMenuEntities() = 0;
-	};
+	// ...
+};
 
-	/**
-	 * @brief Gets a player data.
-	 * 
-	 * @param aSlot         A player slot.
-	 * 
-	 * @return              Returns a player data.
-	 */
-	virtual IPlayer *GetPlayer(const CPlayerSlot &aSlot) = 0;
-}; // IMenuPlugin
-
-#endif // _INCLUDE_METAMOD_SOURCE_IMENU_HPP_
+#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASE_PLAYER_PAWN_HPP_

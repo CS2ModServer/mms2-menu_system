@@ -19,49 +19,50 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-
-#ifndef _INCLUDE_METAMOD_SOURCE_IMENU_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_IMENU_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BODY_COMPONENT_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BODY_COMPONENT_HPP_
 
 #	pragma once
 
-#	include "imenu/isample.hpp"
+#	include <menu/schema.hpp>
 
-#	include <tier1/utlvector.h>
+#	define CBODYCOMPONENT_CLASS_NAME "CBodyComponent"
 
-#	define MENU_SYSTEM_INTERFACE_NAME "Menu System v1.0.0"
+class QAngle;
+class Vector;
+class CGameSceneNode;
 
-class CEntityInstance;
-
-/**
- * @brief A Menu System interface.
- * Note: gets with "ismm->MetaFactory(MENU_SYSTEM_INTERFACE_NAME, NULL, NULL);"
-**/
-class IMenuPlugin : public ISample
+class CBodyComponent
 {
 public:
-	/**
-	 * @brief A player interface.
-	**/
-	class IPlayer : public IPlayerBase
+	// ...
+};
+
+namespace Menu
+{
+	namespace Schema
 	{
-	public:
-		/**
-		 * @brief Gets menu entities of the player.
-		 * 
-		 * @return              A vector of menu entities.
-		 */
-		virtual CUtlVector<CEntityInstance *> &GetMenuEntities() = 0;
-	};
+		class CBodyComponent_Helper
+		{
+		public:
+			CBodyComponent_Helper(CSystem *pSchemaSystemHelper);
 
-	/**
-	 * @brief Gets a player data.
-	 * 
-	 * @param aSlot         A player slot.
-	 * 
-	 * @return              Returns a player data.
-	 */
-	virtual IPlayer *GetPlayer(const CPlayerSlot &aSlot) = 0;
-}; // IMenuPlugin
+		public:
+			void Clear();
 
-#endif // _INCLUDE_METAMOD_SOURCE_IMENU_HPP_
+		public:
+			SCHEMA_COMPONENT_ACCESSOR_METHOD(GetSceneNodeAccessor, CBodyComponent, CGameSceneNode *, m_aOffsets.m_nSceneNode);
+
+		private:
+			CSystem::CClass *m_pClass;
+			CSystem::CClass::Fields::ListenerCallbacksCollector m_aClassFieldsClassbacks;
+
+			struct
+			{
+				int m_nSceneNode = INVALID_SCHEMA_FIELD_OFFSET;
+			} m_aOffsets;
+		}; // Menu::Schema::CBodyComponent_Helper
+	}; // Menu::Schema
+}; // Menu
+
+#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BODY_COMPONENT_HPP_
