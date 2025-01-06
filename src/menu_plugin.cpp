@@ -342,21 +342,13 @@ bool MenuPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bo
 			}
 		}
 
-		// Initialize a game resource.
+		// Initialize a game resource & load menu spawn groups.
 		{
 			char sMessage[256];
 
-			if(!RegisterGameResource(sMessage, sizeof(sMessage)))
+			if(!RegisterGameResource(sMessage, sizeof(sMessage)) || !LoadSpawnGroups(sMessage, sizeof(sMessage)))
 			{
 				Logger::WarningFormat("%s\n", sMessage);
-			}
-		}
-
-		// Load menu spawn groups.
-		{
-			if(!LoadMenuSpawnGroups())
-			{
-				Logger::Warning("Failed to load the menu spawn groups\n");
 			}
 		}
 	}
@@ -412,6 +404,11 @@ bool MenuPlugin::Unload(char *error, size_t maxlen)
 	}
 
 	if(!UnregisterGameFactory(error, maxlen))
+	{
+		return false;
+	}
+
+	if(!UnloadSpawnGroups(error, maxlen))
 	{
 		return false;
 	}
@@ -566,7 +563,7 @@ GS_EVENT_MEMBER(MenuPlugin, GameActivate)
 
 	// Load menu spawn groups.
 	{
-		if(!LoadMenuSpawnGroups())
+		if(!LoadSpawnGroups())
 		{
 			Logger::Warning("Failed to load the menu spawn groups\n");
 		}
@@ -905,7 +902,7 @@ bool MenuPlugin::UnloadEntityManager(char *error, size_t maxlen)
 	return true;
 }
 
-bool MenuPlugin::LoadMenuSpawnGroups(const Vector &aWorldOrigin)
+bool MenuPlugin::LoadSpawnGroups(char *error, size_t maxlen)
 {
 	if(Logger::IsChannelEnabled(LS_DETAILED))
 	{
@@ -932,14 +929,24 @@ bool MenuPlugin::LoadMenuSpawnGroups(const Vector &aWorldOrigin)
 
 		pSpawnGroupInstance->AddNotificationsListener(static_cast<IEntityManager::IProviderAgent::ISpawnGroupNotifications *>(this));
 
-		if(pSpawnGroupInstance->Load(aDesc, aWorldOrigin))
+		if(pSpawnGroupInstance->Load(aDesc, {0.f, 0.f, 0.f}))
 		{
 			m_pMySpawnGroupInstance = pSpawnGroupInstance;
 		}
 		else
 		{
-			Logger::WarningFormat("Failed to load \"%s\" spawn group", sMenu.Get());
+			snprintf(error, maxlen, "Failed to load \"%s\" spawn group", sMenu.Get());
 		}
+	}
+
+	return true;
+}
+
+bool MenuPlugin::UnloadSpawnGroups(char *error, size_t maxlen)
+{
+	if(m_pEntityManagerProviderAgent && m_pMySpawnGroupInstance)
+	{
+		m_pEntityManagerProviderAgent->ReleaseSpawnGroup(m_pMySpawnGroupInstance);
 	}
 
 	return true;

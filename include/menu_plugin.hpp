@@ -235,7 +235,8 @@ public: // Entity Manager.
 	void DumpEntityManager(const ConcatLineString &aConcat, CBufferString &sOutput);
 	bool UnloadEntityManager(char *error = nullptr, size_t maxlen = 0);
 
-	bool LoadMenuSpawnGroups(const Vector &aWorldOrigin = {0.0f, 0.0f, 0.0f});
+	bool LoadSpawnGroups(char *error = nullptr, size_t maxlen = 0);
+	bool UnloadSpawnGroups(char *error = nullptr, size_t maxlen = 0);
 
 	// Entity keyvalues.
 	void FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation, const Vector &vecScales, const Color rgbaColor, const char *pszFontName, const char *pszBackgroundMaterialName, const char *pszMessageText);
@@ -347,7 +348,7 @@ private: // Fields.
 	IEntityManager::CSpawnGroupProvider *m_pEntityManagerSpawnGroupProvider = nullptr;
 
 	// Run-time things.
-	IEntityManager::IProviderAgent::ISpawnGroupInstance *m_pMySpawnGroupInstance;
+	IEntityManager::IProviderAgent::ISpawnGroupInstance *m_pMySpawnGroupInstance = nullptr;
 
 	INetworkMessageInternal *m_pGetCvarValueMessage = NULL;
 	INetworkMessageInternal *m_pSayText2Message = NULL;
