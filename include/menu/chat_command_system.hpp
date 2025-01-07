@@ -24,13 +24,10 @@
 
 #	pragma once
 
-#	include <functional>
-#	include <memory>
+#	include "system_base.hpp"
 
 #	include <playerslot.h>
 #	include <tier0/utlstring.h>
-#	include <tier1/utlmap.h>
-#	include <tier1/utlsymbollarge.h>
 #	include <tier1/utlvector.h>
 
 #	include <logger.hpp>
@@ -39,64 +36,26 @@
 
 namespace Menu
 {
-	class ChatCommandSystem : virtual public Logger
+	using ChatCommandSystemBase = CSystemBase<CPlayerSlot, bool, const CUtlVector<CUtlString> &>;
+
+	class ChatCommandSystem : virtual public Logger, public ChatCommandSystemBase
 	{
+	public:
+		using Base = ChatCommandSystemBase;
+
 	public:
 		ChatCommandSystem();
 
-		using OnCallback_t = std::function<void (CPlayerSlot, bool, const CUtlVector<CUtlString> &)>;
-		using OnCallbackShared_t = std::shared_ptr<OnCallback_t>;
-
-		class SharedCallback
-		{
-		public:
-			SharedCallback()
-				:  m_pCallback(std::make_shared<OnCallback_t>(nullptr))
-			{
-			}
-
-			SharedCallback(const OnCallbackShared_t &funcSharedCallback)
-				:  m_pCallback(funcSharedCallback)
-			{
-			}
-
-			SharedCallback(const OnCallback_t &funcCallback)
-				:  m_pCallback(std::make_shared<OnCallback_t>(funcCallback))
-			{
-			}
-
-			operator OnCallbackShared_t() const
-			{
-				return m_pCallback;
-			}
-
-			operator OnCallback_t() const
-			{
-				return *m_pCallback;
-			}
-
-		private:
-			OnCallbackShared_t m_pCallback;
-		}; // Menu::ChatCommandSystem::SharedCallback
-
 	public:
-		const char *GetName();
-
-	public:
-		bool Register(const char *pszName, const SharedCallback &fnCallback);
-		bool Unregister(const char *pszName);
-		void UnregisterAll();
+		const char *GetName() override;
+		const char *GetHandlerLowercaseName() override;
 
 	public:
 		static char GetPublicTrigger();
 		static char GetSilentTrigger();
 
 	public:
-		bool Handle(CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArgs);
-
-	protected:
-		CUtlSymbolLarge GetSymbol(const char *pszText);
-		CUtlSymbolLarge FindSymbol(const char *pszText) const;
+		bool Handle(const char *pszName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArgs) override;
 
 	private:
 		CUtlSymbolTableLarge_CI m_aSymbolTable;

@@ -25,7 +25,7 @@
 
 Menu::ChatCommandSystem::ChatCommandSystem()
  :  Logger(GetName(), NULL, 0, LV_DEFAULT, MENU_SYSTEM_CHAT_COMMAND_SYSTEM_LOGGINING_COLOR), 
-    m_mapCallbacks(DefLessFunc(const CUtlSymbolLarge))
+    Base()
 {
 }
 
@@ -34,21 +34,9 @@ const char *Menu::ChatCommandSystem::GetName()
 	return "Menu - Chat Command System";
 }
 
-bool Menu::ChatCommandSystem::Register(const char *pszName, const SharedCallback &fnCallback)
+const char *Menu::ChatCommandSystem::GetHandlerLowercaseName()
 {
-	m_mapCallbacks.Insert(GetSymbol(pszName), fnCallback);
-
-	return true;
-}
-
-bool Menu::ChatCommandSystem::Unregister(const char *pszName)
-{
-	return m_mapCallbacks.Remove(FindSymbol(pszName));
-}
-
-void Menu::ChatCommandSystem::UnregisterAll()
-{
-	m_mapCallbacks.Purge();
+	return "chat command";
 }
 
 char Menu::ChatCommandSystem::GetPublicTrigger()
@@ -61,7 +49,7 @@ char Menu::ChatCommandSystem::GetSilentTrigger()
 	return '/';
 }
 
-bool Menu::ChatCommandSystem::Handle(CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArgs)
+bool Menu::ChatCommandSystem::Handle(const char *pszName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArgs)
 {
 	if(aSlot == CPlayerSlot::InvalidIndex())
 	{
@@ -80,45 +68,6 @@ bool Menu::ChatCommandSystem::Handle(CPlayerSlot aSlot, bool bIsSilent, const CU
 		return false;
 	}
 
-	const char *pszName = vecArgs[0];
-
-	CUtlSymbolLarge sName = FindSymbol(pszName);
-
-	if(!sName.IsValid())
-	{
-		return false;
-	}
-
-	auto iFound = m_mapCallbacks.Find(sName);
-
-	if(iFound == m_mapCallbacks.InvalidIndex())
-	{
-		if(Logger::IsChannelEnabled(LS_DETAILED))
-		{
-			Logger::DetailedFormat("Can't be found \"%s\" command\n", pszName);
-		}
-
-		return false;
-	}
-
-	if(Logger::IsChannelEnabled(LS_DETAILED))
-	{
-		Logger::DetailedFormat(u8"Handling \"%s\" command…\n", pszName);
-	}
-
-	OnCallback_t it = m_mapCallbacks[iFound];
-
-	it(aSlot, bIsSilent, vecArgs);
-
-	return true;
+	return Base::Handle(pszName, aSlot, bIsSilent, vecArgs);
 }
 
-CUtlSymbolLarge Menu::ChatCommandSystem::GetSymbol(const char *pszText)
-{
-	return m_aSymbolTable.AddString(pszText);
-}
-
-CUtlSymbolLarge Menu::ChatCommandSystem::FindSymbol(const char *pszText) const
-{
-	return m_aSymbolTable.Find(pszText);
-}

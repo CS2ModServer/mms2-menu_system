@@ -25,8 +25,8 @@
 #include <tier1/utlrbtree.h>
 
 Menu::GameEventSystem::GameEventSystem()
- :  Logger(GetName(), NULL, 0, LV_DEFAULT, MENU_SYSTEM_GAME_EVENT_SYSTEM_LOGGINING_COLOR), 
-    m_mapCallbacks(DefLessFunc(const CUtlSymbolLarge)), 
+ :  Logger(GetName(), NULL, 0, LV_DEFAULT, MENU_SYSTEM_GAME_EVENT_SYSTEM_LOGGINING_COLOR),
+    Base(), 
 
     m_aEnableDetaillsConVar("mm_" META_PLUGIN_PREFIX "_enable_game_events_details", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable detail messages of game events", false, true, false, true, true)
 {
@@ -35,6 +35,11 @@ Menu::GameEventSystem::GameEventSystem()
 const char *Menu::GameEventSystem::GetName()
 {
 	return "Menu - Game Event System";
+}
+
+const char *Menu::GameEventSystem::GetHandlerLowercaseName()
+{
+	return "game event";
 }
 
 bool Menu::GameEventSystem::HookAll()
@@ -48,6 +53,8 @@ bool Menu::GameEventSystem::HookAll()
 
 	auto *pEventListener = static_cast<IGameEventListener2 *>(this);
 
+	const char *pszHandlerLowercaseName = GetHandlerLowercaseName();
+
 	unsigned int nFails = 0;
 
 	FOR_EACH_MAP_FAST(m_mapCallbacks, i)
@@ -56,7 +63,7 @@ bool Menu::GameEventSystem::HookAll()
 
 		if(g_pGameEventManager->AddListener(pEventListener, pszName, true) == -1)
 		{
-			Logger::WarningFormat("Failed to hook \"%s\" event\n", pszName);
+			Logger::WarningFormat("Failed to hook \"%s\" %s\n", pszName, pszHandlerLowercaseName);
 
 			nFails++;
 		}
@@ -64,7 +71,7 @@ bool Menu::GameEventSystem::HookAll()
 		{
 			if(Logger::IsChannelEnabled(LV_DETAILED))
 			{
-				Logger::DetailedFormat("Hooked \"%s\" event\n", pszName);
+				Logger::DetailedFormat("Hooked \"%s\" %s\n", pszName, pszHandlerLowercaseName);
 			}
 		}
 	}
@@ -86,30 +93,13 @@ bool Menu::GameEventSystem::UnhookAll()
 	return true;
 }
 
-bool Menu::GameEventSystem::Register(const char *pszName, const SharedCallback &fnCallback)
-{
-	m_mapCallbacks.Insert(GetSymbol(pszName), fnCallback);
-
-	return true;
-}
-
-bool Menu::GameEventSystem::Unregister(const char *pszName)
-{
-	return m_mapCallbacks.Remove(FindSymbol(pszName));
-}
-
-void Menu::GameEventSystem::UnregisterAll()
-{
-	m_mapCallbacks.Purge();
-}
-
 bool Menu::GameEventSystem::DumpGameEvent(IGameEvent *pEvent)
 {
 	KeyValues3 *pEventDataKeys = pEvent->GetDataKeys();
 
 	if(!pEventDataKeys)
 	{
-		Logger::WarningFormat("Data keys is empty at \"%s\" event\n", pEvent->GetName());
+		Logger::WarningFormat("Data keys is empty at \"%s\" %s\n", pEvent->GetName(), GetHandlerLowercaseName());
 
 		return false;
 	}
@@ -120,7 +110,7 @@ bool Menu::GameEventSystem::DumpGameEvent(IGameEvent *pEvent)
 
 		if(!iMemberCount)
 		{
-			Logger::WarningFormat("No members at \"%s\" event\n", pEvent->GetName());
+			Logger::WarningFormat("No members at \"%s\" %s\n", pEvent->GetName(), GetHandlerLowercaseName());
 
 			return false;
 		}
@@ -159,6 +149,11 @@ bool Menu::GameEventSystem::DumpGameEvent(IGameEvent *pEvent)
 	return true;
 }
 
+bool Menu::GameEventSystem::Handle(const char *pszName, IGameEvent *pEvent)
+{
+	return Base::Handle(pszName, pEvent);
+}
+
 void Menu::GameEventSystem::FireGameEvent(IGameEvent *pEvent)
 {
 	if(m_aEnableDetaillsConVar.GetValue())
@@ -166,38 +161,5 @@ void Menu::GameEventSystem::FireGameEvent(IGameEvent *pEvent)
 		DumpGameEvent(pEvent);
 	}
 
-	const char *pszName = pEvent->GetName();
-
-	CUtlSymbolLarge sName = FindSymbol(pszName);
-
-	if(!sName.IsValid())
-	{
-		return;
-	}
-
-	auto iFound = m_mapCallbacks.Find(sName);
-
-	if(iFound == m_mapCallbacks.InvalidIndex())
-	{
-		return;
-	}
-
-	if(Logger::IsChannelEnabled(LS_DETAILED))
-	{
-		Logger::DetailedFormat(u8"Handling \"%s\" game event…\n", pszName);
-	}
-
-	OnCallback_t it = m_mapCallbacks[iFound];
-
-	it(pEvent);
-}
-
-CUtlSymbolLarge Menu::GameEventSystem::GetSymbol(const char *pszText)
-{
-	return m_aSymbolTable.AddString(pszText);
-}
-
-CUtlSymbolLarge Menu::GameEventSystem::FindSymbol(const char *pszText) const
-{
-	return m_aSymbolTable.Find(pszText);
+	Handle(pEvent->GetName(), pEvent);
 }

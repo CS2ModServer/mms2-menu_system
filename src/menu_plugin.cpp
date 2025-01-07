@@ -112,15 +112,15 @@ MenuPlugin::MenuPlugin()
     m_mapConVarCookies(DefLessFunc(const CUtlSymbolLarge)),
     m_mapLanguages(DefLessFunc(const CUtlSymbolLarge))
 {
-	// Register game events.
+	// Game events.
 	{
-		Menu::GameEventSystem::Register("player_team", {[&](IGameEvent *pEvent) -> void
+		Menu::GameEventSystem::AddHandler("player_team", {[&](const CUtlSymbolLarge &sName, IGameEvent *pEvent) -> bool
 		{
 			auto aPlayerSlot = pEvent->GetPlayerSlot("userid");
 
 			if(aPlayerSlot == CPlayerSlot::InvalidIndex())
 			{
-				return;
+				return false;
 			}
 
 			auto &aPlayerData = GetPlayerData(aPlayerSlot);
@@ -129,22 +129,20 @@ MenuPlugin::MenuPlugin()
 
 			if(!vecMenuEntities.Count())
 			{
-				return;
+				return false;
 			}
 
 			auto *pPlayerPawn = entity_upper_cast<CBasePlayerPawn *>(pEvent->GetPlayerPawn("userid"));
 
 			if(!pPlayerPawn)
 			{
-				return;
+				return false;
 			}
 
 			if(pEvent->GetBool("disconnect") || pEvent->GetBool("isbot"))
 			{
-				return;
+				return false;
 			}
-
-			DebuggerBreak();
 
 			int iNewTeam = pEvent->GetInt("team"), 
 			    iOldTeam = pEvent->GetInt("oldteam");
@@ -159,12 +157,14 @@ MenuPlugin::MenuPlugin()
 
 				AttachMenuEntitiesToCSPlayer(pCSPlayerPawn, vecMenuEntities);
 			}
+
+			return true;
 		}});
 	}
 
-	// Register chat commands.
+	// Chat commands.
 	{
-		Menu::ChatCommandSystem::Register("menu", {[&](CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments) -> void
+		Menu::ChatCommandSystem::AddHandler("menu", {[&](const CUtlSymbolLarge &sName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments) -> bool
 		{
 			CSingleRecipientFilter aFilter(aSlot);
 
@@ -176,7 +176,7 @@ MenuPlugin::MenuPlugin()
 
 			if(!aPlayer.IsConnected())
 			{
-				return;
+				return false;
 			}
 
 			const auto &aPhrase = aPlayer.GetYourArgumentPhrase();
@@ -201,7 +201,7 @@ MenuPlugin::MenuPlugin()
 				{
 					Logger::WarningFormat("Failed to get player entity. Client index is %d\n", iClient);
 
-					return;
+					return false;
 				}
 
 				CBasePlayerPawn *pPlayerPawn = CBasePlayerController_Helper::GetPawnAccessor(pPlayerController)->Get();
@@ -210,7 +210,7 @@ MenuPlugin::MenuPlugin()
 				{
 					Logger::WarningFormat("Failed to get player pawn. Client index is %d\n", iClient);
 
-					return;
+					return false;
 				}
 
 				CUtlVector<CEntityInstance *> vecEntitites;
@@ -232,16 +232,18 @@ MenuPlugin::MenuPlugin()
 				}
 
 				aPlayer.GetMenuEntities().AddVectorToTail(vecEntitites);
+
+				return true;
 			}
 		}});
 
-		Menu::ChatCommandSystem::Register("menu_clear", {[&](CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments) -> void
+		Menu::ChatCommandSystem::AddHandler("menu_clear", {[&](const CUtlSymbolLarge &sName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments) -> bool
 		{
 			auto &aPlayer = GetPlayerData(aSlot);
 
 			if(!aPlayer.IsConnected())
 			{
-				return;
+				return false;
 			}
 
 			auto &vecMenuEntities = aPlayer.GetMenuEntities();
@@ -253,6 +255,8 @@ MenuPlugin::MenuPlugin()
 
 			m_pEntityManagerProviderAgent->ExecuteDestroyQueued();
 			vecMenuEntities.Purge();
+
+				return true;
 		}});
 	}
 }
@@ -1909,7 +1913,7 @@ void MenuPlugin::OnDispatchConCommandHook(ConCommandHandle hCommand, const CComm
 						Logger::Detailed(sBuffer);
 					}
 
-					Menu::ChatCommandSystem::Handle(aPlayerSlot, bIsSilent, vecArgs);
+					Menu::ChatCommandSystem::Handle(vecArgs[0], aPlayerSlot, bIsSilent, vecArgs);
 				}
 
 				RETURN_META(MRES_SUPERCEDE);
@@ -2173,16 +2177,22 @@ void MenuPlugin::OnStartupServer(CNetworkGameServerBase *pNetServer, const GameS
 {
 	SH_ADD_HOOK_MEMFUNC(CNetworkGameServerBase, ConnectClient, pNetServer, this, &MenuPlugin::OnConnectClientHook, true);
 
-	// Initialize & hook game evetns.
-	// Initialize network messages.
 	{
 		char sMessage[256];
 
-		if(!RegisterSource2Server(sMessage, sizeof(sMessage)) ||
-		   !HookGameEvents(sMessage, sizeof(sMessage)) ||
-		   !RegisterNetMessages(sMessage, sizeof(sMessage)))
+		bool (MenuPlugin::*pfnIntializers[])(char *error, size_t maxlen) = 
 		{
-			Logger::WarningFormat("%s\n", sMessage);
+			&MenuPlugin::RegisterSource2Server,
+			&MenuPlugin::RegisterNetMessages,
+			&MenuPlugin::HookGameEvents,
+		};
+
+		for(const auto &aInitializer : pfnIntializers)
+		{
+			if(!(this->*(aInitializer))(sMessage, sizeof(sMessage)))
+			{
+				Logger::WarningFormat("%s\n", sMessage);
+			}
 		}
 	}
 }
