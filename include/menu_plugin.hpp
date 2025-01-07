@@ -30,16 +30,16 @@
 #	include "menu/game_event_system.hpp"
 #	include "menu/provider.hpp"
 #	include "menu/schema.hpp"
-#	include "menu/schema/base_entity.hpp"
-#	include "menu/schema/base_model_entity.hpp"
-#	include "menu/schema/base_player_controller.hpp"
-#	include "menu/schema/base_player_pawn.hpp"
-#	include "menu/schema/base_view_model.hpp"
-#	include "menu/schema/body_component.hpp"
-#	include "menu/schema/cs_player_base_camera_services.hpp"
-#	include "menu/schema/cs_player_pawn_base.hpp"
-#	include "menu/schema/cs_player_view_model_services.hpp"
-#	include "menu/schema/game_scene_node.hpp"
+#	include "menu/schema/baseentity.hpp"
+#	include "menu/schema/basemodelentity.hpp"
+#	include "menu/schema/baseplayercontroller.hpp"
+#	include "menu/schema/baseplayerpawn.hpp"
+#	include "menu/schema/baseviewmodel.hpp"
+#	include "menu/schema/bodycomponent.hpp"
+#	include "menu/schema/csplayer_viewmodelservices.hpp"
+#	include "menu/schema/csplayerbase_cameraservices.hpp"
+#	include "menu/schema/csplayerpawnbase.hpp"
+#	include "menu/schema/gamescenenode.hpp"
 #	include "concat.hpp"
 
 #	include <logger.hpp>
@@ -94,7 +94,7 @@ class INetworkMessageInternal;
 
 class MenuPlugin final : public ISmmPlugin, public IMetamodListener, public IMenuPlugin, public CBaseGameSystem, public IEntityManager::IProviderAgent::ISpawnGroupNotifications, // Interfaces.
                          public Menu::ChatCommandSystem, public Menu::GameEventSystem, public Menu::Provider, virtual public Menu::Schema::CSystem, virtual public Logger, public Translations, // Conponents.
-                         virtual public Menu::Schema::CBaseEntity_Helper, virtual public Menu::Schema::CBaseModelEntity_Helper, virtual public Menu::Schema::CBasePlayerController_Helper, virtual public Menu::Schema::CBaseViewModel_Helper, virtual public Menu::Schema::CBodyComponent_Helper, virtual public Menu::Schema::CCSPlayerBase_CameraServices_Helper, virtual public Menu::Schema::CCSPlayerPawnBase_Helper, virtual public Menu::Schema::CGameSceneNode_Helper, virtual public Menu::Schema::CCSPlayer_ViewModelServices_Helper // Schema helpers.
+                         virtual public Menu::Schema::CBaseEntity_Helper, virtual public Menu::Schema::CBaseModelEntity_Helper, virtual public Menu::Schema::CBasePlayerController_Helper, virtual public Menu::Schema::CBaseViewModel_Helper, virtual public Menu::Schema::CBodyComponent_Helper, virtual public Menu::Schema::CCSPlayer_ViewModelServices_Helper, virtual public Menu::Schema::CCSPlayerBase_CameraServices_Helper, virtual public Menu::Schema::CCSPlayerPawnBase_Helper, virtual public Menu::Schema::CGameSceneNode_Helper // Schema helpers.
 {
 public:
 	MenuPlugin();

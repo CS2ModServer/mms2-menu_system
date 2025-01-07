@@ -19,22 +19,20 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASE_ENTITY_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASE_ENTITY_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEMODELENTITY_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEMODELENTITY_HPP_
 
 #	pragma once
 
+#	include <menu/schema/baseentity.hpp>
 #	include <menu/schema.hpp>
 
-#	include <entity2/entityinstance.h>
-
-#	define CBASEENTITY_CLASS_NAME "CBaseEntity"
+#	define CBASEMODELENTITY_CLASS_NAME "CBaseModelEntity"
 
 class QAngle;
 class Vector;
-class CBodyComponent;
 
-class CBaseEntity : public CEntityInstance
+class CBaseModelEntity : public CBaseEntity
 {
 public:
 	// ...
@@ -44,20 +42,16 @@ namespace Menu
 {
 	namespace Schema
 	{
-		class CBaseEntity_Helper
+		class CBaseModelEntity_Helper
 		{
 		public:
-			CBaseEntity_Helper(CSystem *pSchemaSystemHelper);
+			CBaseModelEntity_Helper(CSystem *pSchemaSystemHelper);
 
 		public:
 			void Clear();
 
 		public:
-			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetBodyComponentAccessor, CBaseEntity, CBodyComponent *, m_aOffsets.m_nBodyComponent);
-			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetTeamNumAccessor, CBaseEntity, uint8, m_aOffsets.m_nTeamNum);
-			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetEffectsAccessor, CBaseEntity, uint, m_aOffsets.m_nEffects);
-			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetOwnerEntityAccessor, CBaseEntity, CBaseEntity *, m_aOffsets.m_nOwnerEntity);
-			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetEFlagsAccessor, CBaseEntity, int, m_aOffsets.m_nEFlags);
+			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetViewOffsetAccessor, CBaseModelEntity, Vector, m_aOffsets.m_nViewOffset);
 
 		private:
 			CSystem::CClass *m_pClass;
@@ -65,14 +59,10 @@ namespace Menu
 
 			struct
 			{
-				int m_nBodyComponent = INVALID_SCHEMA_FIELD_OFFSET;
-				int m_nTeamNum = INVALID_SCHEMA_FIELD_OFFSET;
-				int m_nEffects = INVALID_SCHEMA_FIELD_OFFSET;
-				int m_nOwnerEntity = INVALID_SCHEMA_FIELD_OFFSET;
-				int m_nEFlags = INVALID_SCHEMA_FIELD_OFFSET;
+				int m_nViewOffset = INVALID_SCHEMA_FIELD_OFFSET;
 			} m_aOffsets;
-		}; // Menu::Schema::CBaseEntity_Helper
+		}; // Menu::Schema::CBaseModelEntity_Helper
 	}; // Menu::Schema
 }; // Menu
 
-#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASE_ENTITY_HPP_
+#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEMODELENTITY_HPP_

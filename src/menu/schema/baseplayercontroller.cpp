@@ -19,22 +19,29 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASE_PLAYER_PAWN_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASE_PLAYER_PAWN_HPP_
+#include <menu/schema/baseplayercontroller.hpp>
 
-#	pragma once
+#include <schemasystem/schemasystem.h>
 
-#	include <menu/schema/base_model_entity.hpp>
-
-#	define CBASEPLAYERPAWN_CLASS_NAME "CBasePlayerPawn"
-
-class QAngle;
-class Vector;
-
-class CBasePlayerPawn : public CBaseModelEntity  // / public CBaseCombatCharacter < public CBaseFlex < public CBaseAnimGraph < public CBaseModelEntity
+Menu::Schema::CBasePlayerController_Helper::CBasePlayerController_Helper(CSystem *pSchemaSystemHelper)
 {
-public:
-	// ...
-};
+	auto &aCallbacks = m_aClassFieldsClassbacks;
 
-#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASE_PLAYER_PAWN_HPP_
+	m_pClass = pSchemaSystemHelper->GetClass(CBASEPLAYERCONTROLLER_CLASS_NAME);
+
+	Assert(m_pClass);
+
+	auto &aFields = m_pClass->GetFields();
+
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_hPawn"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
+	{
+		m_aOffsets.m_nPawn = pField->m_nSingleInheritanceOffset;
+	}});
+
+	aFields.AddListener(&aCallbacks);
+}
+
+void Menu::Schema::CBasePlayerController_Helper::Clear()
+{
+	m_aOffsets = {};
+}

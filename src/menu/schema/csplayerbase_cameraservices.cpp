@@ -19,7 +19,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <menu/schema/cs_player_base_camera_services.hpp>
+#include <menu/schema/csplayerbase_cameraservices.hpp>
 
 #include <schemasystem/schemasystem.h>
 

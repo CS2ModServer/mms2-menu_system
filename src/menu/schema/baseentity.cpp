@@ -19,7 +19,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <menu/schema/base_entity.hpp>
+#include <menu/schema/baseentity.hpp>
 
 #include <schemasystem/schemasystem.h>
 

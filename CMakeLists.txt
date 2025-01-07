@@ -86,15 +86,15 @@ set(SOURCE_FILES
 	${SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR}/gameresource.cpp
 	${SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR}/gamesystem.cpp
 	${SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR}/source2server.cpp
-	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/base_entity.cpp
-	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/base_model_entity.cpp
-	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/base_player_controller.cpp
-	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/base_view_model.cpp
-	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/body_component.cpp
-	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/cs_player_base_camera_services.cpp
-	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/cs_player_pawn_base.cpp
-	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/cs_player_view_model_services.cpp
-	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/game_scene_node.cpp
+	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/baseentity.cpp
+	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/basemodelentity.cpp
+	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/baseplayercontroller.cpp
+	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/baseviewmodel.cpp
+	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/bodycomponent.cpp
+	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/csplayer_viewmodelservices.cpp
+	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/csplayerbase_cameraservices.cpp
+	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/csplayerpawnbase.cpp
+	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/gamescenenode.cpp
 	${SOURCE_MENU_SYSTEM_DIR}/chat_command_system.cpp
 	${SOURCE_MENU_SYSTEM_DIR}/game_event_system.cpp
 	${SOURCE_MENU_SYSTEM_DIR}/language.cpp

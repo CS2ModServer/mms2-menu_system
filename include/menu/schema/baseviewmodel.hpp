@@ -19,36 +19,42 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CS_PLAYER_BASE_CAMERA_SERVICES_BASE_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CS_PLAYER_BASE_CAMERA_SERVICES_BASE_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEVIEWMODEL_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEVIEWMODEL_HPP_
 
 #	pragma once
 
+#	include <menu/schema/baseentity.hpp>
 #	include <menu/schema.hpp>
 
-#	include <ehandle.h>
+#	include <entity2/entityinstance.h>
 
-#	define CCSPLAYERBASE_CAMERASERVICES_CLASS_NAME "CCSPlayerBase_CameraServices"
+#	define CBASEVIEWMODEL_CLASS_NAME "CBaseViewModel"
 
 class QAngle;
 class Vector;
-class CBaseViewModel;
-class CCSPlayerBase_CameraServices;
+class CBodyComponent;
+
+class CBaseViewModel : public CBaseEntity
+{
+public:
+	// ...
+};
 
 namespace Menu
 {
 	namespace Schema
 	{
-		class CCSPlayerBase_CameraServices_Helper
+		class CBaseViewModel_Helper
 		{
 		public:
-			CCSPlayerBase_CameraServices_Helper(CSystem *pSchemaSystemHelper);
+			CBaseViewModel_Helper(CSystem *pSchemaSystemHelper);
 
 		public:
 			void Clear();
 
 		public:
-			SCHEMA_COMPONENT_ACCESSOR_METHOD(GetFOVAccessor, CCSPlayerBase_CameraServices, uint32, m_aOffsets.m_nFOV);
+			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetViewModelIndexAccessor, CBaseViewModel, uint, m_aOffsets.m_nViewModelIndex);
 
 		private:
 			CSystem::CClass *m_pClass;
@@ -56,10 +62,10 @@ namespace Menu
 
 			struct
 			{
-				int m_nFOV = INVALID_SCHEMA_FIELD_OFFSET;
+				int m_nViewModelIndex = INVALID_SCHEMA_FIELD_OFFSET;
 			} m_aOffsets;
-		}; // Menu::Schema::CCSPlayerBase_CameraServices_Helper
+		}; // Menu::Schema::CBaseViewModel_Helper
 	}; // Menu::Schema
 }; // Menu
 
-#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CS_PLAYER_BASE_CAMERA_SERVICES_BASE_HPP_
+#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEVIEWMODEL_HPP_

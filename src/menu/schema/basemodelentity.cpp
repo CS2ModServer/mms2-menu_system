@@ -19,44 +19,29 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <menu/schema/game_scene_node.hpp>
+#include <menu/schema/basemodelentity.hpp>
 
 #include <schemasystem/schemasystem.h>
 
-Menu::Schema::CGameSceneNode_Helper::CGameSceneNode_Helper(CSystem *pSchemaSystemHelper)
+Menu::Schema::CBaseModelEntity_Helper::CBaseModelEntity_Helper(CSystem *pSchemaSystemHelper)
 {
 	auto &aCallbacks = m_aClassFieldsClassbacks;
 
-	m_pClass = pSchemaSystemHelper->GetClass(CGAMESCENENODE_CLASS_NAME);
+	m_pClass = pSchemaSystemHelper->GetClass(CBASEMODELENTITY_CLASS_NAME);
 
 	Assert(m_pClass);
 
 	auto &aFields = m_pClass->GetFields();
 
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_pParent"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_vecViewOffset"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
 	{
-		m_aOffsets.m_nParent = pField->m_nSingleInheritanceOffset;
-	}});
-
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_vecAbsOrigin"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
-	{
-		m_aOffsets.m_nAbsOrigin = pField->m_nSingleInheritanceOffset;
-	}});
-
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_angAbsRotation"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
-	{
-		m_aOffsets.m_nAbsRotation = pField->m_nSingleInheritanceOffset;
-	}});
-
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_hierarchyAttachName"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
-	{
-		m_aOffsets.m_nHierarchyAttachName = pField->m_nSingleInheritanceOffset;
+		m_aOffsets.m_nViewOffset = pField->m_nSingleInheritanceOffset;
 	}});
 
 	aFields.AddListener(&aCallbacks);
 }
 
-void Menu::Schema::CGameSceneNode_Helper::Clear()
+void Menu::Schema::CBaseModelEntity_Helper::Clear()
 {
 	m_aOffsets = {};
 }

@@ -19,37 +19,29 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <menu/schema/cs_player_view_model_services.hpp>
+#include <menu/schema/bodycomponent.hpp>
 
 #include <schemasystem/schemasystem.h>
 
-Menu::Schema::CCSPlayer_ViewModelServices_Helper::CCSPlayer_ViewModelServices_Helper(CSystem *pSchemaSystemHelper)
+Menu::Schema::CBodyComponent_Helper::CBodyComponent_Helper(CSystem *pSchemaSystemHelper)
 {
 	auto &aCallbacks = m_aClassFieldsClassbacks;
 
-	m_pClass = pSchemaSystemHelper->GetClass(CCSPLAYER_VIEWMODELSERVICES_CLASS_NAME);
+	m_pClass = pSchemaSystemHelper->GetClass(CBODYCOMPONENT_CLASS_NAME);
 
 	Assert(m_pClass);
 
 	auto &aFields = m_pClass->GetFields();
 
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_hViewModel"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_pSceneNode"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
 	{
-		m_aOffsets.m_aViewModel.nValue = pField->m_nSingleInheritanceOffset;
-
-		{
-			int nSize {};
-			uint8 nAlignment {};
-
-			pField->m_pType->GetSizeAndAlignment(nSize, nAlignment);
-			m_aOffsets.m_aViewModel.nArraySize = nSize / sizeof(CHandle<CBaseViewModel>);
-		}
+		m_aOffsets.m_nSceneNode = pField->m_nSingleInheritanceOffset;
 	}});
 
 	aFields.AddListener(&aCallbacks);
 }
 
-void Menu::Schema::CCSPlayer_ViewModelServices_Helper::Clear()
+void Menu::Schema::CBodyComponent_Helper::Clear()
 {
 	m_aOffsets = {};
 }

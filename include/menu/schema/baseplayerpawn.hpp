@@ -19,50 +19,22 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BODY_COMPONENT_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BODY_COMPONENT_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEPLAYERPAWN_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEPLAYERPAWN_HPP_
 
 #	pragma once
 
-#	include <menu/schema.hpp>
+#	include <menu/schema/basemodelentity.hpp>
 
-#	define CBODYCOMPONENT_CLASS_NAME "CBodyComponent"
+#	define CBASEPLAYERPAWN_CLASS_NAME "CBasePlayerPawn"
 
 class QAngle;
 class Vector;
-class CGameSceneNode;
 
-class CBodyComponent
+class CBasePlayerPawn : public CBaseModelEntity  // / public CBaseCombatCharacter < public CBaseFlex < public CBaseAnimGraph < public CBaseModelEntity
 {
 public:
 	// ...
 };
 
-namespace Menu
-{
-	namespace Schema
-	{
-		class CBodyComponent_Helper
-		{
-		public:
-			CBodyComponent_Helper(CSystem *pSchemaSystemHelper);
-
-		public:
-			void Clear();
-
-		public:
-			SCHEMA_COMPONENT_ACCESSOR_METHOD(GetSceneNodeAccessor, CBodyComponent, CGameSceneNode *, m_aOffsets.m_nSceneNode);
-
-		private:
-			CSystem::CClass *m_pClass;
-			CSystem::CClass::Fields::ListenerCallbacksCollector m_aClassFieldsClassbacks;
-
-			struct
-			{
-				int m_nSceneNode = INVALID_SCHEMA_FIELD_OFFSET;
-			} m_aOffsets;
-		}; // Menu::Schema::CBodyComponent_Helper
-	}; // Menu::Schema
-}; // Menu
-
-#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BODY_COMPONENT_HPP_
+#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEPLAYERPAWN_HPP_

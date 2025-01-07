@@ -19,42 +19,36 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASE_VIEW_MODEL_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASE_VIEW_MODEL_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CSPLAYER_VIEWMODELSERVICES_BASE_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CSPLAYER_VIEWMODELSERVICES_BASE_HPP_
 
 #	pragma once
 
-#	include <menu/schema/base_entity.hpp>
 #	include <menu/schema.hpp>
 
-#	include <entity2/entityinstance.h>
+#	include <ehandle.h>
 
-#	define CBASEVIEWMODEL_CLASS_NAME "CBaseViewModel"
+#	define CCSPLAYER_VIEWMODELSERVICES_CLASS_NAME "CCSPlayer_ViewModelServices"
 
 class QAngle;
 class Vector;
-class CBodyComponent;
-
-class CBaseViewModel : public CBaseEntity
-{
-public:
-	// ...
-};
+class CBaseViewModel;
+class CCSPlayer_ViewModelServices;
 
 namespace Menu
 {
 	namespace Schema
 	{
-		class CBaseViewModel_Helper
+		class CCSPlayer_ViewModelServices_Helper
 		{
 		public:
-			CBaseViewModel_Helper(CSystem *pSchemaSystemHelper);
+			CCSPlayer_ViewModelServices_Helper(CSystem *pSchemaSystemHelper);
 
 		public:
 			void Clear();
 
 		public:
-			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetViewModelIndexAccessor, CBaseViewModel, uint, m_aOffsets.m_nViewModelIndex);
+			SCHEMA_COMPONENT_ARRAY_ACCESSOR_METHOD(GetViewModelAccessor, CCSPlayer_ViewModelServices, CHandle<CBaseViewModel>, m_aOffsets.m_aViewModel.nValue, m_aOffsets.m_aViewModel.nArraySize);
 
 		private:
 			CSystem::CClass *m_pClass;
@@ -62,10 +56,14 @@ namespace Menu
 
 			struct
 			{
-				int m_nViewModelIndex = INVALID_SCHEMA_FIELD_OFFSET;
+				struct
+				{
+					int nValue = INVALID_SCHEMA_FIELD_OFFSET;
+					int nArraySize = INVALID_SCHEMA_FIELD_ARRAY_SIZE;
+				} m_aViewModel;
 			} m_aOffsets;
-		}; // Menu::Schema::CBaseViewModel_Helper
+		}; // Menu::Schema::CCSPlayer_ViewModelServices_Helper
 	}; // Menu::Schema
 }; // Menu
 
-#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASE_VIEW_MODEL_HPP_
+#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CSPLAYER_VIEWMODELSERVICES_BASE_HPP_

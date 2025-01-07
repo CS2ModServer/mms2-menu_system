@@ -19,36 +19,42 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CS_PLAYER_VIEW_MODEL_SERVICES_BASE_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CS_PLAYER_VIEW_MODEL_SERVICES_BASE_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CSPLAYERPAWNBASE_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CSPLAYERPAWNBASE_HPP_
 
 #	pragma once
 
+#	include <menu/schema/baseplayerpawn.hpp>
 #	include <menu/schema.hpp>
 
-#	include <ehandle.h>
-
-#	define CCSPLAYER_VIEWMODELSERVICES_CLASS_NAME "CCSPlayer_ViewModelServices"
+#	define CCSPLAYERPAWNBASE_CLASS_NAME "CCSPlayerPawnBase"
 
 class QAngle;
 class Vector;
-class CBaseViewModel;
+class CPlayer_ViewModelServices;
 class CCSPlayer_ViewModelServices;
+class CCSPlayerBase_CameraServices;
+
+class CCSPlayerPawnBase : public CBasePlayerPawn
+{
+};
 
 namespace Menu
 {
 	namespace Schema
 	{
-		class CCSPlayer_ViewModelServices_Helper
+		class CCSPlayerPawnBase_Helper
 		{
 		public:
-			CCSPlayer_ViewModelServices_Helper(CSystem *pSchemaSystemHelper);
+			CCSPlayerPawnBase_Helper(CSystem *pSchemaSystemHelper);
 
 		public:
 			void Clear();
 
 		public:
-			SCHEMA_COMPONENT_ARRAY_ACCESSOR_METHOD(GetViewModelAccessor, CCSPlayer_ViewModelServices, CHandle<CBaseViewModel>, m_aOffsets.m_aViewModel.nValue, m_aOffsets.m_aViewModel.nArraySize);
+			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetViewModelServicesAccessor, CCSPlayerPawnBase, CCSPlayer_ViewModelServices *, m_aOffsets.m_nViewModelServices);
+			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetCameraServicesAccessor, CCSPlayerPawnBase, CCSPlayerBase_CameraServices *, m_aOffsets.m_nCameraServices);
+			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetEyeAnglesAccessor, CCSPlayerPawnBase, QAngle, m_aOffsets.m_nEyeAngles);
 
 		private:
 			CSystem::CClass *m_pClass;
@@ -56,14 +62,12 @@ namespace Menu
 
 			struct
 			{
-				struct
-				{
-					int nValue = INVALID_SCHEMA_FIELD_OFFSET;
-					int nArraySize = INVALID_SCHEMA_FIELD_ARRAY_SIZE;
-				} m_aViewModel;
+				int m_nViewModelServices = INVALID_SCHEMA_FIELD_OFFSET;
+				int m_nCameraServices = INVALID_SCHEMA_FIELD_OFFSET;
+				int m_nEyeAngles = INVALID_SCHEMA_FIELD_OFFSET;
 			} m_aOffsets;
-		}; // Menu::Schema::CCSPlayer_ViewModelServices_Helper
+		}; // Menu::Schema::CCSPlayerPawnBase_Helper
 	}; // Menu::Schema
 }; // Menu
 
-#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CS_PLAYER_VIEW_MODEL_SERVICES_BASE_HPP_
+#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CSPLAYERPAWNBASE_HPP_

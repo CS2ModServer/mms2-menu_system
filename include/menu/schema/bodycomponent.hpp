@@ -19,20 +19,20 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASE_MODEL_ENTITY_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASE_MODEL_ENTITY_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BODYCOMPONENT_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BODYCOMPONENT_HPP_
 
 #	pragma once
 
-#	include <menu/schema/base_entity.hpp>
 #	include <menu/schema.hpp>
 
-#	define CBASEMODELENTITY_CLASS_NAME "CBaseModelEntity"
+#	define CBODYCOMPONENT_CLASS_NAME "CBodyComponent"
 
 class QAngle;
 class Vector;
+class CGameSceneNode;
 
-class CBaseModelEntity : public CBaseEntity
+class CBodyComponent
 {
 public:
 	// ...
@@ -42,16 +42,16 @@ namespace Menu
 {
 	namespace Schema
 	{
-		class CBaseModelEntity_Helper
+		class CBodyComponent_Helper
 		{
 		public:
-			CBaseModelEntity_Helper(CSystem *pSchemaSystemHelper);
+			CBodyComponent_Helper(CSystem *pSchemaSystemHelper);
 
 		public:
 			void Clear();
 
 		public:
-			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetViewOffsetAccessor, CBaseModelEntity, Vector, m_aOffsets.m_nViewOffset);
+			SCHEMA_COMPONENT_ACCESSOR_METHOD(GetSceneNodeAccessor, CBodyComponent, CGameSceneNode *, m_aOffsets.m_nSceneNode);
 
 		private:
 			CSystem::CClass *m_pClass;
@@ -59,10 +59,10 @@ namespace Menu
 
 			struct
 			{
-				int m_nViewOffset = INVALID_SCHEMA_FIELD_OFFSET;
+				int m_nSceneNode = INVALID_SCHEMA_FIELD_OFFSET;
 			} m_aOffsets;
-		}; // Menu::Schema::CBaseModelEntity_Helper
+		}; // Menu::Schema::CBodyComponent_Helper
 	}; // Menu::Schema
 }; // Menu
 
-#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASE_MODEL_ENTITY_HPP_
+#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BODYCOMPONENT_HPP_

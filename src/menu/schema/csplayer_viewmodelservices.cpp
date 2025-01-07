@@ -19,29 +19,37 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <menu/schema/base_player_controller.hpp>
+#include <menu/schema/csplayer_viewmodelservices.hpp>
 
 #include <schemasystem/schemasystem.h>
 
-Menu::Schema::CBasePlayerController_Helper::CBasePlayerController_Helper(CSystem *pSchemaSystemHelper)
+Menu::Schema::CCSPlayer_ViewModelServices_Helper::CCSPlayer_ViewModelServices_Helper(CSystem *pSchemaSystemHelper)
 {
 	auto &aCallbacks = m_aClassFieldsClassbacks;
 
-	m_pClass = pSchemaSystemHelper->GetClass(CBASEPLAYERCONTROLLER_CLASS_NAME);
+	m_pClass = pSchemaSystemHelper->GetClass(CCSPLAYER_VIEWMODELSERVICES_CLASS_NAME);
 
 	Assert(m_pClass);
 
 	auto &aFields = m_pClass->GetFields();
 
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_hPawn"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_hViewModel"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
 	{
-		m_aOffsets.m_nPawn = pField->m_nSingleInheritanceOffset;
+		m_aOffsets.m_aViewModel.nValue = pField->m_nSingleInheritanceOffset;
+
+		{
+			int nSize {};
+			uint8 nAlignment {};
+
+			pField->m_pType->GetSizeAndAlignment(nSize, nAlignment);
+			m_aOffsets.m_aViewModel.nArraySize = nSize / sizeof(CHandle<CBaseViewModel>);
+		}
 	}});
 
 	aFields.AddListener(&aCallbacks);
 }
 
-void Menu::Schema::CBasePlayerController_Helper::Clear()
+void Menu::Schema::CCSPlayer_ViewModelServices_Helper::Clear()
 {
 	m_aOffsets = {};
 }

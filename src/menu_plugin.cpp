@@ -104,10 +104,10 @@ MenuPlugin::MenuPlugin()
     CBasePlayerController_Helper(this),
     CBaseViewModel_Helper(this),
     CBodyComponent_Helper(this),
+    CCSPlayer_ViewModelServices_Helper(this),
     CCSPlayerBase_CameraServices_Helper(this),
     CCSPlayerPawnBase_Helper(this),
     CGameSceneNode_Helper(this),
-    CCSPlayer_ViewModelServices_Helper(this),
 
     m_mapConVarCookies(DefLessFunc(const CUtlSymbolLarge)),
     m_mapLanguages(DefLessFunc(const CUtlSymbolLarge))

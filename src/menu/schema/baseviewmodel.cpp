@@ -19,7 +19,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <menu/schema/base_view_model.hpp>
+#include <menu/schema/baseviewmodel.hpp>
 
 #include <schemasystem/schemasystem.h>
 

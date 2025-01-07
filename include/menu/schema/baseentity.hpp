@@ -19,23 +19,22 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASE_PLAYER_CONTOLLER_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASE_PLAYER_CONTOLLER_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEENTITY_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEENTITY_HPP_
 
 #	pragma once
 
-#	include <menu/schema/cs_player_pawn_base.hpp>
 #	include <menu/schema.hpp>
 
-#	include <ehandle.h>
+#	include <entity2/entityinstance.h>
 
-#	define CBASEPLAYERCONTROLLER_CLASS_NAME "CBasePlayerController"
+#	define CBASEENTITY_CLASS_NAME "CBaseEntity"
 
 class QAngle;
 class Vector;
-class CBasePlayerPawn;
+class CBodyComponent;
 
-class CBasePlayerController : public CBaseEntity
+class CBaseEntity : public CEntityInstance
 {
 public:
 	// ...
@@ -45,16 +44,20 @@ namespace Menu
 {
 	namespace Schema
 	{
-		class CBasePlayerController_Helper
+		class CBaseEntity_Helper
 		{
 		public:
-			CBasePlayerController_Helper(CSystem *pSchemaSystemHelper);
+			CBaseEntity_Helper(CSystem *pSchemaSystemHelper);
 
 		public:
 			void Clear();
 
 		public:
-			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetPawnAccessor, CBasePlayerController, CHandle<CBasePlayerPawn>, m_aOffsets.m_nPawn);
+			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetBodyComponentAccessor, CBaseEntity, CBodyComponent *, m_aOffsets.m_nBodyComponent);
+			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetTeamNumAccessor, CBaseEntity, uint8, m_aOffsets.m_nTeamNum);
+			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetEffectsAccessor, CBaseEntity, uint, m_aOffsets.m_nEffects);
+			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetOwnerEntityAccessor, CBaseEntity, CBaseEntity *, m_aOffsets.m_nOwnerEntity);
+			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetEFlagsAccessor, CBaseEntity, int, m_aOffsets.m_nEFlags);
 
 		private:
 			CSystem::CClass *m_pClass;
@@ -62,10 +65,14 @@ namespace Menu
 
 			struct
 			{
-				int m_nPawn = INVALID_SCHEMA_FIELD_OFFSET;
+				int m_nBodyComponent = INVALID_SCHEMA_FIELD_OFFSET;
+				int m_nTeamNum = INVALID_SCHEMA_FIELD_OFFSET;
+				int m_nEffects = INVALID_SCHEMA_FIELD_OFFSET;
+				int m_nOwnerEntity = INVALID_SCHEMA_FIELD_OFFSET;
+				int m_nEFlags = INVALID_SCHEMA_FIELD_OFFSET;
 			} m_aOffsets;
-		}; // Menu::Schema::CBasePlayerController_Helper
+		}; // Menu::Schema::CBaseEntity_Helper
 	}; // Menu::Schema
 }; // Menu
 
-#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASE_PLAYER_CONTOLLER_HPP_
+#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEENTITY_HPP_

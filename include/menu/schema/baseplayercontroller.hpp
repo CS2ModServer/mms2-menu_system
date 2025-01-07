@@ -19,42 +19,42 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CS_PLAYER_PAWN_BASE_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CS_PLAYER_PAWN_BASE_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEPLAYERCONTOLLER_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEPLAYERCONTOLLER_HPP_
 
 #	pragma once
 
-#	include <menu/schema/base_player_pawn.hpp>
+#	include <menu/schema/csplayerpawnbase.hpp>
 #	include <menu/schema.hpp>
 
-#	define CCSPLAYERPAWNBASE_CLASS_NAME "CCSPlayerPawnBase"
+#	include <ehandle.h>
+
+#	define CBASEPLAYERCONTROLLER_CLASS_NAME "CBasePlayerController"
 
 class QAngle;
 class Vector;
-class CPlayer_ViewModelServices;
-class CCSPlayer_ViewModelServices;
-class CCSPlayerBase_CameraServices;
+class CBasePlayerPawn;
 
-class CCSPlayerPawnBase : public CBasePlayerPawn
+class CBasePlayerController : public CBaseEntity
 {
+public:
+	// ...
 };
 
 namespace Menu
 {
 	namespace Schema
 	{
-		class CCSPlayerPawnBase_Helper
+		class CBasePlayerController_Helper
 		{
 		public:
-			CCSPlayerPawnBase_Helper(CSystem *pSchemaSystemHelper);
+			CBasePlayerController_Helper(CSystem *pSchemaSystemHelper);
 
 		public:
 			void Clear();
 
 		public:
-			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetViewModelServicesAccessor, CCSPlayerPawnBase, CCSPlayer_ViewModelServices *, m_aOffsets.m_nViewModelServices);
-			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetCameraServicesAccessor, CCSPlayerPawnBase, CCSPlayerBase_CameraServices *, m_aOffsets.m_nCameraServices);
-			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetEyeAnglesAccessor, CCSPlayerPawnBase, QAngle, m_aOffsets.m_nEyeAngles);
+			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetPawnAccessor, CBasePlayerController, CHandle<CBasePlayerPawn>, m_aOffsets.m_nPawn);
 
 		private:
 			CSystem::CClass *m_pClass;
@@ -62,12 +62,10 @@ namespace Menu
 
 			struct
 			{
-				int m_nViewModelServices = INVALID_SCHEMA_FIELD_OFFSET;
-				int m_nCameraServices = INVALID_SCHEMA_FIELD_OFFSET;
-				int m_nEyeAngles = INVALID_SCHEMA_FIELD_OFFSET;
+				int m_nPawn = INVALID_SCHEMA_FIELD_OFFSET;
 			} m_aOffsets;
-		}; // Menu::Schema::CCSPlayerPawnBase_Helper
+		}; // Menu::Schema::CBasePlayerController_Helper
 	}; // Menu::Schema
 }; // Menu
 
-#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CS_PLAYER_PAWN_BASE_HPP_
+#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEPLAYERCONTOLLER_HPP_
