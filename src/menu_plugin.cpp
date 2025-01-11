@@ -483,7 +483,7 @@ void *MenuPlugin::OnMetamodQuery(const char *iface, int *ret)
 
 CGameEntitySystem **MenuPlugin::GetGameEntitySystemPointer() const
 {
-	return reinterpret_cast<CGameEntitySystem **>((uintptr_t)g_pGameResourceServiceServer + GetGameDataStorage().GetGameResource().GetEntitySystemOffset());
+	return &g_pGameEntitySystem;
 }
 
 CBaseGameSystemFactory **MenuPlugin::GetFirstGameSystemPointer() const
@@ -1388,17 +1388,7 @@ bool MenuPlugin::SettingExtraPlayerViewModelEntity(CBaseViewModel *pViewModelEnt
 
 bool MenuPlugin::RegisterGameResource(char *error, size_t maxlen)
 {
-	CGameEntitySystem **pGameEntitySystem = GetGameEntitySystemPointer();
-
-	if(!pGameEntitySystem)
-	{
-		if(error && maxlen)
-		{
-			strncpy(error, "Failed to get a game entity system", maxlen);
-		}
-	}
-
-	if(!RegisterGameEntitySystem(*pGameEntitySystem))
+	if(!RegisterGameEntitySystem(m_pEntityManagerProviderAgent->GetSystem()))
 	{
 		if(error && maxlen)
 		{

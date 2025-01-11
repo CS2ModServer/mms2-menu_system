@@ -41,7 +41,6 @@
 #	define MENU_SYSTEM_GAMECONFIG_FOLDER_DIR "gamedata"
 #	define MENU_SYSTEM_GAMECONFIG_BASEENTITY_FILENAME "baseentity.games.*"
 #	define MENU_SYSTEM_GAMECONFIG_BASEPLAYERPAWN_FILENAME "baseplayerpawn.games.*"
-#	define MENU_SYSTEM_GAMECONFIG_GAMERESOURCE_FILENAME "gameresource.games.*"
 #	define MENU_SYSTEM_GAMECONFIG_GAMESYSTEM_FILENAME "gamesystem.games.*"
 #	define MENU_SYSTEM_GAMECONFIG_SOURCE2SERVER_FILENAME "source2server.games.*"
 
@@ -78,7 +77,6 @@ namespace Menu
 		protected:
 			bool LoadBaseEntity(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
 			bool LoadBasePlayerPawn(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
-			bool LoadGameResource(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
 			bool LoadGameSystem(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
 			bool LoadSource2Server(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
 
@@ -128,26 +126,6 @@ namespace Menu
 				ptrdiff_t m_nGetEyePositionOffset;
 			}; // Menu::Provider::GameStorage::CBasePlayerPawn
 
-			class CGameResource
-			{
-			public:
-				CGameResource();
-
-			public:
-				bool Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
-				void Reset();
-
-			public:
-				ptrdiff_t GetEntitySystemOffset() const;
-
-			private:
-				GameData::Config::Offsets::ListenerCallbacksCollector m_aOffsetCallbacks;
-				GameData::Config m_aGameConfig;
-
-			private: // Offsets.
-				ptrdiff_t m_nEntitySystemOffset = -1;
-			}; // Menu::Provider::GameStorage::CGameResource
-
 			class CGameSystem
 			{
 			public:
@@ -192,14 +170,12 @@ namespace Menu
 
 			const CBaseEntity &GetBaseEntity() const;
 			const CBasePlayerPawn &GetBasePlayerPawn() const;
-			const CGameResource &GetGameResource() const;
 			const CGameSystem &GetGameSystem() const;
 			const CSource2Server &GetSource2Server() const;
 
 		private:
 			CBaseEntity m_aBaseEntity;
 			CBasePlayerPawn m_aBasePlayerPawn;
-			CGameResource m_aGameResource;
 			CGameSystem m_aGameSystem;
 			CSource2Server m_aSource2Server;
 		}; // Menu::Provider::GameDataStorage
