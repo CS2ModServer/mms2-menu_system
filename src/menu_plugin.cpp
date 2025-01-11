@@ -881,7 +881,7 @@ bool MenuPlugin::InitEntityManager(char *error, size_t maxlen)
 
 	// Gets an entity manager spawn group mgr interface.
 	{
-		m_pEntityManagerSpawnGroupProvider = m_pEntityManager->GetSpawnGroupManager();
+		m_pEntityManagerSpawnGroupProvider = m_pEntityManager->GetSpawnGroupProvider();
 
 		if(!m_pEntityManagerSpawnGroupProvider)
 		{
