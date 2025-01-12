@@ -28,6 +28,7 @@
 #	include "ientitymgr.hpp"
 #	include "menu/chat_command_system.hpp"
 #	include "menu/game_event_system.hpp"
+#	include "menu/path_resolver.hpp"
 #	include "menu/provider.hpp"
 #	include "menu/schema.hpp"
 #	include "menu/schema/baseentity.hpp"
@@ -77,12 +78,10 @@
 #	define MENU_SYSTEM_EMPTY_BACKGROUND_MATERIAL_NAME "materials/editor/icon_empty.vmat"
 #	define MENU_SYSTEM_TEST_MESSAGE_TEXT
 
-#	define MENU_SYSTEM_BASE_DIR "addons" CORRECT_PATH_SEPARATOR_S META_PLUGIN_PREFIX
+#	define MENU_SYSTEM_GAME_BASE_DIR "addons" CORRECT_PATH_SEPARATOR_S META_PLUGIN_PREFIX
 #	define MENU_SYSTEM_GAME_EVENTS_FILES "resource" CORRECT_PATH_SEPARATOR_S "*.gameevents"
 #	define MENU_SYSTEM_GAME_TRANSLATIONS_FILES "translations" CORRECT_PATH_SEPARATOR_S "*.phrases.*"
-#	define MENU_SYSTEM_GAME_TRANSLATIONS_PATH_FILES MENU_SYSTEM_BASE_DIR CORRECT_PATH_SEPARATOR_S MENU_SYSTEM_GAME_TRANSLATIONS_FILES
 #	define MENU_SYSTEM_GAME_LANGUAGES_FILES "configs" CORRECT_PATH_SEPARATOR_S "languages.*"
-#	define MENU_SYSTEM_GAME_LANGUAGES_PATH_FILES MENU_SYSTEM_BASE_DIR CORRECT_PATH_SEPARATOR_S MENU_SYSTEM_GAME_LANGUAGES_FILES
 #	define MENU_SYSTEM_BASE_PATHID "GAME"
 
 #	define MENU_SYSTEM_EXAMPLE_CHAT_COMMAND "example"
@@ -93,7 +92,7 @@ class CBasePlayerController;
 class INetworkMessageInternal;
 
 class MenuPlugin final : public ISmmPlugin, public IMetamodListener, public IMenuPlugin, public CBaseGameSystem, public IEntityManager::IProviderAgent::ISpawnGroupNotifications, // Interfaces.
-                         public Menu::ChatCommandSystem, public Menu::GameEventSystem, public Menu::Provider, virtual public Menu::Schema::CSystem, virtual public Logger, public Translations, // Conponents.
+                         public Menu::ChatCommandSystem, public Menu::GameEventSystem, public Menu::PathResolver, public Menu::Provider, virtual public Menu::Schema::CSystem, virtual public Logger, public Translations, // Conponents.
                          virtual public Menu::Schema::CBaseEntity_Helper, virtual public Menu::Schema::CBaseModelEntity_Helper, virtual public Menu::Schema::CBasePlayerController_Helper, virtual public Menu::Schema::CBaseViewModel_Helper, virtual public Menu::Schema::CBodyComponent_Helper, virtual public Menu::Schema::CCSPlayer_ViewModelServices_Helper, virtual public Menu::Schema::CCSPlayerBase_CameraServices_Helper, virtual public Menu::Schema::CCSPlayerPawnBase_Helper, virtual public Menu::Schema::CGameSceneNode_Helper // Schema helpers.
 {
 public:
@@ -220,6 +219,13 @@ public: // IEntityManager::IProviderAgent::ISpawnGroupNotifications
 	void OnSpawnGroupInit(SpawnGroupHandle_t hSpawnGroup, IEntityResourceManifest *pManifest, IEntityPrecacheConfiguration *pConfig, ISpawnGroupPrerequisiteRegistry *pRegistry) override;
 	void OnSpawnGroupCreateLoading(SpawnGroupHandle_t hSpawnGroup, CMapSpawnGroup *pMapSpawnGroup, bool bSynchronouslySpawnEntities, bool bConfirmResourcesLoaded, CUtlVector<const CEntityKeyValues *> &vecKeyValues) override;
 	void OnSpawnGroupDestroyed(SpawnGroupHandle_t hSpawnGroup) override;
+
+public: // Path resolver.
+	bool InitPathResolver(char *error = nullptr, size_t maxlen = 0);
+	bool ClearPathResolver(char *error = nullptr, size_t maxlen = 0);
+
+private:
+	std::string m_sBaseGameDirectory = MENU_SYSTEM_GAME_BASE_DIR;
 
 public: // Utils.
 	bool InitProvider(char *error = nullptr, size_t maxlen = 0);

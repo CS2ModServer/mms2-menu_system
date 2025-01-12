@@ -109,6 +109,8 @@ MenuPlugin::MenuPlugin()
     CCSPlayerPawnBase_Helper(this),
     CGameSceneNode_Helper(this),
 
+    PathResolver(this),
+
     m_mapConVarCookies(DefLessFunc(const CUtlSymbolLarge)),
     m_mapLanguages(DefLessFunc(const CUtlSymbolLarge))
 {
@@ -686,6 +688,29 @@ void MenuPlugin::OnSpawnGroupDestroyed(SpawnGroupHandle_t hSpawnGroup)
 	m_pMySpawnGroupInstance->RemoveNotificationsListener(static_cast<IEntityManager::IProviderAgent::ISpawnGroupNotifications *>(this));
 }
 
+bool MenuPlugin::InitPathResolver(char *error, size_t maxlen)
+{
+	if(!PathResolver::Init())
+	{
+		if(error && maxlen)
+		{
+			strncpy(error, "Failed to initialize a path resolver", maxlen);
+		}
+		return false;
+	}
+
+	m_sBaseGameDirectory = PathResolver::ExtractSubpath();
+
+	return true;
+}
+
+bool MenuPlugin::ClearPathResolver(char *error, size_t maxlen)
+{
+	PathResolver::Clear();
+
+	return true;
+}
+
 bool MenuPlugin::InitProvider(char *error, size_t maxlen)
 {
 	GameData::CBufferStringVector vecMessages;
@@ -727,7 +752,7 @@ bool MenuPlugin::LoadProvider(char *error, size_t maxlen)
 {
 	GameData::CBufferStringVector vecMessages;
 
-	bool bResult = Provider::Load(MENU_SYSTEM_BASE_DIR, MENU_SYSTEM_BASE_PATHID, vecMessages);
+	bool bResult = Provider::Load(MENU_SYSTEM_GAME_BASE_DIR, MENU_SYSTEM_BASE_PATHID, vecMessages);
 
 	if(vecMessages.Count())
 	{
@@ -1607,8 +1632,10 @@ bool MenuPlugin::UnregisterNetMessages(char *error, size_t maxlen)
 
 bool MenuPlugin::ParseLanguages(char *error, size_t maxlen)
 {
+	std::string sTranslationsFilesPath = m_sBaseGameDirectory + CORRECT_PATH_SEPARATOR_S MENU_SYSTEM_GAME_LANGUAGES_FILES;
+
 	const char *pszPathID = MENU_SYSTEM_BASE_PATHID, 
-	           *pszLanguagesFiles = MENU_SYSTEM_GAME_LANGUAGES_PATH_FILES;
+	           *pszLanguagesFiles = sTranslationsFilesPath.c_str();
 
 	CUtlVector<CUtlString> vecLangugesFiles;
 	CUtlVector<CUtlString> vecSubmessages;
@@ -1712,8 +1739,10 @@ bool MenuPlugin::ClearLanguages(char *error, size_t maxlen)
 
 bool MenuPlugin::ParseTranslations(char *error, size_t maxlen)
 {
+	std::string sTranslationsFilesPath = m_sBaseGameDirectory + CORRECT_PATH_SEPARATOR_S MENU_SYSTEM_GAME_TRANSLATIONS_FILES;
+
 	const char *pszPathID = MENU_SYSTEM_BASE_PATHID, 
-	           *pszTranslationsFiles = MENU_SYSTEM_GAME_TRANSLATIONS_PATH_FILES;
+	           *pszTranslationsFiles = sTranslationsFilesPath.c_str();
 
 	CUtlVector<CUtlString> vecTranslationsFiles;
 

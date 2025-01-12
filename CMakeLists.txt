@@ -97,6 +97,7 @@ set(SOURCE_FILES
 	${SOURCE_MENU_SYSTEM_DIR}/chat_command_system.cpp
 	${SOURCE_MENU_SYSTEM_DIR}/game_event_system.cpp
 	${SOURCE_MENU_SYSTEM_DIR}/language.cpp
+	${SOURCE_MENU_SYSTEM_DIR}/path_resolver.cpp
 	${SOURCE_MENU_SYSTEM_DIR}/player.cpp
 	${SOURCE_MENU_SYSTEM_DIR}/provider.cpp
 	${SOURCE_MENU_SYSTEM_DIR}/schema.cpp

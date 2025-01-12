@@ -38,14 +38,15 @@
 
 #	include <gamedata.hpp> // GameData
 
-#	define MENU_SYSTEM_GAMECONFIG_FOLDER_DIR "gamedata"
-#	define MENU_SYSTEM_GAMECONFIG_BASEENTITY_FILENAME "baseentity.games.*"
-#	define MENU_SYSTEM_GAMECONFIG_BASEPLAYERPAWN_FILENAME "baseplayerpawn.games.*"
-#	define MENU_SYSTEM_GAMECONFIG_GAMESYSTEM_FILENAME "gamesystem.games.*"
-#	define MENU_SYSTEM_GAMECONFIG_SOURCE2SERVER_FILENAME "source2server.games.*"
+#	define MENU_SYSTEM_PROVIDER_BASE_DIR "gamedata"
+#	define MENU_SYSTEM_PROVIDER_BASEENTITY_FILENAME MENU_SYSTEM_PROVIDER_BASE_DIR CORRECT_PATH_SEPARATOR_S "baseentity.games.*"
+#	define MENU_SYSTEM_PROVIDER_BASEPLAYERPAWN_FILENAME MENU_SYSTEM_PROVIDER_BASE_DIR CORRECT_PATH_SEPARATOR_S "baseplayerpawn.games.*"
+#	define MENU_SYSTEM_PROVIDER_GAMESYSTEM_FILENAME MENU_SYSTEM_PROVIDER_BASE_DIR CORRECT_PATH_SEPARATOR_S "gamesystem.games.*"
+#	define MENU_SYSTEM_PROVIDER_SOURCE2SERVER_FILENAME MENU_SYSTEM_PROVIDER_BASE_DIR CORRECT_PATH_SEPARATOR_S "source2server.games.*"
 
 class CBaseGameSystemFactory;
 class CGameEventManager;
+
 namespace Menu
 {
 	class Provider : public IGameData
@@ -66,13 +67,13 @@ namespace Menu
 		const DynLibUtils::CModule *FindLibrary(const char *pszName) const;
 
 	protected:
-		bool LoadGameData(const char *pszBaseDir, const char *pszPathID, GameData::CBufferStringVector &vecMessages);
+		bool LoadGameData(const char *pszBaseGameDir, const char *pszPathID, GameData::CBufferStringVector &vecMessages);
 
 	public:
 		class GameDataStorage
 		{
 		public:
-			bool Load(IGameData *pRoot, const char *pszBaseConfigDir, const char *pszPathID, GameData::CBufferStringVector &vecMessages);
+			bool Load(IGameData *pRoot, const char *pszBaseGameDir, const char *pszPathID, GameData::CBufferStringVector &vecMessages);
 
 		protected:
 			bool LoadBaseEntity(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
