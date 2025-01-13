@@ -49,15 +49,6 @@
 
 #define EF_MENU EF_BONEMERGE | EF_BRIGHTLIGHT | EF_DIMLIGHT | EF_NOINTERP | EF_NOSHADOW | EF_NODRAW | EF_NORECEIVESHADOW | EF_BONEMERGE_FASTCULL | EF_ITEM_BLINK | EF_PARENT_ANIMATES
 
-using CBaseEntity_Helper = Menu::Schema::CBaseEntity_Helper;
-using CBaseModelEntity_Helper = Menu::Schema::CBaseModelEntity_Helper;
-using CBasePlayerController_Helper = Menu::Schema::CBasePlayerController_Helper;
-using CBaseViewModel_Helper = Menu::Schema::CBaseViewModel_Helper;
-using CBodyComponent_Helper = Menu::Schema::CBodyComponent_Helper;
-using CCSPlayerPawnBase_Helper = Menu::Schema::CCSPlayerPawnBase_Helper;
-using CGameSceneNode_Helper = Menu::Schema::CGameSceneNode_Helper;
-using CCSPlayer_ViewModelServices_Helper = Menu::Schema::CCSPlayer_ViewModelServices_Helper;
-
 SH_DECL_HOOK3_void(ICvar, DispatchConCommand, SH_NOATTRIB, 0, ConCommandHandle, const CCommandContext &, const CCommand &);
 SH_DECL_HOOK3_void(INetworkServerService, StartupServer, SH_NOATTRIB, 0, const GameSessionConfiguration_t &, ISource2WorldSession *, const char *);
 SH_DECL_HOOK8(CNetworkGameServerBase, ConnectClient, SH_NOATTRIB, 0, CServerSideClientBase *, const char *, ns_address *, void *, C2S_CONNECT_Message *, const char *, const byte *, int, bool);
