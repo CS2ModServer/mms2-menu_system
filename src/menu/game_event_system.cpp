@@ -46,7 +46,7 @@ bool Menu::GameEventSystem::HookAll()
 {
 	if(!g_pGameEventManager)
 	{
-		AssertMsg(0, "Game event manager are not ready!\n");
+		AssertMsg(0, "Game event manager are not ready!");
 
 		return false;
 	}
@@ -83,7 +83,7 @@ bool Menu::GameEventSystem::UnhookAll()
 {
 	if(!g_pGameEventManager)
 	{
-		AssertMsg(0, "Game event manager are not ready!\n");
+		AssertMsg(0, "Game event manager are not ready!");
 
 		return false;
 	}

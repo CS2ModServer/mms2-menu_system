@@ -34,57 +34,125 @@
 #	include <mathlib/vector.h>
 
 template<class T>
-struct ConcatLine
+struct ConcatLine_t
 {
+	T m_aHeadWith;
 	T m_aStartWith;
-	T m_aPadding;
+	T m_aBefore;
+	T m_aBetween;
 	T m_aEnd;
 	T m_aEndAndNextLine;
+}; // ConcatLine_t<T>
 
-	std::vector<T> GetKeyValueConcat(const T &aKey) const
+template<class T>
+class CConcatLineStringImpl : public ConcatLine_t<T>
+{
+public:
+	using Base_t = ConcatLine_t<T>;
+
+protected:
+	std::vector<T> GetHeadConcat(const T &aHead) const
 	{
-		return {m_aStartWith, aKey, m_aPadding, m_aEnd};
+		return {Base_t::m_aHeadWith, aHead, Base_t::m_aBefore, Base_t::m_aEnd};
+	}
+
+	std::vector<T> GetStringHeadConcat(const T &aHead) const
+	{
+		return {Base_t::m_aHeadWith, "\"", aHead, "\"", Base_t::m_aBefore, Base_t::m_aEnd};
+	}
+
+	std::vector<T> GetKeyConcat(const T &aKey) const
+	{
+		return {Base_t::m_aStartWith, aKey, Base_t::m_aBefore, Base_t::m_aEnd};
 	}
 
 	std::vector<T> GetKeyValueConcat(const T &aKey, const T &aValue) const
 	{
-		return {m_aStartWith, aKey, m_aPadding, aValue, m_aEnd};
+		return {Base_t::m_aStartWith, aKey, Base_t::m_aBetween, aValue, Base_t::m_aEnd};
 	}
 
 	std::vector<T> GetKeyValueConcat(const T &aKey, const std::vector<T> &vecValues) const
 	{
-		std::vector<T> vecResult = {m_aStartWith, aKey, m_aPadding};
+		std::vector<T> vecResult = {Base_t::m_aStartWith, aKey, Base_t::m_aBefore};
 
 		vecResult.insert(vecResult.cend(), vecValues.cbegin(), vecValues.cend());
-		vecResult.push_back(m_aEnd);
+		vecResult.push_back(Base_t::m_aEnd);
 
 		return vecResult;
 	}
 
-	std::vector<T> GetKeyValueConcatString(const T &aKey, const T &aValue) const
+	std::vector<T> GetKeyStringConcat(const T &aKey, const T &aValue) const
 	{
-		return {m_aStartWith, aKey, m_aPadding, "\"", aValue, "\"", m_aEnd};
+		return {Base_t::m_aStartWith, aKey, Base_t::m_aBetween, "\"", aValue, "\"", Base_t::m_aEnd};
 	}
-}; // ConcatLine
+}; // CConcatLineStringImpl<T>
 
-using ConcatLineStringBase = ConcatLine<const char *>;
+using CConcatLineStringBaseImpl = CConcatLineStringImpl<const char *>;
 
-struct ConcatLineString : ConcatLineStringBase
+class CConcatLineStringBase : public CConcatLineStringBaseImpl
 {
-	using Base = ConcatLineStringBase;
+public:
+	using Impl = CConcatLineStringBaseImpl;
 
-	ConcatLineString(const Base &aInit);
+	CConcatLineStringBase() = delete;
 
+public:
+	const char *GetHeadWith() const
+	{
+		return m_aHeadWith;
+	}
+
+	const char *GetStartWith() const
+	{
+		return m_aStartWith;
+	}
+
+	const char *GetBefore() const
+	{
+		return m_aBefore;
+	}
+
+	const char *GetBetween() const
+	{
+		return m_aBetween;
+	}
+
+	const char *GetEnd() const
+	{
+		return m_aEnd;
+	}
+
+	const char *GetEndAndNextLine() const
+	{
+		return m_aEndAndNextLine;
+	}
+}; // CConcatLineStringBase
+
+class CConcatLineString : public CConcatLineStringBase
+{
+public:
+	using Base = CConcatLineStringBase;
+	using Base::GetHeadWith;
+	using Base::GetStartWith;
+	using Base::GetBefore;
+	using Base::GetBetween;
+	using Base::GetEnd;
+	using Base::GetEndAndNextLine;
+
+public:
+	const char *AppendHeadToBuffer(CBufferString &sMessage, const char *pszHeadKey) const;
+	const char *AppendStringHeadToBuffer(CBufferString &sMessage, const char *pszHeadKey) const;
 	const char *AppendToBuffer(CBufferString &sMessage, const char *pszKey) const;
 	const char *AppendToBuffer(CBufferString &sMessage, const char *pszKey, bool bValue) const;
-	const char *AppendToBuffer(CBufferString &sMessage, const char *pszKey, int iValue) const;
+	const char *AppendToBuffer(CBufferString &sMessage, const char *pszKey, int nValue) const;
+	const char *AppendToBuffer(CBufferString &sMessage, const char *pszKey, uint nValue) const;
 	const char *AppendToBuffer(CBufferString &sMessage, const char *pszKey, float flValue) const;
 	const char *AppendToBuffer(CBufferString &sMessage, const char *pszKey, const Vector &vecValue) const;
 	const char *AppendToBuffer(CBufferString &sMessage, const char *pszKey, const QAngle &angValue) const;
 	const char *AppendToBuffer(CBufferString &sMessage, const char *pszKey, double dblValue) const;
 	const char *AppendToBuffer(CBufferString &sMessage, const char *pszKey, const char *pszValue) const;
 	const char *AppendToBuffer(CBufferString &sMessage, const char *pszKey, std::vector<const char *> vecValues) const;
-	const char *AppendBytesToBuffer(CBufferString &sMessage, const char *pszKey, const byte *pData, size_t nLength) const;
+	const char *AppendBytesToBuffer(CBufferString &sMessage, const char *pszKey, const byte *pData, uintp nLength) const;
 	const char *AppendHandleToBuffer(CBufferString &sMessage, const char *pszKey, uint32 uHandle) const;
 	const char *AppendHandleToBuffer(CBufferString &sMessage, const char *pszKey, uint64 uHandle) const;
 	const char *AppendHandleToBuffer(CBufferString &sMessage, const char *pszKey, const void *pHandle) const;
@@ -93,6 +161,13 @@ struct ConcatLineString : ConcatLineStringBase
 
 	int AppendToVector(CUtlVector<const char *> vecMessage, const char *pszKey, const char *pszValue) const;
 	int AppendStringToVector(CUtlVector<const char *> vecMessage, const char *pszKey, const char *pszValue) const;
-}; // ConcatLineString
+}; // CConcatLineString
+
+constexpr uintp g_nMaxConcatEmbedCount = 5;
+extern const CConcatLineString g_aEmbedConcat;
+extern const CConcatLineString g_aEmbed2Concat; // Next nesting.
+extern const CConcatLineString g_aEmbed3Concat; // Next nesting.
+extern const CConcatLineString g_aEmbed4Concat; // Next nesting.
+extern const CConcatLineString g_aEmbed5Concat; // Next nesting.
 
 #endif // _INCLUDE_METAMOD_SOURCE_CONCAT_HPP_

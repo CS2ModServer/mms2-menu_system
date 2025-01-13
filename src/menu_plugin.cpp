@@ -62,26 +62,6 @@ static IEntityManager *s_pEntityManager = nullptr;
 static IEntityManager *s_pEntityManagerProviderAgent = nullptr;
 static IEntityManager *s_pEntityManagerSpawnGroupMgrProvider = nullptr;
 
-const ConcatLineString s_aEmbedConcat =
-{
-	{
-		"\t", // Start message.
-		": ", // Padding of key & value.
-		"\n", // End.
-		"\n\t", // End and next line.
-	}
-};
-
-const ConcatLineString s_aEmbed2Concat =
-{
-	{
-		"\t\t",
-		": ",
-		"\n",
-		"\n\t\t",
-	}
-};
-
 PLUGIN_EXPOSE(MenuPlugin, s_aMenuPlugin);
 
 MenuPlugin::MenuPlugin()
@@ -269,7 +249,7 @@ bool MenuPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bo
 	{
 		CBufferStringGrowable<1024> sMessage;
 
-		DumpGlobals(s_aEmbedConcat, sMessage);
+		DumpGlobals(g_aEmbedConcat, sMessage);
 		Logger::Detailed(sMessage);
 	}
 
@@ -291,6 +271,11 @@ bool MenuPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bo
 		return false;
 	}
 
+	if(!LoadSchema(error, maxlen))
+	{
+		return false;
+	}
+
 	if(!InitEntityManager(error, maxlen))
 	{
 		return false;
@@ -300,7 +285,7 @@ bool MenuPlugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bo
 	{
 		CBufferStringGrowable<1024> sMessage;
 
-		DumpEntityManager(s_aEmbedConcat, sMessage);
+		DumpEntityManager(g_aEmbedConcat, sMessage);
 		Logger::Detailed(sMessage);
 	}
 
@@ -380,7 +365,7 @@ bool MenuPlugin::Unload(char *error, size_t maxlen)
 		return false;
 	}
 
-	if(!UnloadSchema(error, maxlen))
+	if(!DestroySchema(error, maxlen))
 	{
 		return false;
 	}
@@ -827,44 +812,80 @@ bool MenuPlugin::InitSchema(char *error, size_t maxlen)
 #endif
 	);
 
-	GameData::CBufferStringVector vecMessages;
+	Menu::Schema::CSystem::CBufferStringVector vecMessages;
 
-	bool bResult = CSystem::Init(g_pSchemaSystem, vecLoadLibraries, &vecMessages);
+	bool bResult = Menu::Schema::CSystem::Init(g_pSchemaSystem, vecLoadLibraries, &vecMessages);
 
-	if(vecMessages.Count())
+	if(Logger::IsChannelEnabled(LS_WARNING))
 	{
-		if(Logger::IsChannelEnabled(LS_WARNING))
+		auto aWarnings = Logger::CreateWarningsScope();
+
+		FOR_EACH_VEC(vecMessages, i)
 		{
-			auto aWarnings = Logger::CreateWarningsScope();
+			auto &aMessage = vecMessages[i];
 
-			FOR_EACH_VEC(vecMessages, i)
-			{
-				auto &aMessage = vecMessages[i];
-
-				aWarnings.Push(aMessage.Get());
-			}
-
-			aWarnings.SendColor([&](Color rgba, const CUtlString &sContext)
-			{
-				Logger::Warning(rgba, sContext);
-			});
+			aWarnings.Push(aMessage.Get());
 		}
+
+		aWarnings.SendColor([&](Color rgba, const CUtlString &sContext)
+		{
+			Logger::Warning(rgba, sContext);
+		});
 	}
 
 	if(!bResult)
 	{
 		if(error && maxlen)
 		{
-			strncpy(error, "Failed to load schema helper. See warnings", maxlen);
+			strncpy(error, "Failed to initialize schema helper. See warnings", maxlen);
 		}
 	}
 
 	return bResult;
 }
 
-bool MenuPlugin::UnloadSchema(char *error, size_t maxlen)
+bool MenuPlugin::LoadSchema(char *error, size_t maxlen)
 {
-	CSystem::Destroy();
+	Menu::Schema::CSystem::CBufferStringVector vecMessages;
+
+	Menu::Schema::CSystem::FullDetails_t aFullDetails 
+	{
+		{
+			&vecMessages,
+		},
+
+		{
+			&g_aEmbed5Concat,
+			&g_aEmbed4Concat,
+			&g_aEmbed3Concat,
+			&g_aEmbed2Concat,
+			&g_aEmbedConcat,
+		}
+	};
+
+	bool bResult = Menu::Schema::CSystem::Load(&aFullDetails);
+
+	if(Logger::IsChannelEnabled(LV_DETAILED))
+	{
+		auto aDetails = Logger::CreateDetailsScope("", "");
+
+		for(const auto &sMessage : vecMessages)
+		{
+			aDetails.Push(sMessage.Get());
+		}
+
+		aDetails.SendColor([&](Color rgba, const CUtlString &sContext)
+		{
+			Logger::Detailed(rgba, sContext);
+		});
+	}
+
+	return bResult;
+}
+
+bool MenuPlugin::DestroySchema(char *error, size_t maxlen)
+{
+	Menu::Schema::CSystem::Destroy();
 
 	return true;
 }
@@ -910,11 +931,11 @@ bool MenuPlugin::InitEntityManager(char *error, size_t maxlen)
 	return true;
 }
 
-void MenuPlugin::DumpEntityManager(const ConcatLineString &aConcat, CBufferString &sOutput)
+void MenuPlugin::DumpEntityManager(const CConcatLineString &aConcat, CBufferString &sOutput)
 {
-	GLOBALS_APPEND_VARIABLE(m_pEntityManager);
-	GLOBALS_APPEND_VARIABLE(m_pEntityManagerProviderAgent);
-	GLOBALS_APPEND_VARIABLE(m_pEntityManagerSpawnGroupProvider);
+	GLOBALS_APPEND_VARIABLE(aConcat, m_pEntityManager);
+	GLOBALS_APPEND_VARIABLE(aConcat, m_pEntityManagerProviderAgent);
+	GLOBALS_APPEND_VARIABLE(aConcat, m_pEntityManagerSpawnGroupProvider);
 }
 
 bool MenuPlugin::UnloadEntityManager(char *error, size_t maxlen)
@@ -1325,11 +1346,11 @@ bool MenuPlugin::AttachMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pTarget, const 
 
 	if(Logger::IsChannelEnabled(LS_DETAILED))
 	{
-		const auto &aConcat = s_aEmbedConcat;
+		const auto &aConcat = g_aEmbedConcat;
 
 		CBufferStringGrowable<256> sBuffer;
 
-		sBuffer.Format("Menu entities position:\n");
+		aConcat.AppendHeadToBuffer(sBuffer, "Menu entities position");
 		aConcat.AppendToBuffer(sBuffer, "Origin", vecMenuAbsOrigin);
 		aConcat.AppendToBuffer(sBuffer, "Rotation", angMenuRotation);
 
@@ -1838,6 +1859,16 @@ void MenuPlugin::OnReloadGameDataCommand(const CCommandContext &context, const C
 	}
 }
 
+void MenuPlugin::OnReloadSchemaCommand(const CCommandContext &context, const CCommand &args)
+{
+	char error[256];
+
+	if(!LoadSchema(error, sizeof(error)))
+	{
+		Logger::WarningFormat("%s\n", error);
+	}
+}
+
 void MenuPlugin::OnMenuSelectCommand(const CCommandContext &context, const CCommand &args)
 {
 	Logger::MessageFormat("Menu select: slot %d!!!\n", args.ArgC() > 1 ? atoi(args.Arg(1)) : -1);
@@ -1903,19 +1934,19 @@ void MenuPlugin::OnDispatchConCommandHook(ConCommandHandle hCommand, const CComm
 
 					if(Logger::IsChannelEnabled(LV_DETAILED))
 					{
-						const auto &aConcat = s_aEmbedConcat, 
-						           &aConcat2 = s_aEmbed2Concat;
+						const auto &aConcat = g_aEmbedConcat, 
+						           &aConcat2 = g_aEmbed2Concat;
 
 						CBufferStringGrowable<1024> sBuffer;
 
-						sBuffer.Format("Handle a chat command:\n");
+						aConcat.AppendHeadToBuffer(sBuffer, "Handle a chat command");
 						aConcat.AppendToBuffer(sBuffer, "Player slot", aPlayerSlot.Get());
 						aConcat.AppendToBuffer(sBuffer, "Is silent", bIsSilent);
 						aConcat.AppendToBuffer(sBuffer, "Arguments");
 
 						for(const auto &sArg : vecArgs)
 						{
-							const char *pszMessageConcat[] = {aConcat2.m_aStartWith, "\"", sArg.Get(), "\"", aConcat2.m_aEnd};
+							const char *pszMessageConcat[] = {aConcat2.GetStartWith(), "\"", sArg.Get(), "\"", aConcat2.GetEnd()};
 
 							sBuffer.AppendConcat(ARRAYSIZE(pszMessageConcat), pszMessageConcat, NULL);
 						}
@@ -1993,11 +2024,17 @@ void MenuPlugin::SendChatMessage(IRecipientFilter *pFilter, int iEntityIndex, bo
 
 	if(Logger::IsChannelEnabled(LV_DETAILED))
 	{
-		const auto &aConcat = s_aEmbedConcat;
+		const auto &aConcat = g_aEmbedConcat;
+
+		CBufferStringGrowable<256> sHead;
+
+		sHead.Insert(0, "Send chat message (");
+		sHead.Insert(sHead.GetTotalNumber(), pSayText2Message->GetUnscopedName());
+		sHead.Insert(sHead.GetTotalNumber(), ")");
 
 		CBufferStringGrowable<1024> sBuffer;
 
-		sBuffer.Format("Send chat message (%s):\n", pSayText2Message->GetUnscopedName());
+		aConcat.AppendHeadToBuffer(sBuffer, sHead.Get());
 		aConcat.AppendToBuffer(sBuffer, "Entity index", iEntityIndex);
 		aConcat.AppendToBuffer(sBuffer, "Is chat", bIsChat);
 		aConcat.AppendStringToBuffer(sBuffer, "Chat message", pszChatMessageFormat);
@@ -2046,11 +2083,17 @@ void MenuPlugin::SendTextMessage(IRecipientFilter *pFilter, int iDestination, si
 
 	if(Logger::IsChannelEnabled(LV_DETAILED))
 	{
-		const auto &aConcat = s_aEmbedConcat;
+		const auto &aConcat = g_aEmbedConcat;
+
+		CBufferStringGrowable<256> sHead;
+
+		sHead.Insert(0, "Send text message (");
+		sHead.Insert(sHead.GetTotalNumber(), pTextMsg->GetUnscopedName());
+		sHead.Insert(sHead.GetTotalNumber(), ")");
 
 		CBufferStringGrowable<1024> sBuffer;
 
-		sBuffer.Format("Send message (%s):\n", pTextMsg->GetUnscopedName());
+		aConcat.AppendHeadToBuffer(sBuffer, sHead.Get());
 		aConcat.AppendToBuffer(sBuffer, "Destination", iDestination);
 		aConcat.AppendToBuffer(sBuffer, "Parameter", pszParam);
 		Logger::Detailed(sBuffer);
@@ -2093,8 +2136,8 @@ void MenuPlugin::SendTextMessage(IRecipientFilter *pFilter, int iDestination, si
 
 // 	if(Logger::IsChannelEnabled(LV_DETAILED))
 // 	{
-// 		const auto &aConcat = s_aEmbedConcat, 
-// 		           &aConcat2 = s_aEmbed2Concat;
+// 		const auto &aConcat = g_aEmbedConcat, 
+// 		           &aConcat2 = g_aEmbed2Concat;
 
 // 		CBufferStringGrowable<1024> sBuffer;
 
@@ -2222,7 +2265,7 @@ void MenuPlugin::OnConnectClient(CNetworkGameServerBase *pNetServer, CServerSide
 	}
 	else
 	{
-		AssertMsg(0, "Failed to get a server side client pointer\n");
+		AssertMsg(0, "Failed to get a server side client pointer");
 
 		return;
 	}

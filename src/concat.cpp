@@ -22,33 +22,101 @@
 
 #include <concat.hpp>
 
-ConcatLineString::ConcatLineString(const Base &aInit)
- :  Base(aInit)
+const CConcatLineString g_aEmbedConcat 
 {
-}
+	"",     // Head with.
+	"\t",   // Start with.
+	":",    // Before value.
+	": ",   // Between key & value.
+	"\n",   // End.
+	"\n\t", // End and next line.
+};
 
-const char *ConcatLineString::AppendToBuffer(CBufferString &sMessage, const char *pszKey) const
+const CConcatLineString g_aEmbed2Concat 
 {
-	const auto vecConcat = Base::GetKeyValueConcat(pszKey);
+	"\t",
+	"\t\t",
+	":",
+	": ",
+	"\n",
+	"\n\t\t",
+};
+
+const CConcatLineString g_aEmbed3Concat 
+{
+	"\t\t",
+	"\t\t\t",
+	":",
+	": ",
+	"\n",
+	"\n\t\t\t",
+};
+
+const CConcatLineString g_aEmbed4Concat 
+{
+	"\t\t\t",
+	"\t\t\t\t",
+	":",
+	": ",
+	"\n",
+	"\n\t\t\t\t",
+};
+
+const CConcatLineString g_aEmbed5Concat 
+{
+	"\t\t\t\t",
+	"\t\t\t\t\t",
+	":",
+	": ",
+	"\n",
+	"\n\t\t\t\t\t",
+};
+
+const char *CConcatLineString::AppendHeadToBuffer(CBufferString &sMessage, const char *pszHeadKey) const
+{
+	const auto vecConcat = Base::GetHeadConcat(pszHeadKey);
 
 	return sMessage.AppendConcat(vecConcat.size(), vecConcat.data(), NULL);
 }
 
-const char *ConcatLineString::AppendToBuffer(CBufferString &sMessage, const char *pszKey, bool bValue) const
+const char *CConcatLineString::AppendStringHeadToBuffer(CBufferString &sMessage, const char *pszHeadKey) const
+{
+	const auto vecConcat = Base::GetStringHeadConcat(pszHeadKey);
+
+	return sMessage.AppendConcat(vecConcat.size(), vecConcat.data(), NULL);
+}
+
+const char *CConcatLineString::AppendToBuffer(CBufferString &sMessage, const char *pszKey) const
+{
+	const auto vecConcat = Base::GetKeyConcat(pszKey);
+
+	return sMessage.AppendConcat(vecConcat.size(), vecConcat.data(), NULL);
+}
+
+const char *CConcatLineString::AppendToBuffer(CBufferString &sMessage, const char *pszKey, bool bValue) const
 {
 	return AppendToBuffer(sMessage, pszKey, bValue ? "true" : "false");
 }
 
-const char *ConcatLineString::AppendToBuffer(CBufferString &sMessage, const char *pszKey, int iValue) const
+const char *CConcatLineString::AppendToBuffer(CBufferString &sMessage, const char *pszKey, int nValue) const
 {
 	char sValue[12];
 
-	V_snprintf(sValue, sizeof(sValue), "%i", iValue);
+	V_snprintf(sValue, sizeof(sValue), "%i", nValue);
 
 	return AppendToBuffer(sMessage, pszKey, sValue);
 }
 
-const char *ConcatLineString::AppendToBuffer(CBufferString &sMessage, const char *pszKey, float flValue) const
+const char *CConcatLineString::AppendToBuffer(CBufferString &sMessage, const char *pszKey, uint nValue) const
+{
+	char sValue[11];
+
+	V_snprintf(sValue, sizeof(sValue), "%u", nValue);
+
+	return AppendToBuffer(sMessage, pszKey, sValue);
+}
+
+const char *CConcatLineString::AppendToBuffer(CBufferString &sMessage, const char *pszKey, float flValue) const
 {
 	char sValue[24];
 
@@ -57,7 +125,7 @@ const char *ConcatLineString::AppendToBuffer(CBufferString &sMessage, const char
 	return AppendToBuffer(sMessage, pszKey, sValue);
 }
 
-const char *ConcatLineString::AppendToBuffer(CBufferString &sMessage, const char *pszKey, const Vector &vecValue) const
+const char *CConcatLineString::AppendToBuffer(CBufferString &sMessage, const char *pszKey, const Vector &vecValue) const
 {
 	char sValue[72];
 
@@ -66,7 +134,7 @@ const char *ConcatLineString::AppendToBuffer(CBufferString &sMessage, const char
 	return AppendToBuffer(sMessage, pszKey, sValue);
 }
 
-const char *ConcatLineString::AppendToBuffer(CBufferString &sMessage, const char *pszKey, const QAngle &angValue) const
+const char *CConcatLineString::AppendToBuffer(CBufferString &sMessage, const char *pszKey, const QAngle &angValue) const
 {
 	char sValue[72];
 
@@ -75,27 +143,25 @@ const char *ConcatLineString::AppendToBuffer(CBufferString &sMessage, const char
 	return AppendToBuffer(sMessage, pszKey, sValue);
 }
 
-const char *ConcatLineString::AppendToBuffer(CBufferString &sMessage, const char *pszKey, const char *pszValue) const
+const char *CConcatLineString::AppendToBuffer(CBufferString &sMessage, const char *pszKey, const char *pszValue) const
 {
 	const auto vecConcat = Base::GetKeyValueConcat(pszKey, pszValue);
 
 	return sMessage.AppendConcat(vecConcat.size(), vecConcat.data(), NULL);
 }
 
-const char *ConcatLineString::AppendToBuffer(CBufferString &sMessage, const char *pszKey, std::vector<const char *> vecValues) const
+const char *CConcatLineString::AppendToBuffer(CBufferString &sMessage, const char *pszKey, std::vector<const char *> vecValues) const
 {
-	const auto vecConcat = Base::GetKeyValueConcat(pszKey, vecValues);
+	const auto vecConcat = GetKeyValueConcat(pszKey, vecValues);
 
 	return sMessage.AppendConcat(vecConcat.size(), vecConcat.data(), NULL);
 }
 
-const char *ConcatLineString::AppendBytesToBuffer(CBufferString &sMessage, const char *pszKey, const byte *pData, size_t nLength) const
+const char *CConcatLineString::AppendBytesToBuffer(CBufferString &sMessage, const char *pszKey, const byte *pData, uintp nLength) const
 {
 	std::vector<const char *> vecValues;
 
 	vecValues.reserve(nLength);
-
-	const size_t nDataSetDepthSize = 4;
 
 	CBufferStringGrowable<4> *psDataSet = new CBufferStringGrowable<4>[nLength];
 
@@ -114,16 +180,16 @@ const char *ConcatLineString::AppendBytesToBuffer(CBufferString &sMessage, const
 	return pResult;
 }
 
-const char *ConcatLineString::AppendHandleToBuffer(CBufferString &sMessage, const char *pszKey, uint32 uHandle) const
+const char *CConcatLineString::AppendHandleToBuffer(CBufferString &sMessage, const char *pszKey, uint32 uHandle) const
 {
-	char sHandle[21];
+	char sHandle[11];
 
 	V_snprintf(sHandle, sizeof(sHandle), "%u", uHandle);
 
 	return AppendToBuffer(sMessage, pszKey, sHandle);
 }
 
-const char *ConcatLineString::AppendHandleToBuffer(CBufferString &sMessage, const char *pszKey, uint64 uHandle) const
+const char *CConcatLineString::AppendHandleToBuffer(CBufferString &sMessage, const char *pszKey, uint64 uHandle) const
 {
 	char sHandle[21];
 
@@ -132,37 +198,37 @@ const char *ConcatLineString::AppendHandleToBuffer(CBufferString &sMessage, cons
 	return AppendToBuffer(sMessage, pszKey, sHandle);
 }
 
-const char *ConcatLineString::AppendHandleToBuffer(CBufferString &sMessage, const char *pszKey, const void *pHandle) const
+const char *CConcatLineString::AppendHandleToBuffer(CBufferString &sMessage, const char *pszKey, const void *pHandle) const
 {
 	return AppendHandleToBuffer(sMessage, pszKey, (uint64)pHandle);
 }
 
-const char *ConcatLineString::AppendPointerToBuffer(CBufferString &sMessage, const char *pszKey, const void *pValue) const
+const char *CConcatLineString::AppendPointerToBuffer(CBufferString &sMessage, const char *pszKey, const void *pValue) const
 {
-	char sPointer[22];
+	char sPointer[19];
 
 	V_snprintf(sPointer, sizeof(sPointer), "%p", pValue);
 
 	return AppendToBuffer(sMessage, pszKey, sPointer);
 }
 
-const char *ConcatLineString::AppendStringToBuffer(CBufferString &sMessage, const char *pszKey, const char *pszValue) const
+const char *CConcatLineString::AppendStringToBuffer(CBufferString &sMessage, const char *pszKey, const char *pszValue) const
 {
-	const auto vecConcat = Base::GetKeyValueConcatString(pszKey, pszValue);
+	const auto vecConcat = Base::GetKeyStringConcat(pszKey, pszValue);
 
 	return sMessage.AppendConcat(vecConcat.size(), vecConcat.data(), NULL);
 }
 
-int ConcatLineString::AppendToVector(CUtlVector<const char *> vecMessage, const char *pszKey, const char *pszValue) const
+int CConcatLineString::AppendToVector(CUtlVector<const char *> vecMessage, const char *pszKey, const char *pszValue) const
 {
 	const auto vecConcat = Base::GetKeyValueConcat(pszKey, pszValue);
 
 	return vecMessage.AddMultipleToTail(vecConcat.size(), vecConcat.data());
 }
 
-int ConcatLineString::AppendStringToVector(CUtlVector<const char *> vecMessage, const char *pszKey, const char *pszValue) const
+int CConcatLineString::AppendStringToVector(CUtlVector<const char *> vecMessage, const char *pszKey, const char *pszValue) const
 {
-	const auto vecConcat = Base::GetKeyValueConcatString(pszKey, pszValue);
+	const auto vecConcat = Base::GetKeyStringConcat(pszKey, pszValue);
 
 	return vecMessage.AddMultipleToTail(vecConcat.size(), vecConcat.data());
 }

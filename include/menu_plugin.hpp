@@ -234,11 +234,12 @@ public: // Utils.
 
 public: // Schema.
 	bool InitSchema(char *error = nullptr, size_t maxlen = 0);
-	bool UnloadSchema(char *error = nullptr, size_t maxlen = 0);
+	bool LoadSchema(char *error = nullptr, size_t maxlen = 0);
+	bool DestroySchema(char *error = nullptr, size_t maxlen = 0);
 
 public: // Entity Manager.
 	bool InitEntityManager(char *error = nullptr, size_t maxlen = 0);
-	void DumpEntityManager(const ConcatLineString &aConcat, CBufferString &sOutput);
+	void DumpEntityManager(const CConcatLineString &aConcat, CBufferString &sOutput);
 	bool UnloadEntityManager(char *error = nullptr, size_t maxlen = 0);
 
 	bool LoadSpawnGroups(char *error = nullptr, size_t maxlen = 0);
@@ -306,6 +307,7 @@ public: // Event actions.
 
 private: // Commands.
 	CON_COMMAND_MEMBER_F(MenuPlugin, "mm_" META_PLUGIN_PREFIX "_reload_gamedata", OnReloadGameDataCommand, "Reload gamedata configs", FCVAR_LINKED_CONCOMMAND);
+	CON_COMMAND_MEMBER_F(MenuPlugin, "mm_" META_PLUGIN_PREFIX "_reload_schema", OnReloadSchemaCommand, "Reload schema fields of classes", FCVAR_LINKED_CONCOMMAND);
 	CON_COMMAND_MEMBER_F(MenuPlugin, "menuselect", OnMenuSelectCommand, "", FCVAR_LINKED_CONCOMMAND | FCVAR_CLIENT_CAN_EXECUTE);
 
 public: // SourceHooks.

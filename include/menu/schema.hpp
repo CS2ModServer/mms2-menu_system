@@ -24,6 +24,7 @@
 
 #	pragma once
 
+#	include <array>
 #	include <type_traits>
 
 #	include <tier0/dbg.h>
@@ -34,10 +35,13 @@
 #	include <tier1/utlmap.h>
 #	include <entity2/entityinstance.h>
 
+#	include <concat.hpp>
 #	include <gamedata.hpp>
 
 #	define INVALID_SCHEMA_FIELD_OFFSET -1
 #	define INVALID_SCHEMA_FIELD_ARRAY_SIZE -1
+
+#	define MAX_SCHEMA_TYPE_NAME_SIZE 256
 
 #	ifdef DEBUG
 #		define SCHEMA_FORCEINLINE
@@ -91,6 +95,8 @@ class CSchemaSystemTypeScope;
 class CSchemaType_DeclaredClass;
 struct SchemaClassFieldData_t;
 
+class CConcatLineString;
+
 template<class T, class CLASS>
 T entity_upper_cast(CLASS aEntity)
 {
@@ -111,8 +117,175 @@ namespace Menu
 		public:
 			CSystem();
 
+			using CBufferStringVector = GameData::CBufferStringVector;
+
+			struct DetailsBase_t
+			{
+				DetailsBase_t() = delete;
+
+				CBufferStringVector *m_pMessages;
+			}; // Menu::Schema::CSystem::DetailsBase_t
+
+			template<uintp N>
+			struct DetailsConcatBase_t : DetailsBase_t
+			{
+				using Base_t = DetailsBase_t;
+
+				DetailsConcatBase_t() = delete;
+
+				static_assert(N != 0, "Template parameter N (number of nests) must not be 0. Use \"DetailsBase_t\" instead");
+				static_assert(N <= g_nMaxConcatEmbedCount, "Template parameter N (number of nests) over the limit");
+				static constexpr uintp sm_nEmbeds = N;
+
+				const CConcatLineString *m_pConcats[N]; // From more nested to less.
+			}; // Menu::Schema::CSystem::DetailsConcatBase_t<N>
+
+			template<uintp N>
+			using Details_t = DetailsConcatBase_t<N>;
+
+			using FullDetails_t = Details_t<5>;
+			using SingleDetails_t = Details_t<1>;
+
+			using TypeScopeDetails_t = Details_t<5>;
+			using ClassDetails_t = Details_t<4>;
+			using FieldDetails_t = Details_t<3>;
+			using TypeDetails_t = Details_t<2>;
+			using MetadataDetails_t = Details_t<2>;
+			using MetadataEntryDetails_t = Details_t<1>;
+
+		protected:
+			using CDetailsConcatImpl = SingleDetails_t;
+
+			abstract_class IDetailsConcat
+			{
+			public:
+				virtual void AppendHeader() = 0;
+				virtual void AppendMembers() = 0;
+				virtual void AppendEmpty() = 0;
+			}; // Menu::Schema::CSystem::IDetailsConcat
+
+			class CDetailsConcatBase : private CDetailsConcatImpl, public IDetailsConcat
+			{
+			public:
+				using Impl = CDetailsConcatImpl;
+
+				template<class T, uintp N = T::sm_nEmbeds, typename std::enable_if_t<std::is_base_of_v<DetailsConcatBase_t<N>, T>, int> = 0>
+				CDetailsConcatBase(const T *pDetails)
+				 :  Impl({{pDetails->m_pMessages}, {pDetails->m_pConcats[N - 1]}}) // Go down to a single concat.
+				{
+					Assert(pDetails);
+				}
+
+			protected:
+				CBufferStringVector *GetMessages();
+				const CConcatLineString *GetConcatLine() const;
+
+			public:
+				void AppendHeader() override;
+				void AppendMembers() override;
+				void AppendEmpty() override;
+			}; // Menu::Schema::CSystem::CDetailsConcatBase
+
+			class CDetailsConcatTypeScope : public CDetailsConcatBase
+			{
+			public:
+				using Base = CDetailsConcatBase;
+				using Base::Base;
+
+				CDetailsConcatTypeScope(const Base &aBase, const CSchemaSystemTypeScope *pData)
+				 :  Base(aBase), 
+				    m_pData(pData)
+				{
+				}
+
+			public:
+				void AppendHeader() override;
+				void AppendMembers() override;
+
+			private:
+				const CSchemaSystemTypeScope *m_pData;
+			}; // Menu::Schema::CSystem::CDetailsConcatTypeScope
+
+			class CDetailsConcatType : public CDetailsConcatBase
+			{
+			public:
+				using Base = CDetailsConcatBase;
+
+				CDetailsConcatType(const Base &aBase, const CSchemaType *pData)
+				 :  Base(aBase), 
+				    m_pData(pData)
+				{
+				}
+
+			public:
+				void AppendHeader() override;
+				void AppendMembers() override;
+
+			private:
+				const CSchemaType *m_pData;
+			}; // Menu::Schema::CSystem::CDetailsConcatType
+
+			class CDetailsConcatClass : public CDetailsConcatBase
+			{
+			public:
+				using Base = CDetailsConcatBase;
+
+				CDetailsConcatClass(const Base &aBase, const SchemaClassInfoData_t *pData)
+				 :  Base(aBase), 
+				    m_pData(pData)
+				{
+				}
+
+			public:
+				void AppendHeader() override;
+				void AppendMembers() override;
+
+			private:
+				const SchemaClassInfoData_t *m_pData;
+			}; // Menu::Schema::CSystem::CDetailsConcatClass
+
+			class CDetailsConcatField : public CDetailsConcatBase
+			{
+			public:
+				using Base = CDetailsConcatBase;
+
+				CDetailsConcatField(const Base &aBase, const SchemaClassFieldData_t *pData)
+				 :  Base(aBase), 
+				    m_pData(pData)
+				{
+				}
+
+			public:
+				void AppendHeader() override;
+				void AppendMembers() override;
+				void AppendMetadataMember();
+
+			private:
+				const SchemaClassFieldData_t *m_pData;
+			}; // Menu::Schema::CSystem::CDetailsConcatField
+
+			class CDetailsConcatMetadataEntry : public CDetailsConcatBase
+			{
+			public:
+				using Base = CDetailsConcatBase;
+
+				CDetailsConcatMetadataEntry(const Base &aBase, const SchemaMetadataEntryData_t *pData)
+				 :  Base(aBase), 
+				    m_pData(pData)
+				{
+				}
+
+			public:
+				void AppendHeader() override;
+				void AppendMembers() override;
+
+			private:
+				const SchemaMetadataEntryData_t *m_pData;
+			}; // Menu::Schema::CSystem::CDetailsConcatMetadataEntry
+
 		public:
-			bool Init(ISchemaSystem *pSchemaSystem, const CUtlVector<const char *> &vecLoadedLibraries, GameData::CBufferStringVector *pMessages = nullptr);
+			bool Init(ISchemaSystem *pSchemaSystem, const CUtlVector<const char *> &vecLoadedLibraries, CBufferStringVector *pMessages = nullptr);
+			bool Load(FullDetails_t *pDetails = nullptr); // Calls the classes -> fields callbacks.
 			void Destroy();
 
 		public:
@@ -132,7 +305,7 @@ namespace Menu
 				int FindFieldOffset(const char *pszName) const; // Returns -1 if not found.
 
 			protected:
-				void ParseFields(CSchemaClassInfo *pInfo);
+				void LoadFields(CSchemaClassInfo *pInfo, FieldDetails_t *pDetails = nullptr);
 
 			public: // Fields symbols.
 				CUtlSymbolLarge GetFieldSymbol(const char *pszName);
@@ -141,14 +314,14 @@ namespace Menu
 			private:
 				Fields m_aFieldStorage;
 				CUtlSymbolTableLarge m_tableFileds;
-			};
+			}; // Menu::Schema::CSystem::CClass
 
 			CClass *GetClass(const char *pszName);
 			CClass *FindClass(const char *pszName);
 			int FindClassFieldOffset(const char *pszClassName, const char *pszFiledName); // Returns -1 if not found.
 
 		protected:
-			void ParseClasses(CSchemaSystemTypeScope *pType);
+			void LoadClasses(CSchemaSystemTypeScope *pScope, ClassDetails_t *pDetails = nullptr);
 			void ClearClasses();
 
 		public: // Class symbols.
@@ -160,7 +333,7 @@ namespace Menu
 
 			CUtlSymbolTableLarge m_tableClasses;
 			CUtlMap<CUtlSymbolLarge, CClass> m_mapClasses;
-		}; // CClass
+		}; // Menu::Schema::CSystem
 
 		namespace Accessor
 		{
@@ -168,6 +341,8 @@ namespace Menu
 			class CField
 			{
 			public:
+				CField() = delete;
+
 				FORCEINLINE CField(T *pInitTarget, uintp nInitOffset)
 				:  m_pTarget(pInitTarget), 
 				   m_nOffset(nInitOffset)
@@ -216,6 +391,8 @@ namespace Menu
 			{
 			public:
 				using Base = CField<T, F>;
+
+				CArrayField() = delete;
 
 				FORCEINLINE CArrayField(const Base &aInitField, uintp nInitSize)
 				 :  Base(aInitField), 
