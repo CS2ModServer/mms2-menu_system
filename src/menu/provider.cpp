@@ -156,12 +156,12 @@ bool Menu::Provider::GameDataStorage::Load(IGameData *pRoot, const char *pszBase
 
 	CUtlString sError;
 
+	AnyConfig::Anyone aGameConfig;
+
 	AnyConfig::LoadFromFile_Generic_t aLoadPresets({{&sError, NULL, pszPathID}, g_KV3Format_Generic});
 
 	for(const auto &aConfig : aConfigs)
 	{
-		AnyConfig::Anyone aGameConfig;
-
 		sConfigFile.Clear();
 		sConfigFile.Insert(0, pszBaseGameDir);
 		sConfigFile.Insert(sConfigFile.GetTotalNumber(), CORRECT_PATH_SEPARATOR_S);
