@@ -21,7 +21,7 @@ string(TOUPPER "${PROJECT_NAME_SUBSTRING}" PROJECT_NAME_UPPER)
 
 set(PROJECT_OUTPUT_NAME "menu")
 
-set(PROJECT_AUTHOR "komashchenko & Wend4r")
+set(PROJECT_AUTHOR "Wend4r & komashchenko")
 set(PROJECT_DESCRIPTION_FULL "The menu system")
 set(PROJECT_LICENSE "GPLv3")
 string(TIMESTAMP PROJECT_BUILD_DATE "%Y-%m-%d")
