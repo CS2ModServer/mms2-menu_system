@@ -19,7 +19,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <menu/path_resolver.hpp>
+#include <menu/pathresolver.hpp>
 
 #include <cstddef>
 
@@ -50,7 +50,7 @@ std::string_view Menu::PathResolver::GetAbsoluteModuleFilename()
 	return m_sModuleFilename;
 }
 
-std::string_view Menu::PathResolver::ExtractSubpath(std::string_view sStartMarker, std::string_view sEndMarker)
+std::string_view Menu::PathResolver::Extract(std::string_view sStartMarker, std::string_view sEndMarker)
 {
 	auto &sFullPath = m_sModuleFilename;
 

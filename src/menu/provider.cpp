@@ -133,19 +133,19 @@ bool Menu::Provider::GameDataStorage::Load(IGameData *pRoot, const char *pszBase
 	} aConfigs[] =
 	{
 		{
-			MENU_SYSTEM_PROVIDER_BASEENTITY_FILENAME,
+			MENU_PROVIDER_BASEENTITY_FILENAME,
 			&GameDataStorage::LoadBaseEntity
 		},
 		{
-			MENU_SYSTEM_PROVIDER_BASEPLAYERPAWN_FILENAME,
+			MENU_PROVIDER_BASEPLAYERPAWN_FILENAME,
 			&GameDataStorage::LoadBasePlayerPawn
 		},
 		{
-			MENU_SYSTEM_PROVIDER_GAMESYSTEM_FILENAME,
+			MENU_PROVIDER_GAMESYSTEM_FILENAME,
 			&GameDataStorage::LoadGameSystem
 		},
 		{
-			MENU_SYSTEM_PROVIDER_SOURCE2SERVER_FILENAME,
+			MENU_PROVIDER_SOURCE2SERVER_FILENAME,
 			&GameDataStorage::LoadSource2Server
 		}
 	};

@@ -19,12 +19,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _INCLUDE_METAMOD_SOURCE_MENU_GAME_EVENT_SYSTEM_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_MENU_GAME_EVENT_SYSTEM_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_MENU_GAMEEVENTSYSTEM_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_MENU_GAMEEVENTSYSTEM_HPP_
 
 #	pragma once
 
-#	include "system_base.hpp"
+#	include "systembase.hpp"
 
 #	include <igameevents.h>
 #	include <playerslot.h>
@@ -32,7 +32,7 @@
 
 #	include <logger.hpp>
 
-#	define MENU_SYSTEM_GAME_EVENT_SYSTEM_LOGGINING_COLOR {255, 127, 0, 191}
+#	define MENU_GAMEEVENTSYSTEM_LOGGINING_COLOR {255, 127, 0, 191}
 
 namespace Menu
 {
@@ -68,4 +68,4 @@ namespace Menu
 	}; // Menu::GameEventSystem
 }; // Menu
 
-#endif // _INCLUDE_METAMOD_SOURCE_MENU_GAME_EVENT_SYSTEM_HPP_
+#endif // _INCLUDE_METAMOD_SOURCE_MENU_GAMEEVENTSYSTEM_HPP_

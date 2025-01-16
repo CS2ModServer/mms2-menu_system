@@ -19,16 +19,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _INCLUDE_METAMOD_SOURCE_MENU_PLUGIN_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_MENU_PLUGIN_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_MENUSYSTEM_PLUGIN_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_MENUSYSTEM_PLUGIN_HPP_
 
 #	pragma once
 
 #	include "imenu.hpp"
 #	include "ientitymgr.hpp"
-#	include "menu/chat_command_system.hpp"
-#	include "menu/game_event_system.hpp"
-#	include "menu/path_resolver.hpp"
+#	include "menu/chatcommandsystem.hpp"
+#	include "menu/gameeventsystem.hpp"
+#	include "menu/pathresolver.hpp"
 #	include "menu/provider.hpp"
 #	include "menu/schema.hpp"
 #	include "menu/schema/baseentity.hpp"
@@ -66,37 +66,39 @@
 #	include <entity2/entitykeyvalues.h>
 #	include <network_connection.pb.h>
 
-#	define MENU_SYSTEM_LOGGINING_COLOR {127, 255, 0, 191} // Green (Chartreuse)
-#	define MENU_SYSTEM_MAX_MESSAGE_TEXT_LENGTH 512
-#	define MENU_SYSTEM_MAX_FONT_NAME_LENGTH 64
-#	define MENU_SYSTEM_MAX_BACKGROUND_MATERIAL_NAME_LENGTH 64
-#	define MENU_SYSTEM_BACKGROUND_COLOR {100, 73, 28, 255}
-#	define MENU_SYSTEM_ACTIVE_COLOR {195, 141, 52, 255}
-#	define MENU_SYSTEM_INACTIVE_COLOR {255, 255, 255, 255}
-#	define MENU_SYSTEM_DEFAULT_FONT_FAMILY "Arial"
-#	define MENU_SYSTEM_BACKGROUND_MATERIAL_NAME "materials/dev/annotation_worldtext_background.vmat"
-#	define MENU_SYSTEM_EMPTY_BACKGROUND_MATERIAL_NAME "materials/editor/icon_empty.vmat"
-#	define MENU_SYSTEM_TEST_MESSAGE_TEXT
+#	define MENUSYSTEM_LOGGINING_COLOR {127, 255, 0, 191} // Green (Chartreuse)
+#	define MENUSYSTEM_MAX_MESSAGE_TEXT_LENGTH 512
+#	define MENUSYSTEM_MAX_FONT_NAME_LENGTH 64
+#	define MENUSYSTEM_MAX_BACKGROUND_MATERIAL_NAME_LENGTH 64
+#	define MENUSYSTEM_BACKGROUND_COLOR {100, 73, 28, 255}
+#	define MENUSYSTEM_ACTIVE_COLOR {195, 141, 52, 255}
+#	define MENUSYSTEM_INACTIVE_COLOR {255, 255, 255, 255}
+#	define MENUSYSTEM_DEFAULT_FONT_FAMILY "Arial"
+#	define MENUSYSTEM_BACKGROUND_MATERIAL_NAME "materials/dev/annotation_worldtext_background.vmat"
+#	define MENUSYSTEM_EMPTY_BACKGROUND_MATERIAL_NAME "materials/editor/icon_empty.vmat"
+#	define MENUSYSTEM_TEST_MESSAGE_TEXT
 
-#	define MENU_SYSTEM_GAME_BASE_DIR "addons" CORRECT_PATH_SEPARATOR_S META_PLUGIN_PREFIX
-#	define MENU_SYSTEM_GAME_EVENTS_FILES "resource" CORRECT_PATH_SEPARATOR_S "*.gameevents"
-#	define MENU_SYSTEM_GAME_TRANSLATIONS_FILES "translations" CORRECT_PATH_SEPARATOR_S "*.phrases.*"
-#	define MENU_SYSTEM_GAME_LANGUAGES_FILES "configs" CORRECT_PATH_SEPARATOR_S "languages.*"
-#	define MENU_SYSTEM_BASE_PATHID "GAME"
+#	define MENUSYSTEM_GAME_BASE_DIR "addons" CORRECT_PATH_SEPARATOR_S META_PLUGIN_PREFIX
+#	define MENUSYSTEM_GAME_EVENTS_FILES "resource" CORRECT_PATH_SEPARATOR_S "*.gameevents"
+#	define MENUSYSTEM_GAME_TRANSLATIONS_FILES "translations" CORRECT_PATH_SEPARATOR_S "*.phrases.*"
+#	define MENUSYSTEM_GAME_LANGUAGES_FILES "configs" CORRECT_PATH_SEPARATOR_S "languages.*"
+#	define MENUSYSTEM_BASE_PATHID "GAME"
 
-#	define MENU_SYSTEM_EXAMPLE_CHAT_COMMAND "example"
+#	define MENUSYSTEM_EXAMPLE_CHAT_COMMAND "example"
 
-#	define MENU_SYSTEM_CLIENT_CVAR_NAME_LANGUAGE "cl_language"
+#	define MENUSYSTEM_CLIENT_CVAR_NAME_LANGUAGE "cl_language"
 
 class CBasePlayerController;
 class INetworkMessageInternal;
 
-class MenuPlugin final : public ISmmPlugin, public IMetamodListener, public IMenuPlugin, public CBaseGameSystem, public IEntityManager::IProviderAgent::ISpawnGroupNotifications, // Interfaces.
-                         public Menu::ChatCommandSystem, public Menu::GameEventSystem, public Menu::PathResolver, public Menu::Provider, virtual public Menu::Schema::CSystem, virtual public Logger, public Translations, // Conponents.
-                         virtual public Menu::Schema::CBaseEntity_Helper, virtual public Menu::Schema::CBaseModelEntity_Helper, virtual public Menu::Schema::CBasePlayerController_Helper, virtual public Menu::Schema::CBaseViewModel_Helper, virtual public Menu::Schema::CBodyComponent_Helper, virtual public Menu::Schema::CCSPlayer_ViewModelServices_Helper, virtual public Menu::Schema::CCSPlayerBase_CameraServices_Helper, virtual public Menu::Schema::CCSPlayerPawnBase_Helper, virtual public Menu::Schema::CGameSceneNode_Helper // Schema helpers.
+class MenuSystem_Plugin final : public ISmmPlugin, public IMetamodListener, public IMenuPlugin, public CBaseGameSystem, public IEntityManager::IProviderAgent::ISpawnGroupNotifications, // Interfaces.
+                                public Menu::ChatCommandSystem, public Menu::GameEventSystem, public Menu::PathResolver, public Menu::Provider, virtual public Menu::Schema::CSystem, virtual public Logger, public Translations, // Conponents.
+                                virtual public Menu::Schema::CBaseEntity_Helper, virtual public Menu::Schema::CBaseModelEntity_Helper, virtual public Menu::Schema::CBasePlayerController_Helper, virtual public Menu::Schema::CBaseViewModel_Helper, virtual public Menu::Schema::CBodyComponent_Helper, virtual public Menu::Schema::CCSPlayer_ViewModelServices_Helper, virtual public Menu::Schema::CCSPlayerBase_CameraServices_Helper, virtual public Menu::Schema::CCSPlayerPawnBase_Helper, virtual public Menu::Schema::CGameSceneNode_Helper // Schema helpers.
 {
 public:
-	MenuPlugin();
+	using This = MenuSystem_Plugin;
+
+	MenuSystem_Plugin();
 
 public: // ISmmPlugin
 	bool Load(PluginId id, ISmmAPI *ismm, char *error = nullptr, size_t maxlen = 0, bool late = true) override;
@@ -125,7 +127,7 @@ public: // IMenuPlugin
 
 	class CLanguage : public IMenuPlugin::ILanguage
 	{
-		friend class MenuPlugin;
+		friend class MenuSystem_Plugin;
 
 	public:
 		CLanguage(const CUtlSymbolLarge &sInitName = NULL, const char *pszInitCountryCode = "en");
@@ -145,7 +147,7 @@ public: // IMenuPlugin
 
 	class CPlayer : public IPlayer
 	{
-		friend class MenuPlugin;
+		friend class MenuSystem_Plugin;
 
 	public:
 		CPlayer();
@@ -225,7 +227,7 @@ public: // Path resolver.
 	bool ClearPathResolver(char *error = nullptr, size_t maxlen = 0);
 
 private:
-	std::string m_sBaseGameDirectory = MENU_SYSTEM_GAME_BASE_DIR;
+	std::string m_sBaseGameDirectory = MENUSYSTEM_GAME_BASE_DIR;
 
 public: // Utils.
 	bool InitProvider(char *error = nullptr, size_t maxlen = 0);
@@ -306,9 +308,9 @@ public: // Event actions.
 	bool UnhookGameEvents(char *error = nullptr, size_t maxlen = 0);
 
 private: // Commands.
-	CON_COMMAND_MEMBER_F(MenuPlugin, "mm_" META_PLUGIN_PREFIX "_reload_gamedata", OnReloadGameDataCommand, "Reload gamedata configs", FCVAR_LINKED_CONCOMMAND);
-	CON_COMMAND_MEMBER_F(MenuPlugin, "mm_" META_PLUGIN_PREFIX "_reload_schema", OnReloadSchemaCommand, "Reload schema fields of classes", FCVAR_LINKED_CONCOMMAND);
-	CON_COMMAND_MEMBER_F(MenuPlugin, "menuselect", OnMenuSelectCommand, "", FCVAR_LINKED_CONCOMMAND | FCVAR_CLIENT_CAN_EXECUTE);
+	CON_COMMAND_MEMBER_F(This, "mm_" META_PLUGIN_PREFIX "_reload_gamedata", OnReloadGameDataCommand, "Reload gamedata configs", FCVAR_LINKED_CONCOMMAND);
+	CON_COMMAND_MEMBER_F(This, "mm_" META_PLUGIN_PREFIX "_reload_schema", OnReloadSchemaCommand, "Reload schema fields of classes", FCVAR_LINKED_CONCOMMAND);
+	CON_COMMAND_MEMBER_F(This, "menuselect", OnMenuSelectCommand, "", FCVAR_LINKED_CONCOMMAND | FCVAR_CLIENT_CAN_EXECUTE);
 
 public: // SourceHooks.
 	void OnStartupServerHook(const GameSessionConfiguration_t &config, ISource2WorldSession *pWorldSession, const char *);
@@ -346,7 +348,7 @@ private: // Language (hash)map.
 	CUtlMap<CUtlSymbolLarge, CLanguage> m_mapLanguages;
 
 private: // Fields.
-	CGameSystemStaticFactory<MenuPlugin> *m_pFactory = NULL;
+	CGameSystemStaticFactory<This> *m_pFactory = NULL;
 
 	CKeyValues3Context m_aEntityAllocator;
 
@@ -367,10 +369,10 @@ private: // Fields.
 	CUtlVector<CLanguage> m_vecLanguages;
 
 	CPlayer m_aPlayers[ABSOLUTE_PLAYER_LIMIT];
-}; // MenuPlugin
+}; // MenuSystem_Plugin
 
-extern MenuPlugin *g_pMenuPlugin;
+extern MenuSystem_Plugin *g_pMenuPlugin;
 
 PLUGIN_GLOBALVARS();
 
-#endif //_INCLUDE_METAMOD_SOURCE_MENU_PLUGIN_HPP_
+#endif //_INCLUDE_METAMOD_SOURCE_MENUSYSTEM_PLUGIN_HPP_

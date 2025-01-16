@@ -20,12 +20,12 @@
  */
 
 #include <globals.hpp>
-#include <menu/game_event_system.hpp>
+#include <menu/gameeventsystem.hpp>
 
 #include <tier1/utlrbtree.h>
 
 Menu::GameEventSystem::GameEventSystem()
- :  Logger(GetName(), NULL, 0, LV_DEFAULT, MENU_SYSTEM_GAME_EVENT_SYSTEM_LOGGINING_COLOR),
+ :  Logger(GetName(), NULL, 0, LV_DEFAULT, MENU_GAMEEVENTSYSTEM_LOGGINING_COLOR),
     Base(), 
 
     m_aEnableDetaillsConVar("mm_" META_PLUGIN_PREFIX "_enable_game_events_details", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable detail messages of game events", false, true, false, true, true)

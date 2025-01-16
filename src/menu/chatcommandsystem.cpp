@@ -19,12 +19,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <menu/chat_command_system.hpp>
+#include <menu/chatcommandsystem.hpp>
 
 #include <tier1/utlrbtree.h>
 
 Menu::ChatCommandSystem::ChatCommandSystem()
- :  Logger(GetName(), NULL, 0, LV_DEFAULT, MENU_SYSTEM_CHAT_COMMAND_SYSTEM_LOGGINING_COLOR), 
+ :  Logger(GetName(), NULL, 0, LV_DEFAULT, MENU_CHATCOMMANDSYSTEM_LOGGINING_COLOR), 
     Base()
 {
 }

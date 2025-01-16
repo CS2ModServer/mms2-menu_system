@@ -19,11 +19,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _INCLUDE_METAMOD_SOURCE_MENU_PATH_RESOLVER_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_MENU_PATH_RESOLVER_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_MENU_PATHRESOLVER_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_MENU_PATHRESOLVER_HPP_
 
-#	define MENU_PATH_RESOLVER_ADDONS_DIR "addons"
-#	define MENU_PATH_RESOLVER_BINARY_DIR "bin"
+#	define MENU_PATHRESOLVER_ADDONS_DIR "addons"
+#	define MENU_PATHRESOLVER_BINARY_DIR "bin"
 
 #	include <stddef.h>
 
@@ -42,7 +42,7 @@ namespace Menu
 
 	public:
 		std::string_view GetAbsoluteModuleFilename();
-		std::string_view ExtractSubpath(std::string_view sStartMarker = MENU_PATH_RESOLVER_ADDONS_DIR, std::string_view sEndMarker = MENU_PATH_RESOLVER_BINARY_DIR);
+		std::string_view Extract(std::string_view sStartMarker = MENU_PATHRESOLVER_ADDONS_DIR, std::string_view sEndMarker = MENU_PATHRESOLVER_BINARY_DIR);
 
 	private:
 		const void *m_pModule;
@@ -50,4 +50,4 @@ namespace Menu
 	};
 };
 
-#endif //_INCLUDE_METAMOD_SOURCE_MENU_PATH_RESOLVER_HPP_
+#endif //_INCLUDE_METAMOD_SOURCE_MENU_PATHRESOLVER_HPP_

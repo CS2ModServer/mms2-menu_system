@@ -19,12 +19,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _INCLUDE_METAMOD_SOURCE_MENU_CHAT_COMMAND_SYSTEM_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_MENU_CHAT_COMMAND_SYSTEM_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_MENU_CHATCOMMANDSYSTEM_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_MENU_CHATCOMMANDSYSTEM_HPP_
 
 #	pragma once
 
-#	include "system_base.hpp"
+#	include "systembase.hpp"
 
 #	include <playerslot.h>
 #	include <tier0/utlstring.h>
@@ -32,7 +32,7 @@
 
 #	include <logger.hpp>
 
-#	define MENU_SYSTEM_CHAT_COMMAND_SYSTEM_LOGGINING_COLOR {0, 127, 255, 191}
+#	define MENU_CHATCOMMANDSYSTEM_LOGGINING_COLOR {0, 127, 255, 191}
 
 namespace Menu
 {
@@ -63,4 +63,4 @@ namespace Menu
 	}; // Menu::ChatCommandSystem
 }; // Menu
 
-#endif // _INCLUDE_METAMOD_SOURCE_MENU_CHAT_COMMAND_SYSTEM_HPP_
+#endif // _INCLUDE_METAMOD_SOURCE_MENU_CHATCOMMANDSYSTEM_HPP_

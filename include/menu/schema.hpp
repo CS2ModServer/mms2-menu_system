@@ -43,7 +43,7 @@
 
 #	define MAX_SCHEMA_TYPE_NAME_SIZE 256
 
-#	ifdef DEBUG
+#	ifdef _DEBUG
 #		define SCHEMA_FORCEINLINE
 #	else
 #		define SCHEMA_FORCEINLINE FORCEINLINE

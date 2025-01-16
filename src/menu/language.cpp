@@ -19,30 +19,30 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <menu_plugin.hpp>
+#include <menusystem_plugin.hpp>
 
-MenuPlugin::CLanguage::CLanguage(const CUtlSymbolLarge &sInitName, const char *pszInitCountryCode)
+MenuSystem_Plugin::CLanguage::CLanguage(const CUtlSymbolLarge &sInitName, const char *pszInitCountryCode)
  :  m_sName(sInitName), 
     m_sCountryCode(pszInitCountryCode)
 {
 }
 
-const char *MenuPlugin::CLanguage::GetName() const
+const char *MenuSystem_Plugin::CLanguage::GetName() const
 {
 	return m_sName.String();
 }
 
-void MenuPlugin::CLanguage::SetName(const CUtlSymbolLarge &s)
+void MenuSystem_Plugin::CLanguage::SetName(const CUtlSymbolLarge &s)
 {
 	m_sName = s;
 }
 
-const char *MenuPlugin::CLanguage::GetCountryCode() const
+const char *MenuSystem_Plugin::CLanguage::GetCountryCode() const
 {
 	return m_sCountryCode;
 }
 
-void MenuPlugin::CLanguage::SetCountryCode(const char *psz)
+void MenuSystem_Plugin::CLanguage::SetCountryCode(const char *psz)
 {
 	m_sCountryCode = psz;
 }

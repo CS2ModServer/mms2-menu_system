@@ -31,10 +31,10 @@ set(EXTERNAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external")
 set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(PUBLIC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/public")
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
-set(SOURCE_MENU_SYSTEM_DIR "${SOURCE_DIR}/menu")
-set(SOURCE_MENU_SYSTEM_PROVIDER_DIR "${SOURCE_MENU_SYSTEM_DIR}/provider")
-set(SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR "${SOURCE_MENU_SYSTEM_PROVIDER_DIR}/gamedata")
-set(SOURCE_MENU_SYSTEM_SCHEMA_DIR "${SOURCE_MENU_SYSTEM_DIR}/schema")
+set(SOURCE_MENU_DIR "${SOURCE_DIR}/menu")
+set(SOURCE_MENU_PROVIDER_DIR "${SOURCE_MENU_DIR}/provider")
+set(SOURCE_MENU_PROVIDER_GAMEDATA_DIR "${SOURCE_MENU_PROVIDER_DIR}/gamedata")
+set(SOURCE_MENU_SCHEMA_DIR "${SOURCE_MENU_DIR}/schema")
 
 set(SOURCESDK_PROTOS
 	netmessages
@@ -80,30 +80,47 @@ include(cmake/metamod.cmake)
 include(cmake/sourcesdk.cmake)
 include(cmake/translations.cmake)
 
+set(SOURCE_MENU_PROVIDER_FILES
+	${SOURCE_MENU_PROVIDER_GAMEDATA_DIR}/baseentity.cpp
+	${SOURCE_MENU_PROVIDER_GAMEDATA_DIR}/baseplayerpawn.cpp
+	${SOURCE_MENU_PROVIDER_GAMEDATA_DIR}/gamesystem.cpp
+	${SOURCE_MENU_PROVIDER_GAMEDATA_DIR}/source2server.cpp
+)
+
+set(SOURCE_MENU_SCHEMA_FILES
+	${SOURCE_MENU_SCHEMA_DIR}/baseentity.cpp
+	${SOURCE_MENU_SCHEMA_DIR}/basemodelentity.cpp
+	${SOURCE_MENU_SCHEMA_DIR}/baseplayercontroller.cpp
+	${SOURCE_MENU_SCHEMA_DIR}/baseviewmodel.cpp
+	${SOURCE_MENU_SCHEMA_DIR}/bodycomponent.cpp
+	${SOURCE_MENU_SCHEMA_DIR}/csplayer_viewmodelservices.cpp
+	${SOURCE_MENU_SCHEMA_DIR}/csplayerbase_cameraservices.cpp
+	${SOURCE_MENU_SCHEMA_DIR}/csplayerpawnbase.cpp
+	${SOURCE_MENU_SCHEMA_DIR}/gamescenenode.cpp
+
+)
+
+set(SOURCE_MENU_FILES
+	${SOURCE_MENU_DIR}/chatcommandsystem.cpp
+	${SOURCE_MENU_DIR}/gameeventsystem.cpp
+	${SOURCE_MENU_DIR}/language.cpp
+	${SOURCE_MENU_DIR}/pathresolver.cpp
+	${SOURCE_MENU_DIR}/player.cpp
+	${SOURCE_MENU_DIR}/provider.cpp
+)
+
 set(SOURCE_FILES
-	${SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR}/baseentity.cpp
-	${SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR}/baseplayerpawn.cpp
-	${SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR}/gamesystem.cpp
-	${SOURCE_MENU_SYSTEM_PROVIDER_GAMEDATA_DIR}/source2server.cpp
-	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/baseentity.cpp
-	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/basemodelentity.cpp
-	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/baseplayercontroller.cpp
-	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/baseviewmodel.cpp
-	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/bodycomponent.cpp
-	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/csplayer_viewmodelservices.cpp
-	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/csplayerbase_cameraservices.cpp
-	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/csplayerpawnbase.cpp
-	${SOURCE_MENU_SYSTEM_SCHEMA_DIR}/gamescenenode.cpp
-	${SOURCE_MENU_SYSTEM_DIR}/chat_command_system.cpp
-	${SOURCE_MENU_SYSTEM_DIR}/game_event_system.cpp
-	${SOURCE_MENU_SYSTEM_DIR}/language.cpp
-	${SOURCE_MENU_SYSTEM_DIR}/path_resolver.cpp
-	${SOURCE_MENU_SYSTEM_DIR}/player.cpp
-	${SOURCE_MENU_SYSTEM_DIR}/provider.cpp
-	${SOURCE_MENU_SYSTEM_DIR}/schema.cpp
 	${SOURCE_DIR}/concat.cpp
 	${SOURCE_DIR}/globals.cpp
-	${SOURCE_DIR}/menu_plugin.cpp
+
+	${SOURCE_MENU_PROVIDER_FILES}
+	${SOURCE_MENU_DIR}/provider.cpp
+
+	${SOURCE_MENU_SCHEMA_FILES}
+	${SOURCE_MENU_DIR}/schema.cpp
+
+	${SOURCE_MENU_FILES}
+	${SOURCE_DIR}/menusystem_plugin.cpp # The shared entry point.
 )
 
 set(INCLUDE_DIRS

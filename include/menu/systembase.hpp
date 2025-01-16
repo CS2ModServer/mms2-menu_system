@@ -19,8 +19,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_BASE_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_BASE_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SYSTEMBASE_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_MENU_SYSTEMBASE_HPP_
 
 #	pragma once
 
@@ -32,7 +32,7 @@
 
 #	include <logger.hpp>
 
-#	define MENU_SYSTEM_BASE_LOGGINING_COLOR {255, 255, 255, 191}
+#	define MENU_SYSTEMBASE_LOGGINING_COLOR {255, 255, 255, 191}
 
 namespace Menu
 {
@@ -48,7 +48,7 @@ namespace Menu
 	{
 	public:
 		CSystemBase()
-		  : Logger(GetName(), NULL, 0, LV_DEFAULT, MENU_SYSTEM_BASE_LOGGINING_COLOR), 
+		  : Logger(GetName(), NULL, 0, LV_DEFAULT, MENU_SYSTEMBASE_LOGGINING_COLOR), 
 		    m_mapCallbacks(DefLessFunc(const CUtlSymbolLarge))
 		{
 		}
@@ -161,4 +161,4 @@ namespace Menu
 	}; // Menu::CSystemBase<>
 }; // Menu
 
-#endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEM_BASE_HPP_
+#endif // _INCLUDE_METAMOD_SOURCE_MENU_SYSTEMBASE_HPP_

@@ -29,13 +29,13 @@
 
 #	include <tier1/utlvector.h>
 
-#	define MENU_SYSTEM_INTERFACE_NAME "Menu System v1.0.0"
+#	define MENUSYSTEM_INTERFACE_NAME "Menu System v1.0.0"
 
 class CEntityInstance;
 
 /**
  * @brief A Menu System interface.
- * Note: gets with "ismm->MetaFactory(MENU_SYSTEM_INTERFACE_NAME, NULL, NULL);"
+ * Note: gets with "ismm->MetaFactory(MENUSYSTEM_INTERFACE_NAME, NULL, NULL);"
 **/
 class IMenuPlugin : public ISample
 {
