@@ -58,10 +58,6 @@ SH_DECL_HOOK1_void(CServerSideClientBase, PerformDisconnection, SH_NOATTRIB, 0, 
 static MenuSystem_Plugin s_aMenuPlugin;
 MenuSystem_Plugin *g_pMenuPlugin = &s_aMenuPlugin;
 
-static IEntityManager *s_pEntityManager = nullptr;
-static IEntityManager *s_pEntityManagerProviderAgent = nullptr;
-static IEntityManager *s_pEntityManagerSpawnGroupMgrProvider = nullptr;
-
 PLUGIN_EXPOSE(MenuSystem_Plugin, s_aMenuPlugin);
 
 MenuSystem_Plugin::MenuSystem_Plugin()
