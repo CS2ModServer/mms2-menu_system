@@ -350,8 +350,6 @@ private: // Language (hash)map.
 private: // Fields.
 	CGameSystemStaticFactory<This> *m_pFactory = NULL;
 
-	CKeyValues3Context m_aEntityAllocator;
-
 	// Provide to Entity Manager plugin.
 	IEntityManager *m_pEntityManager = nullptr;
 	IEntityManager::IProviderAgent *m_pEntityManagerProviderAgent = nullptr;
