@@ -2029,8 +2029,8 @@ void MenuPlugin::SendChatMessage(IRecipientFilter *pFilter, int iEntityIndex, bo
 		CBufferStringGrowable<256> sHead;
 
 		sHead.Insert(0, "Send chat message (");
-		sHead.Insert(sHead.GetTotalNumber(), pSayText2Message->GetUnscopedName());
-		sHead.Insert(sHead.GetTotalNumber(), ")");
+		sHead.Insert(sHead.Length(), pSayText2Message->GetUnscopedName());
+		sHead.Insert(sHead.Length(), ")");
 
 		CBufferStringGrowable<1024> sBuffer;
 
@@ -2088,8 +2088,8 @@ void MenuPlugin::SendTextMessage(IRecipientFilter *pFilter, int iDestination, si
 		CBufferStringGrowable<256> sHead;
 
 		sHead.Insert(0, "Send text message (");
-		sHead.Insert(sHead.GetTotalNumber(), pTextMsg->GetUnscopedName());
-		sHead.Insert(sHead.GetTotalNumber(), ")");
+		sHead.Insert(sHead.Length(), pTextMsg->GetUnscopedName());
+		sHead.Insert(sHead.Length(), ")");
 
 		CBufferStringGrowable<1024> sBuffer;
 
