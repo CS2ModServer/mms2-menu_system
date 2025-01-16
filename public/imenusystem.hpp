@@ -25,7 +25,7 @@
 
 #	pragma once
 
-#	include "imenu/isample.hpp"
+#	include "imenusystem/isample.hpp"
 
 #	include <tier1/utlvector.h>
 
@@ -37,7 +37,7 @@ class CEntityInstance;
  * @brief A Menu System interface.
  * Note: gets with "ismm->MetaFactory(MENUSYSTEM_INTERFACE_NAME, NULL, NULL);"
 **/
-class IMenuPlugin : public ISample
+class IMenuSystem : public ISample
 {
 public:
 	/**
@@ -62,6 +62,6 @@ public:
 	 * @return              Returns a player data.
 	 */
 	virtual IPlayer *GetPlayer(const CPlayerSlot &aSlot) = 0;
-}; // IMenuPlugin
+}; // IMenuSystem
 
 #endif // _INCLUDE_METAMOD_SOURCE_IMENU_HPP_

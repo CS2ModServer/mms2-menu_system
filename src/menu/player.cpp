@@ -50,7 +50,7 @@ bool MenuSystem_Plugin::CPlayer::RemoveLanguageListener(IPlayerLanguageListener 
 	return m_vecLanguageCallbacks.FindAndRemove(pListener);
 }
 
-const IMenuPlugin::ILanguage *MenuSystem_Plugin::CPlayer::GetLanguage() const
+const IMenuSystem::ILanguage *MenuSystem_Plugin::CPlayer::GetLanguage() const
 {
 	return m_pLanguage;
 }
@@ -166,7 +166,7 @@ const MenuSystem_Plugin::CPlayer::TranslatedPhrase &MenuSystem_Plugin::CPlayer::
 	return m_aYourArgumentPhrase;
 }
 
-const IMenuPlugin::ILanguage *MenuSystem_Plugin::GetServerLanguage() const
+const IMenuSystem::ILanguage *MenuSystem_Plugin::GetServerLanguage() const
 {
 	return &m_aServerLanguage;
 }

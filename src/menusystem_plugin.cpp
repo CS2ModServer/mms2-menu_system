@@ -448,7 +448,7 @@ void *MenuSystem_Plugin::OnMetamodQuery(const char *iface, int *ret)
 			*ret = META_IFACE_OK;
 		}
 
-		return static_cast<IMenuPlugin *>(this);
+		return static_cast<IMenuSystem *>(this);
 	}
 
 	if(ret)
@@ -491,7 +491,7 @@ ISample::IPlayerBase *MenuSystem_Plugin::GetPlayerBase(const CPlayerSlot &aSlot)
 	return GetPlayer(aSlot);
 }
 
-IMenuPlugin::IPlayer *MenuSystem_Plugin::GetPlayer(const CPlayerSlot &aSlot)
+IMenuSystem::IPlayer *MenuSystem_Plugin::GetPlayer(const CPlayerSlot &aSlot)
 {
 	return &GetPlayerData(aSlot);
 }
