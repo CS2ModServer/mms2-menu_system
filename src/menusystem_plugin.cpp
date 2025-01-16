@@ -225,7 +225,7 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 			m_pEntityManagerProviderAgent->ExecuteDestroyQueued();
 			vecMenuEntities.Purge();
 
-				return true;
+			return true;
 		}});
 	}
 }
@@ -644,7 +644,7 @@ void MenuSystem_Plugin::OnSpawnGroupCreateLoading(SpawnGroupHandle_t hSpawnGroup
 
 	FillMenuEntityKeyValues(pMenuKV, vecBackgroundOrigin, angRotation, vecScales, MENUSYSTEM_BACKGROUND_COLOR, MENUSYSTEM_DEFAULT_FONT_FAMILY, MENUSYSTEM_BACKGROUND_MATERIAL_NAME, "Title\n\n1. Active");
 	FillMenuEntityKeyValues(pMenuKV2, vecOrigin, angRotation, vecScales, MENUSYSTEM_ACTIVE_COLOR, MENUSYSTEM_DEFAULT_FONT_FAMILY, MENUSYSTEM_EMPTY_BACKGROUND_MATERIAL_NAME, "\n\n1. Active");
-	FillMenuEntityKeyValues(pMenuKV3, vecOrigin, angRotation, vecScales, MENUSYSTEM_INACTIVE_COLOR, MENUSYSTEM_DEFAULT_FONT_FAMILY, MENUSYSTEM_EMPTY_BACKGROUND_MATERIAL_NAME, "Title");
+	FillMenuEntityKeyValues(pMenuKV3, vecOrigin, angRotation, vecScales, MENUSYSTEM_INACTIVE_COLOR, MENUSYSTEM_DEFAULT_FONT_FAMILY, MENUSYSTEM_EMPTY_BACKGROUND_MATERIAL_NAME, "Title\n\n");
 
 	g_pEntitySystem->AddRefKeyValues(pMenuKV);
 	g_pEntitySystem->AddRefKeyValues(pMenuKV2);
@@ -1011,8 +1011,6 @@ void MenuSystem_Plugin::FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV, const
 	// Background.
 	pMenuKV->SetBool("draw_background", true);
 	pMenuKV->SetString("background_material_name", pszBackgroundMaterialName);
-	// pMenuKV->SetString("background_material_name", "materials/dev/point_worldtext_default_background.vmat");
-	// pMenuKV->SetString("background_material_name", "materials/editor/icon_empty.vmat");
 	pMenuKV->SetFloat("background_border_width", 2.0f);
 	pMenuKV->SetFloat("background_border_height", 1.0f);
 	pMenuKV->SetFloat("background_world_to_uv", 0.1f);
