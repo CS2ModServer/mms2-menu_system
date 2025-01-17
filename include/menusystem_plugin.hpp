@@ -70,7 +70,7 @@
 #	define MENUSYSTEM_MAX_MESSAGE_TEXT_LENGTH 512
 #	define MENUSYSTEM_MAX_FONT_NAME_LENGTH 64
 #	define MENUSYSTEM_MAX_BACKGROUND_MATERIAL_NAME_LENGTH 64
-#	define MENUSYSTEM_BACKGROUND_AWAY_UNITS 0.02f
+#	define MENUSYSTEM_BACKGROUND_AWAY_UNITS 0.04f
 #	define MENUSYSTEM_ACTIVE_COLOR {255, 167, 42, 255}
 #	define MENUSYSTEM_INACTIVE_COLOR {233, 208, 173, 255}
 #	define MENUSYSTEM_DEFAULT_FONT_FAMILY "Tahoma"
@@ -208,7 +208,7 @@ public: // CBaseGameSystem
 
 	GS_EVENT(GameActivate);
 	GS_EVENT(GameDeactivate);
-	GS_EVENT(ServerPostEntityThink);
+	GS_EVENT(ServerPreEntityThink);
 
 public: // IGameEventListener2
 	bool OnPlayerTeam(IGameEvent *event);
@@ -249,13 +249,15 @@ public: // Entity Manager.
 	void FillViewModelEntityKeyValues(CEntityKeyValues *pEntityKV, const Vector &vecOrigin, const QAngle &angRotation);
 
 	// Offset a rotation to display on the left-side of the screen.
-	static constexpr float sm_flPitchOffset = 16.f;
-	static constexpr float sm_flYawOffset = 53.f;
-	static constexpr float sm_flAddDistance = 16.f;
+	static constexpr float sm_flForwardOffset = 8.f;
+	// static constexpr float sm_flLeftOffset = 8.f; // 4:3
+	static constexpr float sm_flLeftOffset = 10.65f; // 16:9
+	static constexpr float sm_flRightOffset = 0.f;
+	static constexpr float sm_flUpOffset = -4.25f;
 
 	// Get & calculate positions.
 	Vector GetEntityPosition(CBaseEntity *pTarget, QAngle *pRotation = nullptr);
-	void CalculateMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, const float flPitchOffset, const float flYawOffset, const float flAddDistance, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
+	void CalculateMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, const float flForwardOffset, const float flLeftOffset, const float flRightOffset, const float flUpOffset, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
 	void CalculateMenuEntitiesPositionByEntity(CBaseEntity *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
 	void CalculateMenuEntitiesPositionByViewModel(CBaseViewModel *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
 	void CalculateMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);

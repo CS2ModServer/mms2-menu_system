@@ -554,7 +554,7 @@ GS_EVENT_MEMBER(MenuSystem_Plugin, GameDeactivate)
 	// ...
 }
 
-GS_EVENT_MEMBER(MenuSystem_Plugin, ServerPostEntityThink)
+GS_EVENT_MEMBER(MenuSystem_Plugin, ServerPreEntityThink)
 {
 	// Teleport menu entities of active spectate players each think.
 	for(auto &aPlayer : m_aPlayers)
@@ -1051,12 +1051,10 @@ Vector MenuSystem_Plugin::GetEntityPosition(CBaseEntity *pEntity, QAngle *pRotat
 	return CGameSceneNode_Helper::GetAbsOriginAccessor(pEntitySceneNode);
 }
 
-void MenuSystem_Plugin::CalculateMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, const float flPitchOffset, const float flYawOffset, const float flAddDistance, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
+void MenuSystem_Plugin::CalculateMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, const float flForwardOffset, const float flLeftOffset, const float flRightOffset, const float flUpOffset, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
-	const QAngle angOffset {AngleNormalize(angRotation.x + flPitchOffset), AngleNormalize(angRotation.y + flYawOffset), 0.f};
-
-	vecResult = AddToFrontByRotation2(vecOrigin, angOffset, flAddDistance);
-	vecBackgroundResult = AddToFrontByRotation2(vecResult, angOffset, MENUSYSTEM_BACKGROUND_AWAY_UNITS);
+	vecResult = AddToFrontByRotation2(vecOrigin, angRotation, flForwardOffset, flLeftOffset, flRightOffset, flUpOffset);
+	vecBackgroundResult = AddToFrontByRotation2(vecResult, angRotation, MENUSYSTEM_BACKGROUND_AWAY_UNITS, MENUSYSTEM_BACKGROUND_AWAY_UNITS);
 
 	angResult = {0.f, AngleNormalize(angRotation.y - 90.f), AngleNormalize(-angRotation.x + 90.f)};
 }
@@ -1064,20 +1062,20 @@ void MenuSystem_Plugin::CalculateMenuEntitiesPosition(const Vector &vecOrigin, c
 void MenuSystem_Plugin::CalculateMenuEntitiesPositionByEntity(CBaseEntity *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
 	vecResult = GetEntityPosition(pTarget, &angResult);
-	CalculateMenuEntitiesPosition(vecResult, angResult, sm_flPitchOffset, sm_flYawOffset, sm_flAddDistance, vecBackgroundResult, vecResult, angResult);
+	CalculateMenuEntitiesPosition(vecResult, angResult, sm_flForwardOffset, sm_flLeftOffset, sm_flRightOffset, sm_flUpOffset, vecBackgroundResult, vecResult, angResult);
 }
 
 void MenuSystem_Plugin::CalculateMenuEntitiesPositionByViewModel(CBaseViewModel *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
 	vecResult = GetEntityPosition(pTarget, &angResult);
-	CalculateMenuEntitiesPosition(vecResult, angResult, 0.f, 0.f, sm_flAddDistance / 1.5f, vecBackgroundResult, vecResult, angResult);
+	CalculateMenuEntitiesPosition(vecResult, angResult, sm_flForwardOffset, sm_flLeftOffset, sm_flRightOffset, sm_flUpOffset, vecBackgroundResult, vecResult, angResult);
 }
 
 void MenuSystem_Plugin::CalculateMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
 	vecResult = GetEntityPosition(pTarget) + CBaseModelEntity_Helper::GetViewOffsetAccessor(pTarget);
 	angResult = CCSPlayerPawnBase_Helper::GetEyeAnglesAccessor(pTarget);
-	CalculateMenuEntitiesPosition(vecResult, angResult, 0.f, 0.f, sm_flAddDistance / 1.5f, vecBackgroundResult, vecResult, angResult);
+	CalculateMenuEntitiesPosition(vecResult, angResult, sm_flForwardOffset, sm_flLeftOffset, sm_flRightOffset, sm_flUpOffset, vecBackgroundResult, vecResult, angResult);
 }
 
 Color MenuSystem_Plugin::CalculateBackgroundColor(const Color &rgbaActive, const Color &rgbaInactive)

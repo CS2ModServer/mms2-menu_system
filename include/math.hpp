@@ -50,13 +50,13 @@ FORCEINLINE Vector AddToFrontByRotation(const Vector &vecOrigin, const QAngle &a
 	return vecOrigin + GetDirectionFromAngle<>(angRotation) * flDistance;
 }
 
-FORCEINLINE Vector AddToFrontByRotation2(const Vector &vecOrigin, const QAngle &angRotation, float flDistance)
+FORCEINLINE Vector AddToFrontByRotation2(const Vector &vecOrigin, const QAngle &angRotation, const float flForwardOffset, const float flLeftOffset = 0.f, const float flRightOffset = 0.f, const float flUpOffset = 0.f)
 {
 	matrix3x4_t matRotation;
 
 	matRotation.Init(angRotation);
 
-	return vecOrigin + matRotation.GetForward() * flDistance;
+	return vecOrigin + matRotation.GetForward() * flForwardOffset + matRotation.GetLeft() * flLeftOffset + matRotation.GetRight() * flRightOffset + matRotation.GetUp() * flUpOffset;
 }
 
 #endif //_INCLUDE_METAMOD_SOURCE_MATH_HPP_
