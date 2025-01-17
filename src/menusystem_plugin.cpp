@@ -362,7 +362,7 @@ bool MenuSystem_Plugin::Unload(char *error, size_t maxlen)
 		return false;
 	}
 
-	if(!DestroySchema(error, maxlen))
+	if(!ClearSchema(error, maxlen))
 	{
 		return false;
 	}
@@ -891,9 +891,9 @@ bool MenuSystem_Plugin::LoadSchema(char *error, size_t maxlen)
 	return bResult;
 }
 
-bool MenuSystem_Plugin::DestroySchema(char *error, size_t maxlen)
+bool MenuSystem_Plugin::ClearSchema(char *error, size_t maxlen)
 {
-	Menu::Schema::CSystem::Destroy();
+	Menu::Schema::CSystem::Clear();
 
 	return true;
 }

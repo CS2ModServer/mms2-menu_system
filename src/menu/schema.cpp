@@ -499,7 +499,7 @@ bool Menu::Schema::CSystem::Load(FullDetails_t *pDetails)
 	return true;
 }
 
-void Menu::Schema::CSystem::Destroy()
+void Menu::Schema::CSystem::Clear()
 {
 	ClearClasses();
 	m_vecTypeScopes.Purge();

@@ -234,7 +234,7 @@ public: // Utils.
 public: // Schema.
 	bool InitSchema(char *error = nullptr, size_t maxlen = 0);
 	bool LoadSchema(char *error = nullptr, size_t maxlen = 0);
-	bool DestroySchema(char *error = nullptr, size_t maxlen = 0);
+	bool ClearSchema(char *error = nullptr, size_t maxlen = 0);
 
 public: // Entity Manager.
 	bool InitEntityManager(char *error = nullptr, size_t maxlen = 0);

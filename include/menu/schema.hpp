@@ -298,7 +298,7 @@ namespace Menu
 		public:
 			bool Init(ISchemaSystem *pSchemaSystem, const CUtlVector<const char *> &vecLoadedLibraries, CBufferStringVector *pMessages = nullptr);
 			bool Load(FullDetails_t *pDetails = nullptr); // Calls the classes -> fields callbacks.
-			void Destroy();
+			void Clear();
 
 		public:
 			class CClass
