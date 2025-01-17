@@ -367,6 +367,11 @@ namespace Menu
 					return GetRef();
 				}
 
+				FORCEINLINE F &operator=(const F &aData)
+				{
+					return GetRef() = aData;
+				}
+
 				FORCEINLINE F *operator->()
 				{
 					return &GetRef();
@@ -386,11 +391,6 @@ namespace Menu
 				FORCEINLINE F &GetRef(uintp nExtraOffset = 0)
 				{
 					return *reinterpret_cast<F *>(reinterpret_cast<uintp>(GetTarget()) + GetOffset() + nExtraOffset);
-				}
-
-				FORCEINLINE F &operator=(const F &aData)
-				{
-					return GetRef() = aData;
 				}
 
 			private:
@@ -433,6 +433,7 @@ namespace Menu
 			public:
 				using Base = CInstanceFieldBase<F>;
 				using Base::Base;
+				using Base::operator F;
 				using Base::operator=;
 				using Base::operator->;
 
@@ -452,6 +453,7 @@ namespace Menu
 			public:
 				using Base = CInstanceArrayFieldBase<F>;
 				using Base::Base;
+				using Base::operator F;
 				using Base::operator=;
 				using Base::operator->;
 				using Base::operator[];
