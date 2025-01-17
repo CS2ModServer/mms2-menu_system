@@ -20,8 +20,8 @@
  */
 
 
-#ifndef _INCLUDE_METAMOD_SOURCE_IMENU_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_IMENU_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_IMENUSYSTEM_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_IMENUSYSTEM_HPP_
 
 #	pragma once
 
@@ -64,4 +64,4 @@ public:
 	virtual IPlayer *GetPlayer(const CPlayerSlot &aSlot) = 0;
 }; // IMenuSystem
 
-#endif // _INCLUDE_METAMOD_SOURCE_IMENU_HPP_
+#endif // _INCLUDE_METAMOD_SOURCE_IMENUSYSTEM_HPP_
