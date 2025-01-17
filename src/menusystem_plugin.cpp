@@ -643,7 +643,7 @@ void MenuSystem_Plugin::OnSpawnGroupCreateLoading(SpawnGroupHandle_t hSpawnGroup
 	                 *pMenuKV2 = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL), 
 	                 *pMenuKV3 = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL);
 
-	FillMenuEntityKeyValues(pMenuKV, vecBackgroundOrigin, angRotation, vecScales, MENUSYSTEM_BACKGROUND_COLOR, MENUSYSTEM_DEFAULT_FONT_FAMILY, MENUSYSTEM_BACKGROUND_MATERIAL_NAME, "Title\n\n1. Active");
+	FillMenuEntityKeyValues(pMenuKV, vecBackgroundOrigin, angRotation, vecScales, CalculateBackgroundColor(MENUSYSTEM_ACTIVE_COLOR, MENUSYSTEM_INACTIVE_COLOR), MENUSYSTEM_DEFAULT_FONT_FAMILY, MENUSYSTEM_BACKGROUND_MATERIAL_NAME, "Title\n\n1. Active");
 	FillMenuEntityKeyValues(pMenuKV2, vecOrigin, angRotation, vecScales, MENUSYSTEM_ACTIVE_COLOR, MENUSYSTEM_DEFAULT_FONT_FAMILY, MENUSYSTEM_EMPTY_BACKGROUND_MATERIAL_NAME, "\n\n1. Active");
 	FillMenuEntityKeyValues(pMenuKV3, vecOrigin, angRotation, vecScales, MENUSYSTEM_INACTIVE_COLOR, MENUSYSTEM_DEFAULT_FONT_FAMILY, MENUSYSTEM_EMPTY_BACKGROUND_MATERIAL_NAME, "Title\n\n");
 
@@ -1012,20 +1012,20 @@ void MenuSystem_Plugin::FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV, const
 	pMenuKV->SetBool("enabled", true);
 	pMenuKV->SetBool("fullbright", true);
 	pMenuKV->SetColor("color", rgbaColor);
-	pMenuKV->SetFloat("world_units_per_pixel", 0.025f);
-	pMenuKV->SetInt("font_size", 80);
+	pMenuKV->SetFloat("world_units_per_pixel", 0.05f);
+	pMenuKV->SetInt("font_size", 100);
 	pMenuKV->SetString("font_name", pszFontName);
 	pMenuKV->SetInt("justify_horizontal", 0);
 	pMenuKV->SetInt("justify_vertical", 0);
-	pMenuKV->SetFloat("depth_render_offset", 0.125f);
+	pMenuKV->SetFloat("depth_render_offset", 0.25f);
 	pMenuKV->SetInt("reorient_mode", 0);
 
 	// Background.
 	pMenuKV->SetBool("draw_background", true);
 	pMenuKV->SetString("background_material_name", pszBackgroundMaterialName);
-	pMenuKV->SetFloat("background_border_width", 2.0f);
-	pMenuKV->SetFloat("background_border_height", 1.0f);
-	pMenuKV->SetFloat("background_world_to_uv", 0.1f);
+	pMenuKV->SetFloat("background_border_width", 4.0f);
+	pMenuKV->SetFloat("background_border_height", 2.0f);
+	pMenuKV->SetFloat("background_world_to_uv", 0.05f);
 
 	pMenuKV->SetString("message", pszMessageText);
 }
@@ -1056,7 +1056,7 @@ void MenuSystem_Plugin::CalculateMenuEntitiesPosition(const Vector &vecOrigin, c
 	const QAngle angOffset {AngleNormalize(angRotation.x + flPitchOffset), AngleNormalize(angRotation.y + flYawOffset), 0.f};
 
 	vecResult = AddToFrontByRotation2(vecOrigin, angOffset, flAddDistance);
-	vecBackgroundResult = AddToFrontByRotation2(vecResult, angOffset, 0.04f);
+	vecBackgroundResult = AddToFrontByRotation2(vecResult, angOffset, MENUSYSTEM_BACKGROUND_AWAY_UNITS);
 
 	angResult = {0.f, AngleNormalize(angRotation.y - 90.f), AngleNormalize(-angRotation.x + 90.f)};
 }
@@ -1078,6 +1078,33 @@ void MenuSystem_Plugin::CalculateMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBas
 	vecResult = GetEntityPosition(pTarget) + CBaseModelEntity_Helper::GetViewOffsetAccessor(pTarget);
 	angResult = CCSPlayerPawnBase_Helper::GetEyeAnglesAccessor(pTarget);
 	CalculateMenuEntitiesPosition(vecResult, angResult, 0.f, 0.f, sm_flAddDistance / 1.5f, vecBackgroundResult, vecResult, angResult);
+}
+
+Color MenuSystem_Plugin::CalculateBackgroundColor(const Color &rgbaActive, const Color &rgbaInactive)
+{
+	struct BackgroundColor_t
+	{
+		uint16 _r_sum;
+		uint16 _g_sum;
+		uint16 _b_sum;
+		uint16 _a_sum;
+
+		BackgroundColor_t() = delete;
+		inline BackgroundColor_t(const Color &left, const Color &right)
+		 :  _r_sum(left.r() + right.r()),
+		    _g_sum(left.g() + right.g()),
+		    _b_sum(left.b() + right.b()),
+		    _a_sum(left.a() + right.a())
+		{
+		}
+
+		inline Color GetColor()
+		{
+			return {_r_sum / 3, _g_sum / 3, _b_sum / 3, _a_sum / 3};
+		}
+	};
+
+	return BackgroundColor_t(rgbaActive, rgbaInactive).GetColor();
 }
 
 void MenuSystem_Plugin::SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKeyValues, CUtlVector<CEntityInstance *> *pEntities, IEntityManager::IProviderAgent::IEntityListener *pListener)
@@ -1156,7 +1183,7 @@ void MenuSystem_Plugin::SpawnMenuEntities(const Vector &vecBackgroundOrigin, con
 
 	CUtlVector<CEntityKeyValues *> vecKeyValues;
 
-	const Vector vecScales {0.25f, 0.25f, 0.25f};
+	const Vector vecScales {0.1f, 0.1f, 0.1f};
 
 	static const char szMessageTextFull[] = "Заголовок\n"
 	                                        "\n"
@@ -1197,7 +1224,7 @@ void MenuSystem_Plugin::SpawnMenuEntities(const Vector &vecBackgroundOrigin, con
 	                                            "\n"
 	                                            "\n";
 
-	FillMenuEntityKeyValues(pMenuKV, vecBackgroundOrigin, angRotation, vecScales, MENUSYSTEM_BACKGROUND_COLOR, MENUSYSTEM_DEFAULT_FONT_FAMILY, MENUSYSTEM_BACKGROUND_MATERIAL_NAME, szMessageTextFull);
+	FillMenuEntityKeyValues(pMenuKV, vecBackgroundOrigin, angRotation, vecScales, CalculateBackgroundColor(MENUSYSTEM_ACTIVE_COLOR, MENUSYSTEM_INACTIVE_COLOR), MENUSYSTEM_DEFAULT_FONT_FAMILY, MENUSYSTEM_BACKGROUND_MATERIAL_NAME, szMessageTextFull);
 	FillMenuEntityKeyValues(pMenuKV2, vecOrigin, angRotation, vecScales, MENUSYSTEM_ACTIVE_COLOR, MENUSYSTEM_DEFAULT_FONT_FAMILY, MENUSYSTEM_EMPTY_BACKGROUND_MATERIAL_NAME, szMessageTextActive);
 	FillMenuEntityKeyValues(pMenuKV3, vecOrigin, angRotation, vecScales, MENUSYSTEM_INACTIVE_COLOR, MENUSYSTEM_DEFAULT_FONT_FAMILY, MENUSYSTEM_EMPTY_BACKGROUND_MATERIAL_NAME, szMessageTextInactive);
 

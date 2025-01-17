@@ -70,10 +70,10 @@
 #	define MENUSYSTEM_MAX_MESSAGE_TEXT_LENGTH 512
 #	define MENUSYSTEM_MAX_FONT_NAME_LENGTH 64
 #	define MENUSYSTEM_MAX_BACKGROUND_MATERIAL_NAME_LENGTH 64
-#	define MENUSYSTEM_BACKGROUND_COLOR {160, 160, 160, 150}
-#	define MENUSYSTEM_ACTIVE_COLOR {255, 155, 0, 255}
-#	define MENUSYSTEM_INACTIVE_COLOR {255, 255, 255, 150}
-#	define MENUSYSTEM_DEFAULT_FONT_FAMILY "Arial"
+#	define MENUSYSTEM_BACKGROUND_AWAY_UNITS 0.02f
+#	define MENUSYSTEM_ACTIVE_COLOR {255, 167, 42, 255}
+#	define MENUSYSTEM_INACTIVE_COLOR {233, 208, 173, 255}
+#	define MENUSYSTEM_DEFAULT_FONT_FAMILY "Tahoma"
 #	define MENUSYSTEM_BACKGROUND_MATERIAL_NAME "materials/dev/annotation_worldtext_background.vmat"
 #	define MENUSYSTEM_EMPTY_BACKGROUND_MATERIAL_NAME "materials/editor/icon_empty.vmat"
 
@@ -259,6 +259,9 @@ public: // Entity Manager.
 	void CalculateMenuEntitiesPositionByEntity(CBaseEntity *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
 	void CalculateMenuEntitiesPositionByViewModel(CBaseViewModel *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
 	void CalculateMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
+
+	// Calculate a color.
+	static Color CalculateBackgroundColor(const Color &rgbaActive, const Color &rgbaInactive);
 
 	// Spawn entities.
 	void SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKeyValues, CUtlVector<CEntityInstance *> *pEntities = nullptr, IEntityManager::IProviderAgent::IEntityListener *pListener = nullptr);
