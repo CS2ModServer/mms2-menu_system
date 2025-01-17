@@ -367,11 +367,6 @@ bool MenuSystem_Plugin::Unload(char *error, size_t maxlen)
 		return false;
 	}
 
-	if(!UnloadEntityManager(error, maxlen))
-	{
-		return false;
-	}
-
 	if(!UnregisterNetMessages(error, maxlen))
 	{
 		return false;
@@ -398,6 +393,11 @@ bool MenuSystem_Plugin::Unload(char *error, size_t maxlen)
 	}
 
 	if(!DestoryGlobals(error, maxlen))
+	{
+		return false;
+	}
+
+	if(!UnloadEntityManager(error, maxlen))
 	{
 		return false;
 	}
@@ -948,6 +948,10 @@ void MenuSystem_Plugin::DumpEntityManager(const CConcatLineString &aConcat, CBuf
 
 bool MenuSystem_Plugin::UnloadEntityManager(char *error, size_t maxlen)
 {
+	m_pEntityManager = nullptr;
+	m_pEntityManagerProviderAgent = nullptr;
+	m_pEntityManagerSpawnGroupProvider = nullptr;
+
 	return true;
 }
 
