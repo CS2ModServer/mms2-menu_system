@@ -22,54 +22,77 @@
 
 #include <concat.hpp>
 
-const CConcatLineString g_aEmbedConcat 
+const std::array<const CConcatLineString, 8> g_arrEmbedsConcat = 
 {
-	"",     // Head with.
-	"\t",   // Start with.
-	":",    // Before value.
-	": ",   // Between key & value.
-	"\n",   // End.
-	"\n\t", // End and next line.
-};
+	{
+		// 0-3
+		{
+			"",     // Head with.
+			"\t",   // Start with.
+			":",    // Before value.
+			": ",   // Between key & value.
+			"\n",   // End.
+			"\n\t", // End and next line.
+		},
+		{
+			"\t",
+			"\t\t",
+			":",
+			": ",
+			"\n",
+			"\n\t\t",
+		},
+		{
+			"\t\t",
+			"\t\t\t",
+			":",
+			": ",
+			"\n",
+			"\n\t\t\t",
+		},
+		{
+			"\t\t\t",
+			"\t\t\t\t",
+			":",
+			": ",
+			"\n",
+			"\n\t\t\t\t",
+		},
 
-const CConcatLineString g_aEmbed2Concat 
-{
-	"\t",
-	"\t\t",
-	":",
-	": ",
-	"\n",
-	"\n\t\t",
-};
-
-const CConcatLineString g_aEmbed3Concat 
-{
-	"\t\t",
-	"\t\t\t",
-	":",
-	": ",
-	"\n",
-	"\n\t\t\t",
-};
-
-const CConcatLineString g_aEmbed4Concat 
-{
-	"\t\t\t",
-	"\t\t\t\t",
-	":",
-	": ",
-	"\n",
-	"\n\t\t\t\t",
-};
-
-const CConcatLineString g_aEmbed5Concat 
-{
-	"\t\t\t\t",
-	"\t\t\t\t\t",
-	":",
-	": ",
-	"\n",
-	"\n\t\t\t\t\t",
+		// 3-7
+		{
+			"\t\t\t\t",
+			"\t\t\t\t\t",
+			":",
+			": ",
+			"\n",
+			"\n\t\t\t\t\t",
+		},
+		{
+			"\t\t\t\t\t",
+			"\t\t\t\t\t\t",
+			":",
+			": ",
+			"\n",
+			"\n\t\t\t\t\t\t",
+		},
+		{
+			"\t\t\t\t\t\t",
+			"\t\t\t\t\t\t\t",
+			":",
+			": ",
+			"\n",
+			"\n\t\t\t\t\t\t\t",
+		},
+		{
+			"\t\t\t\t\t\t\t",
+			"\t\t\t\t\t\t\t\t",
+			":",
+			": ",
+			"\n",
+			"\n\t\t\t\t\t\t\t\t",
+		}
+	}
 };
 
 const char *CConcatLineString::AppendHeadToBuffer(CBufferString &sMessage, const char *pszHeadKey) const
@@ -86,9 +109,23 @@ const char *CConcatLineString::AppendStringHeadToBuffer(CBufferString &sMessage,
 	return sMessage.AppendConcat(vecConcat.size(), vecConcat.data(), NULL);
 }
 
+const char *CConcatLineString::AppendStringHeadWithoutBeforeToBuffer(CBufferString &sMessage, const char *pszHeadKey) const
+{
+	const auto vecConcat = Base::GetStringHeadConcat<false>(pszHeadKey);
+
+	return sMessage.AppendConcat(vecConcat.size(), vecConcat.data(), NULL);
+}
+
 const char *CConcatLineString::AppendToBuffer(CBufferString &sMessage, const char *pszKey) const
 {
 	const auto vecConcat = Base::GetKeyConcat(pszKey);
+
+	return sMessage.AppendConcat(vecConcat.size(), vecConcat.data(), NULL);
+}
+
+const char *CConcatLineString::AppendWithoutBeforeToBuffer(CBufferString &sMessage, const char *pszKey) const
+{
+	const auto vecConcat = Base::GetKeyConcat<false>(pszKey);
 
 	return sMessage.AppendConcat(vecConcat.size(), vecConcat.data(), NULL);
 }
@@ -214,7 +251,14 @@ const char *CConcatLineString::AppendPointerToBuffer(CBufferString &sMessage, co
 
 const char *CConcatLineString::AppendStringToBuffer(CBufferString &sMessage, const char *pszKey, const char *pszValue) const
 {
-	const auto vecConcat = Base::GetKeyStringConcat(pszKey, pszValue);
+	const auto vecConcat = Base::GetKeyValueStringConcat(pszKey, pszValue);
+
+	return sMessage.AppendConcat(vecConcat.size(), vecConcat.data(), NULL);
+}
+
+const char *CConcatLineString::AppendKeyStringValueStringToBuffer(CBufferString &sMessage, const char *pszKey, const char *pszValue) const
+{
+	const auto vecConcat = Base::GetKeyStringValueStringConcat(pszKey, pszValue);
 
 	return sMessage.AppendConcat(vecConcat.size(), vecConcat.data(), NULL);
 }
@@ -228,7 +272,7 @@ int CConcatLineString::AppendToVector(CUtlVector<const char *> vecMessage, const
 
 int CConcatLineString::AppendStringToVector(CUtlVector<const char *> vecMessage, const char *pszKey, const char *pszValue) const
 {
-	const auto vecConcat = Base::GetKeyStringConcat(pszKey, pszValue);
+	const auto vecConcat = Base::GetKeyValueStringConcat(pszKey, pszValue);
 
 	return vecMessage.AddMultipleToTail(vecConcat.size(), vecConcat.data());
 }

@@ -25,6 +25,7 @@
 
 #include <stdint.h>
 
+#include <algorithm>
 #include <exception>
 #include <functional>
 #include <string>
@@ -842,38 +843,49 @@ bool MenuSystem_Plugin::InitSchema(char *error, size_t maxlen)
 
 bool MenuSystem_Plugin::LoadSchema(char *error, size_t maxlen)
 {
-	Menu::Schema::CSystem::CBufferStringVector vecMessages;
-
-	Menu::Schema::CSystem::FullDetails_t aFullDetails 
-	{
-		{
-			&vecMessages,
-		},
-
-		{
-			&g_aEmbed5Concat,
-			&g_aEmbed4Concat,
-			&g_aEmbed3Concat,
-			&g_aEmbed2Concat,
-			&g_aEmbedConcat,
-		}
-	};
-
-	bool bResult = Menu::Schema::CSystem::Load(&aFullDetails);
+	bool bResult {};
 
 	if(Logger::IsChannelEnabled(LV_DETAILED))
 	{
-		auto aDetails = Logger::CreateDetailsScope("", "");
+		Menu::Schema::CSystem::CBufferStringVector vecMessages;
 
-		for(const auto &sMessage : vecMessages)
+		using Concat_t = decltype(g_arrEmbedsConcat)::value_type;
+		using SchemaFullDetails_t = Menu::Schema::CSystem::FullDetails_t;
+		constexpr uintp nEmbeds = SchemaFullDetails_t::sm_nEmbeds;
+
+		std::array<Concat_t *, nEmbeds> arrSchemaEmbedConcats;
+
+		std::transform(g_arrEmbedsConcat.begin(), g_arrEmbedsConcat.begin() + arrSchemaEmbedConcats.size(), arrSchemaEmbedConcats.begin(), [](Concat_t &aConcat) { return &aConcat; });
+		std::reverse(arrSchemaEmbedConcats.begin(), arrSchemaEmbedConcats.end());
+
+		auto aFullDetails = SchemaFullDetails_t 
 		{
-			aDetails.Push(sMessage.Get());
+			{
+				&vecMessages,
+			},
+
+			arrSchemaEmbedConcats
+		};
+
+		bResult = Menu::Schema::CSystem::Load(&aFullDetails);
+
+		{
+			auto aDetails = Logger::CreateDetailsScope("", "");
+
+			for(const auto &sMessage : vecMessages)
+			{
+				aDetails.Push(sMessage.Get());
+			}
+
+			aDetails.SendColor([&](Color rgba, const CUtlString &sContext)
+			{
+				Logger::Detailed(rgba, sContext);
+			});
 		}
-
-		aDetails.SendColor([&](Color rgba, const CUtlString &sContext)
-		{
-			Logger::Detailed(rgba, sContext);
-		});
+	}
+	else
+	{
+		bResult = Menu::Schema::CSystem::Load();
 	}
 
 	return bResult;

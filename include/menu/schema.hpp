@@ -25,6 +25,7 @@
 #	pragma once
 
 #	include <array>
+#	include <cstddef>
 #	include <type_traits>
 
 #	include <tier0/dbg.h>
@@ -126,7 +127,7 @@ namespace Menu
 				CBufferStringVector *m_pMessages;
 			}; // Menu::Schema::CSystem::DetailsBase_t
 
-			template<uintp N>
+			template<std::size_t N>
 			struct DetailsConcatBase_t : DetailsBase_t
 			{
 				using Base_t = DetailsBase_t;
@@ -134,24 +135,32 @@ namespace Menu
 				DetailsConcatBase_t() = delete;
 
 				static_assert(N != 0, "Template parameter N (number of nests) must not be 0. Use \"DetailsBase_t\" instead");
-				static_assert(N <= g_nMaxConcatEmbedCount, "Template parameter N (number of nests) over the limit");
-				static constexpr uintp sm_nEmbeds = N;
+				static_assert(N <= g_arrEmbedsConcat.size(), "Template parameter N (number of nests) over the limit");
+				static constexpr std::size_t sm_nEmbeds = N;
 
-				const CConcatLineString *m_pConcats[N]; // From more nested to less.
+				std::array<const CConcatLineString *, N> m_pConcats; // From more nested to less.
 			}; // Menu::Schema::CSystem::DetailsConcatBase_t<N>
 
-			template<uintp N>
+			template<std::size_t N>
 			using Details_t = DetailsConcatBase_t<N>;
 
-			using FullDetails_t = Details_t<5>;
+			static constexpr std::size_t sm_nMaxDetailsNesting = 8;
+			static_assert(sm_nMaxDetailsNesting <= g_arrEmbedsConcat.size(), "Number of max details nestings over the limit");
+
+			template<std::size_t N>
+			using NestingDetails_t = DetailsConcatBase_t<sm_nMaxDetailsNesting - N>;
+
+			using FullDetails_t = NestingDetails_t<1>;
 			using SingleDetails_t = Details_t<1>;
 
-			using TypeScopeDetails_t = Details_t<5>;
-			using ClassDetails_t = Details_t<4>;
-			using FieldDetails_t = Details_t<3>;
-			using TypeDetails_t = Details_t<2>;
-			using MetadataDetails_t = Details_t<2>;
-			using MetadataEntryDetails_t = Details_t<1>;
+			using TypeScopeDetails_t =      NestingDetails_t<1>;
+			using ClassDetails_t =          NestingDetails_t<3>;
+			using ClassTypeDetails_t =      NestingDetails_t<4>;
+			using BaseClassTypeDetails_t =  NestingDetails_t<4>;
+			using FieldDetails_t =          NestingDetails_t<5>;
+			using FieldTypeDetails_t =      NestingDetails_t<6>;
+			using MetadataDetails_t =       NestingDetails_t<6>;
+			using MetadataEntryDetails_t =  NestingDetails_t<7>;
 
 		protected:
 			using CDetailsConcatImpl = SingleDetails_t;
@@ -201,6 +210,7 @@ namespace Menu
 			public:
 				void AppendHeader() override;
 				void AppendMembers() override;
+				virtual void AppendClasses();
 
 			private:
 				const CSchemaSystemTypeScope *m_pData;
@@ -239,6 +249,8 @@ namespace Menu
 			public:
 				void AppendHeader() override;
 				void AppendMembers() override;
+				virtual void AppendBaseClasses();
+				virtual void AppendFields();
 
 			private:
 				const SchemaClassInfoData_t *m_pData;
@@ -258,7 +270,7 @@ namespace Menu
 			public:
 				void AppendHeader() override;
 				void AppendMembers() override;
-				void AppendMetadataMember();
+				virtual void AppendMetadataMember();
 
 			private:
 				const SchemaClassFieldData_t *m_pData;
