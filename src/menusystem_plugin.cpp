@@ -1701,11 +1701,11 @@ bool MenuSystem_Plugin::ParseLanguages(char *error, size_t maxlen)
 		return false;
 	}
 
+	AnyConfig::Anyone aLanguagesConfig;
+
 	for(const auto &sFile : vecLangugesFiles)
 	{
 		const char *pszFilename = sFile.Get();
-
-		AnyConfig::Anyone aLanguagesConfig;
 
 		aLoadPresets.m_pszFilename = pszFilename;
 
@@ -1718,7 +1718,7 @@ bool MenuSystem_Plugin::ParseLanguages(char *error, size_t maxlen)
 
 		if(!ParseLanguages(aLanguagesConfig.Get(), vecSubmessages))
 		{
-			aWarnings.PushFormat("\"%s\"", pszFilename);
+			aWarnings.PushFormat("\"%s\":", pszFilename);
 
 			for(const auto &sSubmessage : vecSubmessages)
 			{
@@ -1809,11 +1809,11 @@ bool MenuSystem_Plugin::ParseTranslations(char *error, size_t maxlen)
 		return false;
 	}
 
+	AnyConfig::Anyone aTranslationsConfig;
+
 	for(const auto &sFile : vecTranslationsFiles)
 	{
 		const char *pszFilename = sFile.Get();
-
-		AnyConfig::Anyone aTranslationsConfig;
 
 		aLoadPresets.m_pszFilename = pszFilename;
 
@@ -1826,7 +1826,7 @@ bool MenuSystem_Plugin::ParseTranslations(char *error, size_t maxlen)
 
 		if(!Translations::Parse(aTranslationsConfig.Get(), vecSubmessages))
 		{
-			aWarnings.PushFormat("\"%s\"", pszFilename);
+			aWarnings.PushFormat("\"%s\":", pszFilename);
 
 			for(const auto &sSubmessage : vecSubmessages)
 			{
