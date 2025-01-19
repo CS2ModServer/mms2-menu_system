@@ -253,6 +253,20 @@ bool MenuSystem_Plugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t max
 	MathLib_Init();
 	ConVar_Register(FCVAR_RELEASE | FCVAR_GAMEDLL);
 
+	if(!InitPathResolver(error, maxlen))
+	{
+		return false;
+	}
+
+	if(Logger::IsChannelEnabled(LS_DETAILED))
+	{
+		CBufferStringN<1024> sMessage;
+
+		sMessage.Insert(0, "Path resolver:\n");
+		g_aEmbedConcat.AppendToBuffer(sMessage, "Base game directory", m_sBaseGameDirectory.c_str());
+		Logger::Detailed(sMessage);
+	}
+
 	if(!InitProvider(error, maxlen))
 	{
 		return false;
@@ -354,8 +368,15 @@ bool MenuSystem_Plugin::Unload(char *error, size_t maxlen)
 
 	UnhookGameEvents();
 
-	ClearLanguages();
-	ClearTranslations();
+	if(!ClearLanguages(error, maxlen))
+	{
+		return false;
+	}
+
+	if(!ClearTranslations())
+	{
+		return false;
+	}
 
 	if(!UnloadProvider(error, maxlen))
 	{
@@ -398,6 +419,11 @@ bool MenuSystem_Plugin::Unload(char *error, size_t maxlen)
 	}
 
 	if(!UnloadEntityManager(error, maxlen))
+	{
+		return false;
+	}
+
+	if(!ClearPathResolver(error, maxlen))
 	{
 		return false;
 	}
