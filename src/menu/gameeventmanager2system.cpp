@@ -20,11 +20,12 @@
  */
 
 #include <globals.hpp>
-#include <menu/gameeventsystem.hpp>
+#include <menu/gameeventmanager2system.hpp>
 
+#include <igameevents.h>
 #include <tier1/utlrbtree.h>
 
-Menu::GameEventSystem::GameEventSystem()
+Menu::GameEventManager2System::GameEventManager2System()
  :  Logger(GetName(), NULL, 0, LV_DEFAULT, MENU_GAMEEVENTSYSTEM_LOGGINING_COLOR),
     Base(), 
 
@@ -32,17 +33,17 @@ Menu::GameEventSystem::GameEventSystem()
 {
 }
 
-const char *Menu::GameEventSystem::GetName()
+const char *Menu::GameEventManager2System::GetName()
 {
 	return "Menu - Game Event System";
 }
 
-const char *Menu::GameEventSystem::GetHandlerLowercaseName()
+const char *Menu::GameEventManager2System::GetHandlerLowercaseName()
 {
 	return "game event";
 }
 
-bool Menu::GameEventSystem::HookAll()
+bool Menu::GameEventManager2System::HookAll()
 {
 	if(!g_pGameEventManager)
 	{
@@ -79,7 +80,7 @@ bool Menu::GameEventSystem::HookAll()
 	return nFails != m_mapCallbacks.Count();
 }
 
-bool Menu::GameEventSystem::UnhookAll()
+bool Menu::GameEventManager2System::UnhookAll()
 {
 	if(!g_pGameEventManager)
 	{
@@ -93,7 +94,7 @@ bool Menu::GameEventSystem::UnhookAll()
 	return true;
 }
 
-bool Menu::GameEventSystem::DumpGameEvent(IGameEvent *pEvent)
+bool Menu::GameEventManager2System::DumpGameEvent(IGameEvent *pEvent)
 {
 	KeyValues3 *pEventDataKeys = pEvent->GetDataKeys();
 
@@ -106,9 +107,9 @@ bool Menu::GameEventSystem::DumpGameEvent(IGameEvent *pEvent)
 
 	if(Logger::IsChannelEnabled(LS_DETAILED))
 	{
-		int iMemberCount = pEventDataKeys->GetMemberCount();
+		int nMemberCount = pEventDataKeys->GetMemberCount();
 
-		if(!iMemberCount)
+		if(!nMemberCount)
 		{
 			Logger::WarningFormat("No members at \"%s\" %s\n", pEvent->GetName(), GetHandlerLowercaseName());
 
@@ -121,22 +122,22 @@ bool Menu::GameEventSystem::DumpGameEvent(IGameEvent *pEvent)
 			aDetails.PushFormat("\"%s\":", pEvent->GetName());
 			aDetails.Push("{");
 
-			KV3MemberId_t id = 0;
+			KV3MemberId_t i = 0;
 
 			do
 			{
-				const char *pEventMemberName = pEventDataKeys->GetMemberName(id);
+				const char *pEventMemberName = pEventDataKeys->GetMemberName(i);
 
-				KeyValues3 *pEventMember = pEventDataKeys->GetMember(id);
+				KeyValues3 *pEventMember = pEventDataKeys->GetMember(i);
 
 				CBufferStringGrowable<128> sEventMember;
 
 				pEventMember->ToString(sEventMember, KV3_TO_STRING_DONT_CLEAR_BUFF);
 				aDetails.PushFormat("\t\"%s\":\t%s", pEventMemberName, sEventMember.Get());
 
-				id++;
+				i++;
 			}
-			while(id < iMemberCount);
+			while(i < nMemberCount);
 
 			aDetails.Push("}");
 			aDetails.Send([&](const CUtlString &sMessage)
@@ -149,12 +150,12 @@ bool Menu::GameEventSystem::DumpGameEvent(IGameEvent *pEvent)
 	return true;
 }
 
-bool Menu::GameEventSystem::Handle(const char *pszName, IGameEvent *pEvent)
+bool Menu::GameEventManager2System::Handle(const char *pszName, IGameEvent *pEvent)
 {
 	return Base::Handle(pszName, pEvent);
 }
 
-void Menu::GameEventSystem::FireGameEvent(IGameEvent *pEvent)
+void Menu::GameEventManager2System::FireGameEvent(IGameEvent *pEvent)
 {
 	if(m_aEnableDetaillsConVar.GetValue())
 	{

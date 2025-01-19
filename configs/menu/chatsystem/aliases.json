@@ -1,0 +1,20 @@
+{
+	"\n": "\u2029",
+	"{DEFAULT}": "\u0001",
+	"{WHITE}": "\u0001",
+	"{RED}": "\u0002",
+	"{TEAM}": "\u0003",
+	"{GREEN}": "\u0004",
+	"{LIME}": "\u0005",
+	"{LIGHTGREEN}": "\u0006",
+	"{LIGHTRED}": "\u0007",
+	"{GRAY}": "\u0008",
+	"{LIGHTOLIVE}": "\u0009",
+	"{GRAYBLUE}": "\u000A",
+	"{LIGHTBLUE}": "\u000B",
+	"{BLUE}": "\u000C",
+	"{PURPLE}": "\u000D",
+	"{PINK}": "\u000E",
+	"{BRIGHTRED}": "\u000F",
+	"{OLIVE}": "\u0010"
+}

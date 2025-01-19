@@ -38,7 +38,7 @@ namespace Menu
 {
 	using ChatCommandSystemBase = CSystemBase<CPlayerSlot, bool, const CUtlVector<CUtlString> &>;
 
-	class ChatCommandSystem : virtual public Logger, public ChatCommandSystemBase
+	class ChatCommandSystem : public ChatCommandSystemBase
 	{
 	public:
 		using Base = ChatCommandSystemBase;
@@ -56,10 +56,6 @@ namespace Menu
 
 	public:
 		bool Handle(const char *pszName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArgs) override;
-
-	private:
-		CUtlSymbolTableLarge_CI m_aSymbolTable;
-		CUtlMap<CUtlSymbolLarge, SharedCallback> m_mapCallbacks;
 	}; // Menu::ChatCommandSystem
 }; // Menu
 

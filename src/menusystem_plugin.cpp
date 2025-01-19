@@ -84,7 +84,7 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 {
 	// Game events.
 	{
-		Menu::GameEventSystem::AddHandler("player_team", {[&](const CUtlSymbolLarge &sName, IGameEvent *pEvent) -> bool
+		Menu::GameEventManager2System::AddHandler("player_team", {[&](const CUtlSymbolLarge &sName, IGameEvent *pEvent) -> bool
 		{
 			auto aPlayerSlot = pEvent->GetPlayerSlot("userid");
 
@@ -149,14 +149,20 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 				return false;
 			}
 
+			CBufferStringN<1024> sBuffer;
+
 			const auto &aPhrase = aPlayer.GetYourArgumentPhrase();
 
 			if(aPhrase.m_pFormat && aPhrase.m_pContent)
 			{
 				for(const auto &sArgument : vecArguments)
 				{
-					SendTextMessage(&aFilter, HUD_PRINTTALK, 1, aPhrase.m_pContent->Format(*aPhrase.m_pFormat, 1, sArgument.Get()).Get());
+					sBuffer.Insert(sBuffer.Length(), aPhrase.m_pContent->Format(*aPhrase.m_pFormat, 1, sArgument.Get()).Get());
+					sBuffer.Insert(sBuffer.Length(), "\n");
 				}
+
+				Menu::ChatSystem::ReplaceString(sBuffer);
+				SendTextMessage(&aFilter, HUD_PRINTTALK, 1, sBuffer.Get());
 			}
 			else
 			{
@@ -252,6 +258,11 @@ bool MenuSystem_Plugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t max
 
 	MathLib_Init();
 	ConVar_Register(FCVAR_RELEASE | FCVAR_GAMEDLL);
+
+	if(!LoadChat(error, maxlen))
+	{
+		return false;
+	}
 
 	if(!InitPathResolver(error, maxlen))
 	{
@@ -366,7 +377,10 @@ bool MenuSystem_Plugin::Unload(char *error, size_t maxlen)
 
 	SH_REMOVE_HOOK_MEMFUNC(INetworkServerService, StartupServer, g_pNetworkServerService, this, &MenuSystem_Plugin::OnStartupServerHook, true);
 
-	UnhookGameEvents();
+	if(!UnhookGameEvents(error, maxlen))
+	{
+		return false;
+	}
 
 	if(!ClearLanguages(error, maxlen))
 	{
@@ -424,6 +438,11 @@ bool MenuSystem_Plugin::Unload(char *error, size_t maxlen)
 	}
 
 	if(!ClearPathResolver(error, maxlen))
+	{
+		return false;
+	}
+
+	if(!ClearChat(error, maxlen))
 	{
 		return false;
 	}
@@ -687,6 +706,42 @@ void MenuSystem_Plugin::OnSpawnGroupDestroyed(SpawnGroupHandle_t hSpawnGroup)
 	m_pMySpawnGroupInstance->RemoveNotificationsListener(static_cast<IEntityManager::IProviderAgent::ISpawnGroupNotifications *>(this));
 }
 
+bool MenuSystem_Plugin::LoadChat(char *error, size_t maxlen)
+{
+	CUtlVector<CUtlString> vecMessages;
+
+	if(!Menu::ChatSystem::Load(m_sBaseGameDirectory.c_str(), MENUSYSTEM_BASE_PATHID, vecMessages))
+	{
+		if(vecMessages.Count() && Logger::IsChannelEnabled(LS_WARNING))
+		{
+			auto aWarnings = Logger::CreateWarningsScope();
+
+			FOR_EACH_VEC(vecMessages, i)
+			{
+				auto &aMessage = vecMessages[i];
+
+				aWarnings.Push(aMessage.Get());
+			}
+
+			aWarnings.SendColor([&](Color rgba, const CUtlString &sContext)
+			{
+				Logger::Warning(rgba, sContext);
+			});
+		}
+
+		return false;
+	}
+
+	return true;
+}
+
+bool MenuSystem_Plugin::ClearChat(char *error, size_t maxlen)
+{
+	Menu::ChatSystem::Clear();
+
+	return true;
+}
+
 bool MenuSystem_Plugin::InitPathResolver(char *error, size_t maxlen)
 {
 	if(!PathResolver::Init())
@@ -751,7 +806,7 @@ bool MenuSystem_Plugin::LoadProvider(char *error, size_t maxlen)
 {
 	GameData::CBufferStringVector vecMessages;
 
-	bool bResult = Provider::Load(MENUSYSTEM_GAME_BASE_DIR, MENUSYSTEM_BASE_PATHID, vecMessages);
+	bool bResult = Provider::Load(m_sBaseGameDirectory.c_str(), MENUSYSTEM_BASE_PATHID, vecMessages);
 
 	if(vecMessages.Count())
 	{
@@ -1772,9 +1827,9 @@ bool MenuSystem_Plugin::ParseLanguages(char *error, size_t maxlen)
 
 bool MenuSystem_Plugin::ParseLanguages(KeyValues3 *pRoot, CUtlVector<CUtlString> &vecMessages)
 {
-	int iMemberCount = pRoot->GetMemberCount();
+	int nMemberCount = pRoot->GetMemberCount();
 
-	if(!iMemberCount)
+	if(!nMemberCount)
 	{
 		vecMessages.AddToTail("No members");
 
@@ -1787,18 +1842,23 @@ bool MenuSystem_Plugin::ParseLanguages(KeyValues3 *pRoot, CUtlVector<CUtlString>
 
 	m_aServerLanguage.SetCountryCode(pszServerContryCode);
 
-	for(KV3MemberId_t n = 0; n < iMemberCount; n++)
+	KV3MemberId_t i = 0;
+
+	do
 	{
-		const char *pszMemberName = pRoot->GetMemberName(n);
+		const char *pszMemberName = pRoot->GetMemberName(i);
 
 		auto sMemberSymbol = GetLanguageSymbol(pszMemberName);
 
-		const KeyValues3 *pMember = pRoot->GetMember(n);
+		const KeyValues3 *pMember = pRoot->GetMember(i);
 
 		const char *pszMemberValue = pMember->GetString(pszServerContryCode);
 
 		m_mapLanguages.Insert(sMemberSymbol, {sMemberSymbol, pszMemberValue});
+
+		i++;
 	}
+	while(i < nMemberCount);
 
 	return true;
 }
@@ -1885,10 +1945,9 @@ bool MenuSystem_Plugin::ClearTranslations(char *error, size_t maxlen)
 	return true;
 }
 
-
 bool MenuSystem_Plugin::HookGameEvents(char *error, size_t maxlen)
 {
-	if(!Menu::GameEventSystem::HookAll())
+	if(!Menu::GameEventManager2System::HookAll())
 	{
 		strncpy(error, "Failed to hook game events", maxlen);
 
@@ -1900,7 +1959,7 @@ bool MenuSystem_Plugin::HookGameEvents(char *error, size_t maxlen)
 
 bool MenuSystem_Plugin::UnhookGameEvents(char *error, size_t maxlen)
 {
-	if(!Menu::GameEventSystem::UnhookAll())
+	if(!Menu::GameEventManager2System::UnhookAll())
 	{
 		strncpy(error, "Failed to unhook game events", maxlen);
 
@@ -2216,9 +2275,9 @@ void MenuSystem_Plugin::SendTextMessage(IRecipientFilter *pFilter, int iDestinat
 
 // 		if(pKeys)
 // 		{
-// 			int iMemberCount = pKeys->GetMemberCount();
+// 			int nMemberCount = pKeys->GetMemberCount();
 
-// 			if(iMemberCount)
+// 			if(nMemberCount)
 // 			{
 // 				aConcat.AppendToBuffer(sBuffer, "Keys");
 
@@ -2232,7 +2291,7 @@ void MenuSystem_Plugin::SendTextMessage(IRecipientFilter *pFilter, int iDestinat
 
 // 					i++;
 // 				}
-// 				while(i < iMemberCount);
+// 				while(i < nMemberCount);
 // 			}
 // 			else
 // 			{
@@ -2261,9 +2320,9 @@ void MenuSystem_Plugin::SendTextMessage(IRecipientFilter *pFilter, int iDestinat
 
 // 	if(pKeys)
 // 	{
-// 		int iMemberCount = pKeys->GetMemberCount();
+// 		int nMemberCount = pKeys->GetMemberCount();
 
-// 		if(iMemberCount)
+// 		if(nMemberCount)
 // 		{
 // 			KV3MemberId_t i = 0;
 
@@ -2278,7 +2337,7 @@ void MenuSystem_Plugin::SendTextMessage(IRecipientFilter *pFilter, int iDestinat
 
 // 				i++;
 // 			}
-// 			while(i < iMemberCount);
+// 			while(i < nMemberCount);
 // 		}
 // 	}
 

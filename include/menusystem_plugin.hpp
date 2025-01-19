@@ -26,8 +26,8 @@
 
 #	include "imenusystem.hpp"
 #	include "ientitymgr.hpp"
-#	include "menu/chatcommandsystem.hpp"
-#	include "menu/gameeventsystem.hpp"
+#	include "menu/chatsystem.hpp"
+#	include "menu/gameeventmanager2system.hpp"
 #	include "menu/pathresolver.hpp"
 #	include "menu/provider.hpp"
 #	include "menu/schema.hpp"
@@ -89,7 +89,7 @@ class CBasePlayerController;
 class INetworkMessageInternal;
 
 class MenuSystem_Plugin final : public ISmmPlugin, public IMetamodListener, public IMenuSystem, public CBaseGameSystem, public IEntityManager::IProviderAgent::ISpawnGroupNotifications, // Interfaces.
-                                public Menu::ChatCommandSystem, public Menu::GameEventSystem, public Menu::PathResolver, public Menu::Provider, virtual public Menu::Schema::CSystem, virtual public Logger, public Translations, // Conponents.
+                                public Menu::ChatSystem, public Menu::GameEventManager2System, public Menu::PathResolver, public Menu::Provider, virtual public Menu::Schema::CSystem, virtual public Logger, public Translations, // Conponents.
                                 virtual public Menu::Schema::CBaseEntity_Helper, virtual public Menu::Schema::CBaseModelEntity_Helper, virtual public Menu::Schema::CBasePlayerController_Helper, virtual public Menu::Schema::CBaseViewModel_Helper, virtual public Menu::Schema::CBodyComponent_Helper, virtual public Menu::Schema::CCSPlayer_ViewModelServices_Helper, virtual public Menu::Schema::CCSPlayerBase_CameraServices_Helper, virtual public Menu::Schema::CCSPlayerPawnBase_Helper, virtual public Menu::Schema::CGameSceneNode_Helper // Schema helpers.
 {
 public:
@@ -218,6 +218,10 @@ public: // IEntityManager::IProviderAgent::ISpawnGroupNotifications
 	void OnSpawnGroupInit(SpawnGroupHandle_t hSpawnGroup, IEntityResourceManifest *pManifest, IEntityPrecacheConfiguration *pConfig, ISpawnGroupPrerequisiteRegistry *pRegistry) override;
 	void OnSpawnGroupCreateLoading(SpawnGroupHandle_t hSpawnGroup, CMapSpawnGroup *pMapSpawnGroup, bool bSynchronouslySpawnEntities, bool bConfirmResourcesLoaded, CUtlVector<const CEntityKeyValues *> &vecKeyValues) override;
 	void OnSpawnGroupDestroyed(SpawnGroupHandle_t hSpawnGroup) override;
+
+public: // Chat system.
+	bool LoadChat(char *error = nullptr, size_t maxlen = 0);
+	bool ClearChat(char *error = nullptr, size_t maxlen = 0);
 
 public: // Path resolver.
 	bool InitPathResolver(char *error = nullptr, size_t maxlen = 0);
