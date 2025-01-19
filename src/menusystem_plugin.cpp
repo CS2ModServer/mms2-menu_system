@@ -1181,13 +1181,13 @@ Color MenuSystem_Plugin::CalculateBackgroundColor(const Color &rgbaActive, const
 		{
 		}
 
-		inline Color GetColor()
+		inline Color GetPassiveColor()
 		{
 			return {_r_sum / 3, _g_sum / 3, _b_sum / 3, _a_sum / 3};
 		}
 	};
 
-	return BackgroundColor_t(rgbaActive, rgbaInactive).GetColor();
+	return BackgroundColor_t(rgbaActive, rgbaInactive).GetPassiveColor();
 }
 
 void MenuSystem_Plugin::SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKeyValues, CUtlVector<CEntityInstance *> *pEntities, IEntityManager::IProviderAgent::IEntityListener *pListener)
