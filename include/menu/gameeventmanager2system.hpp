@@ -36,15 +36,15 @@
 
 namespace Menu
 {
-	using GameEventSystemBase = CSystemBase<IGameEvent *>;
+	using CGameEventSystemBase = CSystemBase<IGameEvent *>;
 
-	class GameEventManager2System : public GameEventSystemBase, public IGameEventListener2
+	class CGameEventManager2System : public CGameEventSystemBase, public IGameEventListener2
 	{
 	public:
-		using Base = GameEventSystemBase;
+		using Base = CGameEventSystemBase;
 
 	public:
-		GameEventManager2System();
+		CGameEventManager2System();
 
 	public:
 		const char *GetName() override;
@@ -54,7 +54,7 @@ namespace Menu
 		bool HookAll();
 		bool UnhookAll();
 
-	public: // GameEventSystemBase
+	public: // CGameEventSystemBase
 		bool Handle(const char *pszName, IGameEvent *pEvent) override;
 
 	protected:
@@ -65,7 +65,7 @@ namespace Menu
 
 	private: // ConVars
 		ConVar<bool> m_aEnableDetaillsConVar;
-	}; // Menu::GameEventManager2System
+	}; // Menu::CGameEventManager2System
 }; // Menu
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENU_GAMEEVENTSYSTEM_HPP_

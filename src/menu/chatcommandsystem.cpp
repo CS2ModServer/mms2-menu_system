@@ -23,33 +23,33 @@
 
 #include <tier1/utlrbtree.h>
 
-Menu::ChatCommandSystem::ChatCommandSystem()
+Menu::CChatCommandSystem::CChatCommandSystem()
  :  Logger(GetName(), NULL, 0, LV_DEFAULT, MENU_CHATCOMMANDSYSTEM_LOGGINING_COLOR), 
     Base()
 {
 }
 
-const char *Menu::ChatCommandSystem::GetName()
+const char *Menu::CChatCommandSystem::GetName()
 {
 	return "Menu - Chat Command System";
 }
 
-const char *Menu::ChatCommandSystem::GetHandlerLowercaseName()
+const char *Menu::CChatCommandSystem::GetHandlerLowercaseName()
 {
 	return "chat command";
 }
 
-char Menu::ChatCommandSystem::GetPublicTrigger()
+char Menu::CChatCommandSystem::GetPublicTrigger()
 {
 	return '!';
 }
 
-char Menu::ChatCommandSystem::GetSilentTrigger()
+char Menu::CChatCommandSystem::GetSilentTrigger()
 {
 	return '/';
 }
 
-bool Menu::ChatCommandSystem::Handle(const char *pszName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArgs)
+bool Menu::CChatCommandSystem::Handle(const char *pszName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArgs)
 {
 	if(aSlot == CPlayerSlot::InvalidIndex())
 	{

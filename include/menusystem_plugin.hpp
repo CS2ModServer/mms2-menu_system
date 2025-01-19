@@ -89,8 +89,9 @@ class CBasePlayerController;
 class INetworkMessageInternal;
 
 class MenuSystem_Plugin final : public ISmmPlugin, public IMetamodListener, public IMenuSystem, public CBaseGameSystem, public IEntityManager::IProviderAgent::ISpawnGroupNotifications, // Interfaces.
-                                public Menu::ChatSystem, public Menu::GameEventManager2System, public Menu::PathResolver, public Menu::Provider, virtual public Menu::Schema::CSystem, virtual public Logger, public Translations, // Conponents.
-                                virtual public Menu::Schema::CBaseEntity_Helper, virtual public Menu::Schema::CBaseModelEntity_Helper, virtual public Menu::Schema::CBasePlayerController_Helper, virtual public Menu::Schema::CBaseViewModel_Helper, virtual public Menu::Schema::CBodyComponent_Helper, virtual public Menu::Schema::CCSPlayer_ViewModelServices_Helper, virtual public Menu::Schema::CCSPlayerBase_CameraServices_Helper, virtual public Menu::Schema::CCSPlayerPawnBase_Helper, virtual public Menu::Schema::CGameSceneNode_Helper // Schema helpers.
+                                virtual public Menu::Schema::CSystem, virtual public Menu::Schema::CBaseEntity_Helper, virtual public Menu::Schema::CBaseModelEntity_Helper, virtual public Menu::Schema::CBasePlayerController_Helper, virtual public Menu::Schema::CBaseViewModel_Helper, virtual public Menu::Schema::CBodyComponent_Helper, virtual public Menu::Schema::CCSPlayer_ViewModelServices_Helper, virtual public Menu::Schema::CCSPlayerBase_CameraServices_Helper, virtual public Menu::Schema::CCSPlayerPawnBase_Helper, virtual public Menu::Schema::CGameSceneNode_Helper, // Schema helpers.
+                                virtual public Logger, public Translations, public Menu::CPathResolver, public Menu::CProvider, // Components.
+                                public Menu::CChatSystem, public Menu::CGameEventManager2System // Subsystems.
 {
 public:
 	using This = MenuSystem_Plugin;
@@ -216,10 +217,13 @@ public: // IEntityManager::IProviderAgent::ISpawnGroupNotifications
 	void OnSpawnGroupCreateLoading(SpawnGroupHandle_t hSpawnGroup, CMapSpawnGroup *pMapSpawnGroup, bool bSynchronouslySpawnEntities, bool bConfirmResourcesLoaded, CUtlVector<const CEntityKeyValues *> &vecKeyValues) override;
 	void OnSpawnGroupDestroyed(SpawnGroupHandle_t hSpawnGroup) override;
 
-public: // Chat system.
-	bool LoadChat(char *error = nullptr, size_t maxlen = 0);
-	bool ClearChat(char *error = nullptr, size_t maxlen = 0);
+// Schema helpers.
+public: // Schema.
+	bool InitSchema(char *error = nullptr, size_t maxlen = 0);
+	bool LoadSchema(char *error = nullptr, size_t maxlen = 0);
+	bool ClearSchema(char *error = nullptr, size_t maxlen = 0);
 
+// Components.
 public: // Path resolver.
 	bool InitPathResolver(char *error = nullptr, size_t maxlen = 0);
 	bool ClearPathResolver(char *error = nullptr, size_t maxlen = 0);
@@ -231,11 +235,6 @@ public: // Utils.
 	bool InitProvider(char *error = nullptr, size_t maxlen = 0);
 	bool LoadProvider(char *error = nullptr, size_t maxlen = 0);
 	bool UnloadProvider(char *error = nullptr, size_t maxlen = 0);
-
-public: // Schema.
-	bool InitSchema(char *error = nullptr, size_t maxlen = 0);
-	bool LoadSchema(char *error = nullptr, size_t maxlen = 0);
-	bool ClearSchema(char *error = nullptr, size_t maxlen = 0);
 
 public: // Entity Manager.
 	bool InitEntityManager(char *error = nullptr, size_t maxlen = 0);
@@ -305,6 +304,11 @@ public: // Languages.
 public: // Translations.
 	bool ParseTranslations(char *error = nullptr, size_t maxlen = 0);
 	bool ClearTranslations(char *error = nullptr, size_t maxlen = 0);
+
+// Subsystems.
+public: // Chat system.
+	bool LoadChat(char *error = nullptr, size_t maxlen = 0);
+	bool ClearChat(char *error = nullptr, size_t maxlen = 0);
 
 public: // Event actions.
 	bool HookGameEvents(char *error = nullptr, size_t maxlen = 0);

@@ -28,29 +28,29 @@
 #include <tier0/basetypes.h>
 #include <tier0/dbg.h>
 
-Menu::PathResolver::PathResolver(const void *pInitModule)
+Menu::CPathResolver::CPathResolver(const void *pInitModule)
  :  m_pModule(pInitModule)
 {
 }
 
-bool Menu::PathResolver::Init()
+bool Menu::CPathResolver::Init()
 {
 	m_sModuleFilename = DynLibUtils::CModule(m_pModule).GetModulePath();
 
 	return true;
 }
 
-void Menu::PathResolver::Clear()
+void Menu::CPathResolver::Clear()
 {
 	m_sModuleFilename = {};
 }
 
-std::string_view Menu::PathResolver::GetAbsoluteModuleFilename()
+std::string_view Menu::CPathResolver::GetAbsoluteModuleFilename()
 {
 	return m_sModuleFilename;
 }
 
-std::string_view Menu::PathResolver::Extract(std::string_view sStartMarker, std::string_view sEndMarker)
+std::string_view Menu::CPathResolver::Extract(std::string_view sStartMarker, std::string_view sEndMarker)
 {
 	auto &sFullPath = m_sModuleFilename;
 

@@ -40,17 +40,17 @@ class KeyValues3;
 
 namespace Menu
 {
-	using ChatSystemBase = ChatCommandSystem;
+	using CChatSystemBase = CChatCommandSystem;
 
-	class ChatSystem : public ChatSystemBase
+	class CChatSystem : public CChatSystemBase
 	{
 	public:
-		using Base = ChatSystemBase;
+		using Base = CChatSystemBase;
 
 		using AliasKey_t = CUtlSymbolLarge;
 		using AliasValue_t = CUtlSymbolLarge;
 
-		ChatSystem();
+		CChatSystem();
 
 	public:
 		bool Load(const char *pszBaseGameDir, const char *pszPathID, CUtlVector<CUtlString> &vecMessages);
@@ -76,7 +76,7 @@ namespace Menu
 
 	private:
 		CUtlSymbolTableLarge m_tableAliasValues;
-	}; // Menu::ChatSystem
+	}; // Menu::CChatSystem
 }; // Menu
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENU_CHATSYSTEM_HPP_

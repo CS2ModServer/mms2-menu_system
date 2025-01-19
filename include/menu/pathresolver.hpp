@@ -31,10 +31,10 @@
 
 namespace Menu
 {
-	class PathResolver
+	class CPathResolver
 	{
 	public:
-		PathResolver(const void *pInitModule);
+		CPathResolver(const void *pInitModule);
 
 	public:
 		bool Init();

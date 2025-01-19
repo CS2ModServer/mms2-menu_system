@@ -62,12 +62,7 @@ MenuSystem_Plugin *g_pMenuPlugin = &s_aMenuPlugin;
 PLUGIN_EXPOSE(MenuSystem_Plugin, s_aMenuPlugin);
 
 MenuSystem_Plugin::MenuSystem_Plugin()
- :  Logger(GetName(), [](LoggingChannelID_t nTagChannelID)
-    {
-    	LoggingSystem_AddTagToChannel(nTagChannelID, s_aMenuPlugin.GetLogTag());
-    }, 0, LV_DETAILED, MENUSYSTEM_LOGGINING_COLOR),
-
-    CBaseEntity_Helper(this),
+ :  CBaseEntity_Helper(this),
     CBaseModelEntity_Helper(this),
     CBasePlayerController_Helper(this),
     CBaseViewModel_Helper(this),
@@ -77,14 +72,18 @@ MenuSystem_Plugin::MenuSystem_Plugin()
     CCSPlayerPawnBase_Helper(this),
     CGameSceneNode_Helper(this),
 
-    PathResolver(this),
+    Logger(GetName(), [](LoggingChannelID_t nTagChannelID)
+    {
+    	LoggingSystem_AddTagToChannel(nTagChannelID, s_aMenuPlugin.GetLogTag());
+    }, 0, LV_DETAILED, MENUSYSTEM_LOGGINING_COLOR),
+    CPathResolver(this),
 
     m_mapConVarCookies(DefLessFunc(const CUtlSymbolLarge)),
     m_mapLanguages(DefLessFunc(const CUtlSymbolLarge))
 {
 	// Game events.
 	{
-		Menu::GameEventManager2System::AddHandler("player_team", {[&](const CUtlSymbolLarge &sName, IGameEvent *pEvent) -> bool
+		Menu::CGameEventManager2System::AddHandler("player_team", {[&](const CUtlSymbolLarge &sName, IGameEvent *pEvent) -> bool
 		{
 			auto aPlayerSlot = pEvent->GetPlayerSlot("userid");
 
@@ -134,7 +133,7 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 
 	// Chat commands.
 	{
-		Menu::ChatCommandSystem::AddHandler("menu", {[&](const CUtlSymbolLarge &sName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments) -> bool
+		Menu::CChatCommandSystem::AddHandler("menu", {[&](const CUtlSymbolLarge &sName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments) -> bool
 		{
 			CSingleRecipientFilter aFilter(aSlot);
 
@@ -161,7 +160,7 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 					sBuffer.Insert(sBuffer.Length(), "\n");
 				}
 
-				Menu::ChatSystem::ReplaceString(sBuffer);
+				Menu::CChatSystem::ReplaceString(sBuffer);
 				SendTextMessage(&aFilter, HUD_PRINTTALK, 1, sBuffer.Get());
 			}
 			else
@@ -213,7 +212,7 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 			}
 		}});
 
-		Menu::ChatCommandSystem::AddHandler("menu_clear", {[&](const CUtlSymbolLarge &sName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments) -> bool
+		Menu::CChatCommandSystem::AddHandler("menu_clear", {[&](const CUtlSymbolLarge &sName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments) -> bool
 		{
 			auto &aPlayer = GetPlayerData(aSlot);
 
@@ -259,7 +258,7 @@ bool MenuSystem_Plugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t max
 	MathLib_Init();
 	ConVar_Register(FCVAR_RELEASE | FCVAR_GAMEDLL);
 
-	if(!LoadChat(error, maxlen))
+	if(!InitSchema(error, maxlen))
 	{
 		return false;
 	}
@@ -288,11 +287,6 @@ bool MenuSystem_Plugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t max
 		return false;
 	}
 
-	if(!InitSchema(error, maxlen))
-	{
-		return false;
-	}
-
 	if(!LoadSchema(error, maxlen))
 	{
 		return false;
@@ -317,6 +311,11 @@ bool MenuSystem_Plugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t max
 	}
 
 	if(!ParseTranslations(error, maxlen))
+	{
+		return false;
+	}
+
+	if(!LoadChat(error, maxlen))
 	{
 		return false;
 	}
@@ -382,6 +381,11 @@ bool MenuSystem_Plugin::Unload(char *error, size_t maxlen)
 		return false;
 	}
 
+	if(!ClearChat(error, maxlen))
+	{
+		return false;
+	}
+
 	if(!ClearLanguages(error, maxlen))
 	{
 		return false;
@@ -393,11 +397,6 @@ bool MenuSystem_Plugin::Unload(char *error, size_t maxlen)
 	}
 
 	if(!UnloadProvider(error, maxlen))
-	{
-		return false;
-	}
-
-	if(!ClearSchema(error, maxlen))
 	{
 		return false;
 	}
@@ -442,7 +441,7 @@ bool MenuSystem_Plugin::Unload(char *error, size_t maxlen)
 		return false;
 	}
 
-	if(!ClearChat(error, maxlen))
+	if(!ClearSchema(error, maxlen))
 	{
 		return false;
 	}
@@ -706,176 +705,6 @@ void MenuSystem_Plugin::OnSpawnGroupDestroyed(SpawnGroupHandle_t hSpawnGroup)
 	m_pMySpawnGroupInstance->RemoveNotificationsListener(static_cast<IEntityManager::IProviderAgent::ISpawnGroupNotifications *>(this));
 }
 
-bool MenuSystem_Plugin::LoadChat(char *error, size_t maxlen)
-{
-	CUtlVector<CUtlString> vecMessages;
-
-	if(!Menu::ChatSystem::Load(m_sBaseGameDirectory.c_str(), MENUSYSTEM_BASE_PATHID, vecMessages))
-	{
-		if(vecMessages.Count() && Logger::IsChannelEnabled(LS_WARNING))
-		{
-			auto aWarnings = Logger::CreateWarningsScope();
-
-			FOR_EACH_VEC(vecMessages, i)
-			{
-				auto &aMessage = vecMessages[i];
-
-				aWarnings.Push(aMessage.Get());
-			}
-
-			aWarnings.SendColor([&](Color rgba, const CUtlString &sContext)
-			{
-				Logger::Warning(rgba, sContext);
-			});
-		}
-
-		return false;
-	}
-
-	return true;
-}
-
-bool MenuSystem_Plugin::ClearChat(char *error, size_t maxlen)
-{
-	Menu::ChatSystem::Clear();
-
-	return true;
-}
-
-bool MenuSystem_Plugin::InitPathResolver(char *error, size_t maxlen)
-{
-	if(!PathResolver::Init())
-	{
-		if(error && maxlen)
-		{
-			strncpy(error, "Failed to initialize a path resolver", maxlen);
-		}
-		return false;
-	}
-
-	m_sBaseGameDirectory = PathResolver::Extract();
-
-	return true;
-}
-
-bool MenuSystem_Plugin::ClearPathResolver(char *error, size_t maxlen)
-{
-	PathResolver::Clear();
-
-	return true;
-}
-
-bool MenuSystem_Plugin::InitProvider(char *error, size_t maxlen)
-{
-	GameData::CBufferStringVector vecMessages;
-
-	bool bResult = Provider::Init(vecMessages);
-
-	if(vecMessages.Count())
-	{
-		if(Logger::IsChannelEnabled(LS_WARNING))
-		{
-			auto aWarnings = Logger::CreateWarningsScope();
-
-			FOR_EACH_VEC(vecMessages, i)
-			{
-				auto &aMessage = vecMessages[i];
-
-				aWarnings.Push(aMessage.Get());
-			}
-
-			aWarnings.SendColor([&](Color rgba, const CUtlString &sContext)
-			{
-				Logger::Warning(rgba, sContext);
-			});
-		}
-	}
-
-	if(!bResult)
-	{
-		if(error && maxlen)
-		{
-			strncpy(error, "Failed to initialize provider. See warnings", maxlen);
-		}
-	}
-
-	return bResult;
-}
-
-bool MenuSystem_Plugin::LoadProvider(char *error, size_t maxlen)
-{
-	GameData::CBufferStringVector vecMessages;
-
-	bool bResult = Provider::Load(m_sBaseGameDirectory.c_str(), MENUSYSTEM_BASE_PATHID, vecMessages);
-
-	if(vecMessages.Count())
-	{
-		if(Logger::IsChannelEnabled(LS_WARNING))
-		{
-			auto aWarnings = Logger::CreateWarningsScope();
-
-			FOR_EACH_VEC(vecMessages, i)
-			{
-				auto &aMessage = vecMessages[i];
-
-				aWarnings.Push(aMessage.Get());
-			}
-
-			aWarnings.SendColor([&](Color rgba, const CUtlString &sContext)
-			{
-				Logger::Warning(rgba, sContext);
-			});
-		}
-	}
-
-	if(!bResult)
-	{
-		if(error && maxlen)
-		{
-			strncpy(error, "Failed to load provider. See warnings", maxlen);
-		}
-	}
-
-	return bResult;
-}
-
-bool MenuSystem_Plugin::UnloadProvider(char *error, size_t maxlen)
-{
-	GameData::CBufferStringVector vecMessages;
-
-	bool bResult = Provider::Destroy(vecMessages);
-
-	if(vecMessages.Count())
-	{
-		if(Logger::IsChannelEnabled(LS_WARNING))
-		{
-			auto aWarnings = Logger::CreateWarningsScope();
-
-			FOR_EACH_VEC(vecMessages, i)
-			{
-				auto &aMessage = vecMessages[i];
-
-				aWarnings.Push(aMessage.Get());
-			}
-
-			aWarnings.SendColor([&](Color rgba, const CUtlString &sContext)
-			{
-				Logger::Warning(rgba, sContext);
-			});
-		}
-	}
-
-	if(!bResult)
-	{
-		if(error && maxlen)
-		{
-			strncpy(error, "Failed to unload provider. See warnings", maxlen);
-		}
-	}
-
-	return bResult;
-}
-
 bool MenuSystem_Plugin::InitSchema(char *error, size_t maxlen)
 {
 	CUtlVector<const char *> vecLoadLibraries;
@@ -977,6 +806,140 @@ bool MenuSystem_Plugin::ClearSchema(char *error, size_t maxlen)
 	Menu::Schema::CSystem::Clear();
 
 	return true;
+}
+
+bool MenuSystem_Plugin::InitPathResolver(char *error, size_t maxlen)
+{
+	if(!CPathResolver::Init())
+	{
+		if(error && maxlen)
+		{
+			strncpy(error, "Failed to initialize a path resolver", maxlen);
+		}
+		return false;
+	}
+
+	m_sBaseGameDirectory = CPathResolver::Extract();
+
+	return true;
+}
+
+bool MenuSystem_Plugin::ClearPathResolver(char *error, size_t maxlen)
+{
+	CPathResolver::Clear();
+
+	return true;
+}
+
+bool MenuSystem_Plugin::InitProvider(char *error, size_t maxlen)
+{
+	GameData::CBufferStringVector vecMessages;
+
+	bool bResult = CProvider::Init(vecMessages);
+
+	if(vecMessages.Count())
+	{
+		if(Logger::IsChannelEnabled(LS_WARNING))
+		{
+			auto aWarnings = Logger::CreateWarningsScope();
+
+			FOR_EACH_VEC(vecMessages, i)
+			{
+				auto &aMessage = vecMessages[i];
+
+				aWarnings.Push(aMessage.Get());
+			}
+
+			aWarnings.SendColor([&](Color rgba, const CUtlString &sContext)
+			{
+				Logger::Warning(rgba, sContext);
+			});
+		}
+	}
+
+	if(!bResult)
+	{
+		if(error && maxlen)
+		{
+			strncpy(error, "Failed to initialize provider. See warnings", maxlen);
+		}
+	}
+
+	return bResult;
+}
+
+bool MenuSystem_Plugin::LoadProvider(char *error, size_t maxlen)
+{
+	GameData::CBufferStringVector vecMessages;
+
+	bool bResult = CProvider::Load(m_sBaseGameDirectory.c_str(), MENUSYSTEM_BASE_PATHID, vecMessages);
+
+	if(vecMessages.Count())
+	{
+		if(Logger::IsChannelEnabled(LS_WARNING))
+		{
+			auto aWarnings = Logger::CreateWarningsScope();
+
+			FOR_EACH_VEC(vecMessages, i)
+			{
+				auto &aMessage = vecMessages[i];
+
+				aWarnings.Push(aMessage.Get());
+			}
+
+			aWarnings.SendColor([&](Color rgba, const CUtlString &sContext)
+			{
+				Logger::Warning(rgba, sContext);
+			});
+		}
+	}
+
+	if(!bResult)
+	{
+		if(error && maxlen)
+		{
+			strncpy(error, "Failed to load provider. See warnings", maxlen);
+		}
+	}
+
+	return bResult;
+}
+
+bool MenuSystem_Plugin::UnloadProvider(char *error, size_t maxlen)
+{
+	GameData::CBufferStringVector vecMessages;
+
+	bool bResult = CProvider::Destroy(vecMessages);
+
+	if(vecMessages.Count())
+	{
+		if(Logger::IsChannelEnabled(LS_WARNING))
+		{
+			auto aWarnings = Logger::CreateWarningsScope();
+
+			FOR_EACH_VEC(vecMessages, i)
+			{
+				auto &aMessage = vecMessages[i];
+
+				aWarnings.Push(aMessage.Get());
+			}
+
+			aWarnings.SendColor([&](Color rgba, const CUtlString &sContext)
+			{
+				Logger::Warning(rgba, sContext);
+			});
+		}
+	}
+
+	if(!bResult)
+	{
+		if(error && maxlen)
+		{
+			strncpy(error, "Failed to unload provider. See warnings", maxlen);
+		}
+	}
+
+	return bResult;
 }
 
 bool MenuSystem_Plugin::InitEntityManager(char *error, size_t maxlen)
@@ -1945,9 +1908,45 @@ bool MenuSystem_Plugin::ClearTranslations(char *error, size_t maxlen)
 	return true;
 }
 
+bool MenuSystem_Plugin::LoadChat(char *error, size_t maxlen)
+{
+	CUtlVector<CUtlString> vecMessages;
+
+	if(!Menu::CChatSystem::Load(m_sBaseGameDirectory.c_str(), MENUSYSTEM_BASE_PATHID, vecMessages))
+	{
+		if(vecMessages.Count() && Logger::IsChannelEnabled(LS_WARNING))
+		{
+			auto aWarnings = Logger::CreateWarningsScope();
+
+			FOR_EACH_VEC(vecMessages, i)
+			{
+				auto &aMessage = vecMessages[i];
+
+				aWarnings.Push(aMessage.Get());
+			}
+
+			aWarnings.SendColor([&](Color rgba, const CUtlString &sContext)
+			{
+				Logger::Warning(rgba, sContext);
+			});
+		}
+
+		return false;
+	}
+
+	return true;
+}
+
+bool MenuSystem_Plugin::ClearChat(char *error, size_t maxlen)
+{
+	Menu::CChatSystem::Clear();
+
+	return true;
+}
+
 bool MenuSystem_Plugin::HookGameEvents(char *error, size_t maxlen)
 {
-	if(!Menu::GameEventManager2System::HookAll())
+	if(!Menu::CGameEventManager2System::HookAll())
 	{
 		strncpy(error, "Failed to hook game events", maxlen);
 
@@ -1959,7 +1958,7 @@ bool MenuSystem_Plugin::HookGameEvents(char *error, size_t maxlen)
 
 bool MenuSystem_Plugin::UnhookGameEvents(char *error, size_t maxlen)
 {
-	if(!Menu::GameEventManager2System::UnhookAll())
+	if(!Menu::CGameEventManager2System::UnhookAll())
 	{
 		strncpy(error, "Failed to unhook game events", maxlen);
 
@@ -2021,9 +2020,9 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandHandle hCommand, cons
 				pszArg1++;
 			}
 
-			bool bIsSilent = *pszArg1 == Menu::ChatCommandSystem::GetSilentTrigger();
+			bool bIsSilent = *pszArg1 == Menu::CChatCommandSystem::GetSilentTrigger();
 
-			if(bIsSilent || *pszArg1 == Menu::ChatCommandSystem::GetPublicTrigger())
+			if(bIsSilent || *pszArg1 == Menu::CChatCommandSystem::GetPublicTrigger())
 			{
 				pszArg1++; // Skip a command character.
 
@@ -2074,7 +2073,7 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandHandle hCommand, cons
 						Logger::Detailed(sBuffer);
 					}
 
-					Menu::ChatCommandSystem::Handle(vecArgs[0], aPlayerSlot, bIsSilent, vecArgs);
+					Menu::CChatCommandSystem::Handle(vecArgs[0], aPlayerSlot, bIsSilent, vecArgs);
 				}
 
 				RETURN_META(MRES_SUPERCEDE);

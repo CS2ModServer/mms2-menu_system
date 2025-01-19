@@ -25,7 +25,7 @@
 #include <igameevents.h>
 #include <tier1/utlrbtree.h>
 
-Menu::GameEventManager2System::GameEventManager2System()
+Menu::CGameEventManager2System::CGameEventManager2System()
  :  Logger(GetName(), NULL, 0, LV_DEFAULT, MENU_GAMEEVENTSYSTEM_LOGGINING_COLOR),
     Base(), 
 
@@ -33,17 +33,17 @@ Menu::GameEventManager2System::GameEventManager2System()
 {
 }
 
-const char *Menu::GameEventManager2System::GetName()
+const char *Menu::CGameEventManager2System::GetName()
 {
 	return "Menu - Game Event System";
 }
 
-const char *Menu::GameEventManager2System::GetHandlerLowercaseName()
+const char *Menu::CGameEventManager2System::GetHandlerLowercaseName()
 {
 	return "game event";
 }
 
-bool Menu::GameEventManager2System::HookAll()
+bool Menu::CGameEventManager2System::HookAll()
 {
 	if(!g_pGameEventManager)
 	{
@@ -80,7 +80,7 @@ bool Menu::GameEventManager2System::HookAll()
 	return nFails != m_mapCallbacks.Count();
 }
 
-bool Menu::GameEventManager2System::UnhookAll()
+bool Menu::CGameEventManager2System::UnhookAll()
 {
 	if(!g_pGameEventManager)
 	{
@@ -94,7 +94,7 @@ bool Menu::GameEventManager2System::UnhookAll()
 	return true;
 }
 
-bool Menu::GameEventManager2System::DumpGameEvent(IGameEvent *pEvent)
+bool Menu::CGameEventManager2System::DumpGameEvent(IGameEvent *pEvent)
 {
 	KeyValues3 *pEventDataKeys = pEvent->GetDataKeys();
 
@@ -150,12 +150,12 @@ bool Menu::GameEventManager2System::DumpGameEvent(IGameEvent *pEvent)
 	return true;
 }
 
-bool Menu::GameEventManager2System::Handle(const char *pszName, IGameEvent *pEvent)
+bool Menu::CGameEventManager2System::Handle(const char *pszName, IGameEvent *pEvent)
 {
 	return Base::Handle(pszName, pEvent);
 }
 
-void Menu::GameEventManager2System::FireGameEvent(IGameEvent *pEvent)
+void Menu::CGameEventManager2System::FireGameEvent(IGameEvent *pEvent)
 {
 	if(m_aEnableDetaillsConVar.GetValue())
 	{

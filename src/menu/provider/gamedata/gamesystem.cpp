@@ -21,7 +21,7 @@
 
 #include <menu/provider.hpp>
 
-Menu::Provider::GameDataStorage::CGameSystem::CGameSystem()
+Menu::CProvider::GameDataStorage::CGameSystem::CGameSystem()
 {
 	{
 		auto &aCallbacks = m_aAddressCallbacks;
@@ -40,23 +40,23 @@ Menu::Provider::GameDataStorage::CGameSystem::CGameSystem()
 	}
 }
 
-bool Menu::Provider::GameDataStorage::CGameSystem::Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
+bool Menu::CProvider::GameDataStorage::CGameSystem::Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
 {
 	return m_aGameConfig.Load(pRoot, pGameConfig, vecMessages);
 }
 
-void Menu::Provider::GameDataStorage::CGameSystem::Reset()
+void Menu::CProvider::GameDataStorage::CGameSystem::Reset()
 {
 	m_ppFirst = nullptr;
 	m_ppEventDispatcher = nullptr;
 }
 
-CBaseGameSystemFactory **Menu::Provider::GameDataStorage::CGameSystem::GetFirstPointer() const
+CBaseGameSystemFactory **Menu::CProvider::GameDataStorage::CGameSystem::GetFirstPointer() const
 {
 	return m_ppFirst;
 }
 
-CGameSystemEventDispatcher **Menu::Provider::GameDataStorage::CGameSystem::GetEventDispatcher() const
+CGameSystemEventDispatcher **Menu::CProvider::GameDataStorage::CGameSystem::GetEventDispatcher() const
 {
 	return m_ppEventDispatcher;
 }

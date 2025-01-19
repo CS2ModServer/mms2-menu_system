@@ -28,14 +28,14 @@
 
 #include <any_config.hpp>
 
-Menu::ChatSystem::ChatSystem()
+Menu::CChatSystem::CChatSystem()
  :  Logger(Base::GetName(), NULL, 0, LV_DEFAULT, MENU_CHATCOMMANDSYSTEM_LOGGINING_COLOR), 
 
     m_mapAliases(DefLessFunc(const CUtlSymbolLarge))
 {
 }
 
-bool Menu::ChatSystem::Load(const char *pszBaseGameDir, const char *pszPathID, CUtlVector<CUtlString> &vecMessages)
+bool Menu::CChatSystem::Load(const char *pszBaseGameDir, const char *pszPathID, CUtlVector<CUtlString> &vecMessages)
 {
 	CBufferStringGrowable<MAX_PATH> sConfigFile;
 
@@ -96,14 +96,14 @@ bool Menu::ChatSystem::Load(const char *pszBaseGameDir, const char *pszPathID, C
 	return true;
 }
 
-void Menu::ChatSystem::Clear()
+void Menu::CChatSystem::Clear()
 {
 	m_tableAliases.Purge();
 	m_mapAliases.Purge();
 	m_tableAliasValues.Purge();
 }
 
-bool Menu::ChatSystem::LoadAliases(KeyValues3 *pData, CUtlVector<CUtlString> &vecMessages)
+bool Menu::CChatSystem::LoadAliases(KeyValues3 *pData, CUtlVector<CUtlString> &vecMessages)
 {
 	int nMemberCount = pData->GetMemberCount();
 
@@ -131,7 +131,7 @@ bool Menu::ChatSystem::LoadAliases(KeyValues3 *pData, CUtlVector<CUtlString> &ve
 	return true;
 }
 
-int Menu::ChatSystem::ReplaceString(CBufferString &sBuffer)
+int Menu::CChatSystem::ReplaceString(CBufferString &sBuffer)
 {
 	int iStoredLength = 0;
 
@@ -146,22 +146,22 @@ int Menu::ChatSystem::ReplaceString(CBufferString &sBuffer)
 	return iStoredLength;
 }
 
-CUtlSymbolLarge Menu::ChatSystem::GetAliasSymbol(const char *pszName)
+CUtlSymbolLarge Menu::CChatSystem::GetAliasSymbol(const char *pszName)
 {
 	return m_tableAliases.AddString(pszName);
 }
 
-CUtlSymbolLarge Menu::ChatSystem::FindAliasSymbol(const char *pszName) const
+CUtlSymbolLarge Menu::CChatSystem::FindAliasSymbol(const char *pszName) const
 {
 	return m_tableAliases.Find(pszName);
 }
 
-CUtlSymbolLarge Menu::ChatSystem::GetAliasValueSymbol(const char *pszValue)
+CUtlSymbolLarge Menu::CChatSystem::GetAliasValueSymbol(const char *pszValue)
 {
 	return m_tableAliasValues.AddString(pszValue);
 }
 
-CUtlSymbolLarge Menu::ChatSystem::FindAliasValueSymbol(const char *pszValue) const
+CUtlSymbolLarge Menu::CChatSystem::FindAliasValueSymbol(const char *pszValue) const
 {
 	return m_tableAliasValues.Find(pszValue);
 }

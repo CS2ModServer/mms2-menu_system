@@ -36,15 +36,15 @@
 
 namespace Menu
 {
-	using ChatCommandSystemBase = CSystemBase<CPlayerSlot, bool, const CUtlVector<CUtlString> &>;
+	using CChatCommandSystemBase = CSystemBase<CPlayerSlot, bool, const CUtlVector<CUtlString> &>;
 
-	class ChatCommandSystem : public ChatCommandSystemBase
+	class CChatCommandSystem : public CChatCommandSystemBase
 	{
 	public:
-		using Base = ChatCommandSystemBase;
+		using Base = CChatCommandSystemBase;
 
 	public:
-		ChatCommandSystem();
+		CChatCommandSystem();
 
 	public:
 		const char *GetName() override;
@@ -56,7 +56,7 @@ namespace Menu
 
 	public:
 		bool Handle(const char *pszName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArgs) override;
-	}; // Menu::ChatCommandSystem
+	}; // Menu::CChatCommandSystem
 }; // Menu
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENU_CHATCOMMANDSYSTEM_HPP_
