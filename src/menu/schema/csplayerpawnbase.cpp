@@ -31,24 +31,11 @@ Menu::Schema::CCSPlayerPawnBase_Helper::CCSPlayerPawnBase_Helper(CSystem *pSchem
 
 	Assert(m_pClass);
 
-	auto &aFields = m_pClass->GetFields();
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_pViewModelServices"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nViewModelServices));
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_pCameraServices"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nCameraServices));
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_angEyeAngles"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nEyeAngles));
 
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_pViewModelServices"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
-	{
-		m_aOffsets.m_nViewModelServices = pField->m_nSingleInheritanceOffset;
-	}});
-
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_pCameraServices"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
-	{
-		m_aOffsets.m_nCameraServices = pField->m_nSingleInheritanceOffset;
-	}});
-
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_angEyeAngles"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
-	{
-		m_aOffsets.m_nEyeAngles = pField->m_nSingleInheritanceOffset;
-	}});
-
-	aFields.AddListener(&aCallbacks);
+	m_pClass->GetFields().AddListener(&aCallbacks);
 }
 
 void Menu::Schema::CCSPlayerPawnBase_Helper::Clear()

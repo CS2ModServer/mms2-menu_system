@@ -31,14 +31,9 @@ Menu::Schema::CBaseModelEntity_Helper::CBaseModelEntity_Helper(CSystem *pSchemaS
 
 	Assert(m_pClass);
 
-	auto &aFields = m_pClass->GetFields();
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_vecViewOffset"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nViewOffset));
 
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_vecViewOffset"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
-	{
-		m_aOffsets.m_nViewOffset = pField->m_nSingleInheritanceOffset;
-	}});
-
-	aFields.AddListener(&aCallbacks);
+	m_pClass->GetFields().AddListener(&aCallbacks);
 }
 
 void Menu::Schema::CBaseModelEntity_Helper::Clear()

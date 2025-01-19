@@ -31,22 +31,9 @@ Menu::Schema::CCSPlayer_ViewModelServices_Helper::CCSPlayer_ViewModelServices_He
 
 	Assert(m_pClass);
 
-	auto &aFields = m_pClass->GetFields();
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_hViewModel"), SCHEMA_CLASS_ARRAY_FIELD_SHARED_LAMBDA_CAPTURE(CHandle<CBaseViewModel>, m_aOffsets.m_aViewModel.nValue, m_aOffsets.m_aViewModel.nArraySize));
 
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_hViewModel"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
-	{
-		m_aOffsets.m_aViewModel.nValue = pField->m_nSingleInheritanceOffset;
-
-		{
-			int nSize {};
-			uint8 nAlignment {};
-
-			pField->m_pType->GetSizeAndAlignment(nSize, nAlignment);
-			m_aOffsets.m_aViewModel.nArraySize = nSize / sizeof(CHandle<CBaseViewModel>);
-		}
-	}});
-
-	aFields.AddListener(&aCallbacks);
+	m_pClass->GetFields().AddListener(&aCallbacks);
 }
 
 void Menu::Schema::CCSPlayer_ViewModelServices_Helper::Clear()

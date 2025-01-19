@@ -90,6 +90,30 @@
 #	define SCHEMA_INSTANCE_ACCESSOR_METHOD(methodName, classType, fieldType, fieldOffsetVar) SCHEMA_METHOD_ACCESSOR(methodName, classType, Accessor::CInstanceField, fieldType, fieldOffsetVar)
 #	define SCHEMA_INSTANCE_ARRAY_ACCESSOR_METHOD(methodName, classType, fieldType, fieldOffsetVar, fieldSizeVar) SCHEMA_METHOD_ARRAY_ACCESSOR(methodName, classType, Accessor::CInstanceArrayField, fieldType, fieldOffsetVar, fieldSizeVar)
 
+#	define SCHEMA_CLASS_FIELD_LAMBDA_CAPTURE(fieldOffsetVar) \
+	[&_offset = fieldOffsetVar](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField) \
+	{ \
+		_offset = pField->m_nSingleInheritanceOffset; \
+	}
+#	define SCHEMA_CLASS_ARRAY_FIELD_LAMBDA_CAPTURE(fieldType, fieldOffsetVar, fieldSizeVar) \
+	[&_offset = fieldOffsetVar, &_arraySize = fieldSizeVar](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField) \
+	{ \
+		_offset = pField->m_nSingleInheritanceOffset; \
+	\
+		Assert(pField->m_pType); \
+	\
+		{ \
+			int nSize {}; \
+			uint8 nAlignment {}; \
+		\
+			pField->m_pType->GetSizeAndAlignment(nSize, nAlignment); \
+			_arraySize = nSize / sizeof(fieldType); \
+		} \
+	}
+
+#	define SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(fieldOffsetVar) {SCHEMA_CLASS_FIELD_LAMBDA_CAPTURE(fieldOffsetVar)}
+#	define SCHEMA_CLASS_ARRAY_FIELD_SHARED_LAMBDA_CAPTURE(fieldType, fieldOffsetVar, fieldSizeVar) {SCHEMA_CLASS_ARRAY_FIELD_LAMBDA_CAPTURE(fieldType, fieldOffsetVar, fieldSizeVar)}
+
 class ISchemaSystem;
 class CSchemaClassInfo;
 class CSchemaSystemTypeScope;

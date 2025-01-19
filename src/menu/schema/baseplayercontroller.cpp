@@ -31,14 +31,9 @@ Menu::Schema::CBasePlayerController_Helper::CBasePlayerController_Helper(CSystem
 
 	Assert(m_pClass);
 
-	auto &aFields = m_pClass->GetFields();
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_hPawn"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nPawn));
 
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_hPawn"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
-	{
-		m_aOffsets.m_nPawn = pField->m_nSingleInheritanceOffset;
-	}});
-
-	aFields.AddListener(&aCallbacks);
+	m_pClass->GetFields().AddListener(&aCallbacks);
 }
 
 void Menu::Schema::CBasePlayerController_Helper::Clear()

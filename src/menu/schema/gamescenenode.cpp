@@ -31,29 +31,12 @@ Menu::Schema::CGameSceneNode_Helper::CGameSceneNode_Helper(CSystem *pSchemaSyste
 
 	Assert(m_pClass);
 
-	auto &aFields = m_pClass->GetFields();
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_pParent"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nParent));
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_vecAbsOrigin"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nAbsOrigin));
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_angAbsRotation"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nAbsRotation));
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_hierarchyAttachName"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nHierarchyAttachName));
 
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_pParent"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
-	{
-		m_aOffsets.m_nParent = pField->m_nSingleInheritanceOffset;
-	}});
-
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_vecAbsOrigin"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
-	{
-		m_aOffsets.m_nAbsOrigin = pField->m_nSingleInheritanceOffset;
-	}});
-
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_angAbsRotation"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
-	{
-		m_aOffsets.m_nAbsRotation = pField->m_nSingleInheritanceOffset;
-	}});
-
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_hierarchyAttachName"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
-	{
-		m_aOffsets.m_nHierarchyAttachName = pField->m_nSingleInheritanceOffset;
-	}});
-
-	aFields.AddListener(&aCallbacks);
+	m_pClass->GetFields().AddListener(&aCallbacks);
 }
 
 void Menu::Schema::CGameSceneNode_Helper::Clear()

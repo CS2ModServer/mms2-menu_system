@@ -31,14 +31,9 @@ Menu::Schema::CCSPlayerBase_CameraServices_Helper::CCSPlayerBase_CameraServices_
 
 	Assert(m_pClass);
 
-	auto &aFields = m_pClass->GetFields();
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_iFOV"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nFOV));
 
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_iFOV"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
-	{
-		m_aOffsets.m_nFOV = pField->m_nSingleInheritanceOffset;
-	}});
-
-	aFields.AddListener(&aCallbacks);
+	m_pClass->GetFields().AddListener(&aCallbacks);
 }
 
 void Menu::Schema::CCSPlayerBase_CameraServices_Helper::Clear()

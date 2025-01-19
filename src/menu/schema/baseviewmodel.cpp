@@ -31,14 +31,9 @@ Menu::Schema::CBaseViewModel_Helper::CBaseViewModel_Helper(CSystem *pSchemaSyste
 
 	Assert(m_pClass);
 
-	auto &aFields = m_pClass->GetFields();
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_nViewModelIndex"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nViewModelIndex));
 
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_nViewModelIndex"), {[&](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField)
-	{
-		m_aOffsets.m_nViewModelIndex = pField->m_nSingleInheritanceOffset;
-	}});
-
-	aFields.AddListener(&aCallbacks);
+	m_pClass->GetFields().AddListener(&aCallbacks);
 }
 
 void Menu::Schema::CBaseViewModel_Helper::Clear()
