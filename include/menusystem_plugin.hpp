@@ -85,7 +85,6 @@
 
 #	define MENUSYSTEM_CLIENT_CVAR_NAME_LANGUAGE "cl_language"
 
-class CBasePlayerController;
 class INetworkMessageInternal;
 
 class MenuSystem_Plugin final : public ISmmPlugin, public IMetamodListener, public IMenuSystem, public CBaseGameSystem, public IEntityManager::IProviderAgent::ISpawnGroupNotifications, // Interfaces.
