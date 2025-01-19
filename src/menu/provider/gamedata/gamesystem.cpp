@@ -26,15 +26,8 @@ Menu::CProvider::GameDataStorage::CGameSystem::CGameSystem()
 	{
 		auto &aCallbacks = m_aAddressCallbacks;
 
-		aCallbacks.Insert(m_aGameConfig.GetSymbol("CBaseGameSystemFactory::sm_pFirst"), {[&](const CUtlSymbolLarge &aKey, const DynLibUtils::CMemory &aAddress)
-		{
-			m_ppFirst = aAddress.RCast<decltype(m_ppFirst)>();
-		}});
-
-		aCallbacks.Insert(m_aGameConfig.GetSymbol("&IGameSystem::sm_pEventDispatcher"), {[&](const CUtlSymbolLarge &aKey, const DynLibUtils::CMemory &aAddress)
-		{
-			m_ppEventDispatcher = aAddress.RCast<decltype(m_ppEventDispatcher)>();
-		}});
+		aCallbacks.Insert(m_aGameConfig.GetSymbol("CBaseGameSystemFactory::sm_pFirst"), GAMEDATA_ADDRESS_SHARED_LAMBDA_CAPTURE(m_ppFirst));
+		aCallbacks.Insert(m_aGameConfig.GetSymbol("&IGameSystem::sm_pEventDispatcher"), GAMEDATA_ADDRESS_SHARED_LAMBDA_CAPTURE(m_ppEventDispatcher));
 
 		m_aGameConfig.GetAddresses().AddListener(&aCallbacks);
 	}

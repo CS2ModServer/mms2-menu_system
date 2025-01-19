@@ -29,10 +29,7 @@ Menu::CProvider::GameDataStorage::CBaseEntity::CBaseEntity()
 	{
 		auto &aCallbacks = m_aAddressCallbacks;
 
-		aCallbacks.Insert(m_aGameConfig.GetSymbol("CEntityInstance::AcceptInput"), {[&](const CUtlSymbolLarge &aKey, const DynLibUtils::CMemory &aAddress)
-		{
-			m_pAcceptInputMethod = aAddress.RCast<AcceptInput_t *>();
-		}});
+		aCallbacks.Insert(m_aGameConfig.GetSymbol("CEntityInstance::AcceptInput"), GAMEDATA_ADDRESS_SHARED_LAMBDA_CAPTURE(m_pAcceptInputMethod));
 
 		m_aGameConfig.GetAddresses().AddListener(&aCallbacks);
 	}
@@ -40,10 +37,7 @@ Menu::CProvider::GameDataStorage::CBaseEntity::CBaseEntity()
 	{
 		auto &aCallbacks = m_aOffsetCallbacks;
 
-		aCallbacks.Insert(m_aGameConfig.GetSymbol("CBaseEntity::Teleport"), {[&](const CUtlSymbolLarge &aKey, const ptrdiff_t &nOffset)
-		{
-			m_nTeleportOffset = nOffset;
-		}});
+		aCallbacks.Insert(m_aGameConfig.GetSymbol("CBaseEntity::Teleport"), GAMEDATA_OFFSET_SHARED_LAMBDA_CAPTURE(m_nTeleportOffset));
 
 		m_aGameConfig.GetOffsets().AddListener(&aCallbacks);
 	}
@@ -69,4 +63,3 @@ void Menu::CProvider::GameDataStorage::CBaseEntity::Teleport(CEntityInstance *pI
 {
 	reinterpret_cast<DynLibUtils::VirtualTable *>(pInstance)->CallMethod<void, const Vector &, const QAngle &, const Vector &>(m_nTeleportOffset, vecPosition, angRotation, velocity);
 }
-

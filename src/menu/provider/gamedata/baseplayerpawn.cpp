@@ -29,10 +29,7 @@ Menu::CProvider::GameDataStorage::CBasePlayerPawn::CBasePlayerPawn()
 	{
 		auto &aCallbacks = m_aOffsetCallbacks;
 
-		aCallbacks.Insert(m_aGameConfig.GetSymbol("CBasePlayerPawn::GetEyePosition"), {[&](const CUtlSymbolLarge &aKey, const ptrdiff_t &nOffset)
-		{
-			m_nGetEyePositionOffset = nOffset;
-		}});
+		aCallbacks.Insert(m_aGameConfig.GetSymbol("CBasePlayerPawn::GetEyePosition"), GAMEDATA_OFFSET_SHARED_LAMBDA_CAPTURE(m_nGetEyePositionOffset));
 
 		m_aGameConfig.GetOffsets().AddListener(&aCallbacks);
 	}
