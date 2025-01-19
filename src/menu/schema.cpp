@@ -229,7 +229,7 @@ void Menu::Schema::CSystem::CDetailsConcatType::AppendMembers()
 	auto *pType = m_pData;
 
 	{
-		CBufferStringGrowable<MAX_SCHEMA_TYPE_NAME_SIZE> sName;
+		CBufferStringN<MAX_SCHEMA_TYPE_NAME_SIZE> sName;
 
 		pType->ToString(sName, true);
 		pConcat->AppendStringToBuffer(sBuffer, "Name", sName.Get());
@@ -379,7 +379,7 @@ void Menu::Schema::CSystem::CDetailsConcatMetadataEntry::AppendMembers()
 			int nValue;
 			float flValue;
 			const char *pszValue;
-			CBufferStringGrowable<32> sValue;
+			CBufferStringN<32> sValue;
 
 			struct VarName_t
 			{
@@ -457,7 +457,7 @@ Menu::Schema::CSystem::CSystem()
 
 bool Menu::Schema::CSystem::Init(ISchemaSystem *pSchemaSystem, const CUtlVector<const char *> &vecLoadedLibraries, CBufferStringVector *pMessages)
 {
-	CBufferStringGrowable<1024> sBuffer;
+	CBufferStringN<1024> sBuffer;
 
 	int nPreviousCount = m_vecTypeScopes.Count();
 

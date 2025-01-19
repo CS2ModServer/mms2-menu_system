@@ -37,7 +37,7 @@ Menu::CChatSystem::CChatSystem()
 
 bool Menu::CChatSystem::Load(const char *pszBaseGameDir, const char *pszPathID, CUtlVector<CUtlString> &vecMessages)
 {
-	CBufferStringGrowable<MAX_PATH> sConfigFile;
+	CBufferStringN<MAX_PATH> sConfigFile;
 
 	CUtlVector<CUtlString> vecConfigFiles;
 

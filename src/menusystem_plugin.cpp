@@ -249,7 +249,7 @@ bool MenuSystem_Plugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t max
 
 	if(Logger::IsChannelEnabled(LS_DETAILED))
 	{
-		CBufferStringGrowable<1024> sMessage;
+		CBufferStringN<1024> sMessage;
 
 		DumpGlobals(g_aEmbedConcat, sMessage);
 		Logger::Detailed(sMessage);
@@ -299,7 +299,7 @@ bool MenuSystem_Plugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t max
 
 	if(Logger::IsChannelEnabled(LS_DETAILED))
 	{
-		CBufferStringGrowable<1024> sMessage;
+		CBufferStringN<1024> sMessage;
 
 		DumpEntityManager(g_aEmbedConcat, sMessage);
 		Logger::Detailed(sMessage);
@@ -1427,7 +1427,7 @@ bool MenuSystem_Plugin::AttachMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pTarget,
 	{
 		const auto &aConcat = g_aEmbedConcat;
 
-		CBufferStringGrowable<256> sBuffer;
+		CBufferStringN<256> sBuffer;
 
 		aConcat.AppendHeadToBuffer(sBuffer, "Menu entities position");
 		aConcat.AppendToBuffer(sBuffer, "Origin", vecMenuAbsOrigin);
@@ -2056,7 +2056,7 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandHandle hCommand, cons
 						const auto &aConcat = g_aEmbedConcat, 
 						           &aConcat2 = g_aEmbed2Concat;
 
-						CBufferStringGrowable<1024> sBuffer;
+						CBufferStringN<1024> sBuffer;
 
 						aConcat.AppendHeadToBuffer(sBuffer, "Handle a chat command");
 						aConcat.AppendToBuffer(sBuffer, "Player slot", aPlayerSlot.Get());
@@ -2145,13 +2145,13 @@ void MenuSystem_Plugin::SendChatMessage(IRecipientFilter *pFilter, int iEntityIn
 	{
 		const auto &aConcat = g_aEmbedConcat;
 
-		CBufferStringGrowable<256> sHead;
+		CBufferStringN<256> sHead;
 
 		sHead.Insert(0, "Send chat message (");
 		sHead.Insert(sHead.Length(), pSayText2Message->GetUnscopedName());
 		sHead.Insert(sHead.Length(), ")");
 
-		CBufferStringGrowable<1024> sBuffer;
+		CBufferStringN<1024> sBuffer;
 
 		aConcat.AppendHeadToBuffer(sBuffer, sHead.Get());
 		aConcat.AppendToBuffer(sBuffer, "Entity index", iEntityIndex);
@@ -2204,13 +2204,13 @@ void MenuSystem_Plugin::SendTextMessage(IRecipientFilter *pFilter, int iDestinat
 	{
 		const auto &aConcat = g_aEmbedConcat;
 
-		CBufferStringGrowable<256> sHead;
+		CBufferStringN<256> sHead;
 
 		sHead.Insert(0, "Send text message (");
 		sHead.Insert(sHead.Length(), pTextMsg->GetUnscopedName());
 		sHead.Insert(sHead.Length(), ")");
 
-		CBufferStringGrowable<1024> sBuffer;
+		CBufferStringN<1024> sBuffer;
 
 		aConcat.AppendHeadToBuffer(sBuffer, sHead.Get());
 		aConcat.AppendToBuffer(sBuffer, "Destination", iDestination);
@@ -2258,7 +2258,7 @@ void MenuSystem_Plugin::SendTextMessage(IRecipientFilter *pFilter, int iDestinat
 // 		const auto &aConcat = g_aEmbedConcat, 
 // 		           &aConcat2 = g_aEmbed2Concat;
 
-// 		CBufferStringGrowable<1024> sBuffer;
+// 		CBufferStringN<1024> sBuffer;
 
 // 		sBuffer.Format("Send message (%s):\n", pVGUIMenuMsg->GetUnscopedName());
 // 		aConcat.AppendToBuffer(sBuffer, "Name", pszName ? pszName : "<none>");

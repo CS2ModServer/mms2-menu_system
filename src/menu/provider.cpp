@@ -150,7 +150,7 @@ bool Menu::CProvider::GameDataStorage::Load(IGameData *pRoot, const char *pszBas
 		}
 	};
 
-	CBufferStringGrowable<MAX_PATH> sConfigFile;
+	CBufferStringN<MAX_PATH> sConfigFile;
 
 	CUtlVector<CUtlString> vecConfigFiles;
 

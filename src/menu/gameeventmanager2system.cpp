@@ -130,7 +130,7 @@ bool Menu::CGameEventManager2System::DumpGameEvent(IGameEvent *pEvent)
 
 				KeyValues3 *pEventMember = pEventDataKeys->GetMember(i);
 
-				CBufferStringGrowable<128> sEventMember;
+				CBufferStringN<128> sEventMember;
 
 				pEventMember->ToString(sEventMember, KV3_TO_STRING_DONT_CLEAR_BUFF);
 				aDetails.PushFormat("\t\"%s\":\t%s", pEventMemberName, sEventMember.Get());

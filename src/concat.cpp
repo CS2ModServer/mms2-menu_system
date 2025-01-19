@@ -200,14 +200,16 @@ const char *CConcatLineString::AppendBytesToBuffer(CBufferString &sMessage, cons
 
 	vecValues.reserve(nLength);
 
-	CBufferStringGrowable<4> *psDataSet = new CBufferStringGrowable<4>[nLength];
+	constexpr size_t nDepthSize = 4;
+
+	char *psDataSet = new char[nLength * nDepthSize];
 
 	for(int n = 0; n < nLength; n++)
 	{
-		auto &sByte = psDataSet[n];
+		auto *psByte = &psDataSet[n * nDepthSize];
 
-		sByte.Format("%02X ", pData[n]);
-		vecValues.push_back(sByte.Get());
+		V_snprintf(psByte, nDepthSize, "%02X ", pData[n]);
+		vecValues.push_back(psByte);
 	}
 
 	auto *pResult = AppendToBuffer(sMessage, pszKey, vecValues);
