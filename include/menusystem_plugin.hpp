@@ -210,9 +210,6 @@ public: // CBaseGameSystem
 	GS_EVENT(GameDeactivate);
 	GS_EVENT(ServerPreEntityThink);
 
-public: // IGameEventListener2
-	bool OnPlayerTeam(IGameEvent *event);
-
 public: // IEntityManager::IProviderAgent::ISpawnGroupNotifications
 	void OnSpawnGroupAllocated(SpawnGroupHandle_t hSpawnGroup, ISpawnGroup *pSpawnGroup) override;
 	void OnSpawnGroupInit(SpawnGroupHandle_t hSpawnGroup, IEntityResourceManifest *pManifest, IEntityPrecacheConfiguration *pConfig, ISpawnGroupPrerequisiteRegistry *pRegistry) override;
