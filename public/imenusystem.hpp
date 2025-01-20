@@ -25,6 +25,7 @@
 
 #	pragma once
 
+#	include "imenuprofiles.hpp"
 #	include "imenusystem/isample.hpp"
 
 #	include <tier1/utlvector.h>
@@ -62,6 +63,13 @@ public:
 	 * @return              Returns a player data.
 	 */
 	virtual IPlayer *GetPlayer(const CPlayerSlot &aSlot) = 0;
+
+	/**
+	 * @brief Gets a menu profiles.
+	 * 
+	 * @return              Returns a profiles pointer.
+	 */
+	virtual IMenuProfiles *GetProfiles() = 0;
 }; // IMenuSystem
 
 #endif // _INCLUDE_METAMOD_SOURCE_IMENUSYSTEM_HPP_

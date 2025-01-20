@@ -265,6 +265,11 @@ bool MenuSystem_Plugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t max
 		return false;
 	}
 
+	if(!LoadSchema(error, maxlen))
+	{
+		return false;
+	}
+
 	if(!InitPathResolver(error, maxlen))
 	{
 		return false;
@@ -289,7 +294,7 @@ bool MenuSystem_Plugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t max
 		return false;
 	}
 
-	if(!LoadSchema(error, maxlen))
+	if(!LoadProfiles(error, maxlen))
 	{
 		return false;
 	}
@@ -303,6 +308,7 @@ bool MenuSystem_Plugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t max
 	{
 		CBufferStringN<1024> sMessage;
 
+		sMessage.Insert(0, "Entity manager:\n");
 		DumpEntityManager(g_aEmbedConcat, sMessage);
 		Logger::Detailed(sMessage);
 	}
@@ -384,6 +390,11 @@ bool MenuSystem_Plugin::Unload(char *error, size_t maxlen)
 	}
 
 	if(!ClearChat(error, maxlen))
+	{
+		return false;
+	}
+
+	if(!ClearProfiles(error, maxlen))
 	{
 		return false;
 	}
@@ -548,6 +559,11 @@ MenuSystem_Plugin::CPlayer &MenuSystem_Plugin::GetPlayerData(const CPlayerSlot &
 	return m_aPlayers[iClient];
 }
 
+IMenuProfiles *MenuSystem_Plugin::GetProfiles()
+{
+	return static_cast<IMenuProfiles *>(this);
+}
+
 bool MenuSystem_Plugin::Init()
 {
 	if(Logger::IsChannelEnabled(LS_DETAILED))
@@ -668,7 +684,7 @@ void MenuSystem_Plugin::OnSpawnGroupInit(SpawnGroupHandle_t hSpawnGroup, IEntity
 	Assert(pManifest);
 
 	m_pEntityManagerProviderAgent->AddResourceToEntityManifest(pManifest, "materials/dev/annotation_worldtext_background.vmat");
-	m_pEntityManagerProviderAgent->AddResourceToEntityManifest(pManifest, "materials/editor/icon_empty.vmat");
+	m_pEntityManagerProviderAgent->AddResourceToEntityManifest(pManifest, MENUSYSTEM_EMPTY_BACKGROUND_MATERIAL_NAME);
 }
 
 void MenuSystem_Plugin::OnSpawnGroupCreateLoading(SpawnGroupHandle_t hSpawnGroup, CMapSpawnGroup *pMapSpawnGroup, bool bSynchronouslySpawnEntities, bool bConfirmResourcesLoaded, CUtlVector<const CEntityKeyValues *> &vecKeyValues)
@@ -685,13 +701,17 @@ void MenuSystem_Plugin::OnSpawnGroupCreateLoading(SpawnGroupHandle_t hSpawnGroup
 
 	const Vector vecScales {1.f, 1.f, 1.f};
 
+	auto *pProfile = Menu::System::CProfiles::Get();
+
+	Assert(pProfile);
+
 	CEntityKeyValues *pMenuKV = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL),
 	                 *pMenuKV2 = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL), 
 	                 *pMenuKV3 = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL);
 
-	FillMenuEntityKeyValues(pMenuKV, vecBackgroundOrigin, angRotation, vecScales, CalculateBackgroundColor(MENUSYSTEM_ACTIVE_COLOR, MENUSYSTEM_INACTIVE_COLOR), MENUSYSTEM_DEFAULT_FONT_FAMILY, MENUSYSTEM_BACKGROUND_MATERIAL_NAME, "Title\n\n1. Active");
-	FillMenuEntityKeyValues(pMenuKV2, vecOrigin, angRotation, vecScales, MENUSYSTEM_ACTIVE_COLOR, MENUSYSTEM_DEFAULT_FONT_FAMILY, MENUSYSTEM_EMPTY_BACKGROUND_MATERIAL_NAME, "\n\n1. Active");
-	FillMenuEntityKeyValues(pMenuKV3, vecOrigin, angRotation, vecScales, MENUSYSTEM_INACTIVE_COLOR, MENUSYSTEM_DEFAULT_FONT_FAMILY, MENUSYSTEM_EMPTY_BACKGROUND_MATERIAL_NAME, "Title\n\n");
+	SetMenuEntityKeyValuesByProfile(pMenuKV, vecBackgroundOrigin, angRotation, pProfile, MENU_EKV_NONE_FLAGS, "Title\n\n1. Active");
+	SetMenuEntityKeyValuesByProfile(pMenuKV2, vecOrigin, angRotation, pProfile, MENU_EKV_FLAG_DONT_DRAW_BACKGROUND, "\n\n1. Active");
+	SetMenuEntityKeyValuesByProfile(pMenuKV3, vecOrigin, angRotation, pProfile, MENU_EKV_INACTIVE_WITHOUT_BACKGROUND, "Title\n\n");
 
 	g_pEntitySystem->AddRefKeyValues(pMenuKV);
 	g_pEntitySystem->AddRefKeyValues(pMenuKV2);
@@ -944,6 +964,42 @@ bool MenuSystem_Plugin::UnloadProvider(char *error, size_t maxlen)
 	return bResult;
 }
 
+bool MenuSystem_Plugin::LoadProfiles(char *error, size_t maxlen)
+{
+	CUtlVector<CUtlString> vecMessages;
+
+	if(!Menu::System::CProfiles::Load(m_sBaseGameDirectory.c_str(), MENUSYSTEM_BASE_PATHID, vecMessages))
+	{
+		if(vecMessages.Count() && Logger::IsChannelEnabled(LS_WARNING))
+		{
+			auto aWarnings = Logger::CreateWarningsScope();
+
+			FOR_EACH_VEC(vecMessages, i)
+			{
+				auto &aMessage = vecMessages[i];
+
+				aWarnings.Push(aMessage.Get());
+			}
+
+			aWarnings.SendColor([&](Color rgba, const CUtlString &sContext)
+			{
+				Logger::Warning(rgba, sContext);
+			});
+		}
+
+		return false;
+	}
+
+	return true;
+}
+
+bool MenuSystem_Plugin::ClearProfiles(char *error, size_t maxlen)
+{
+	Menu::System::CProfiles::Clear();
+
+	return true;
+}
+
 bool MenuSystem_Plugin::InitEntityManager(char *error, size_t maxlen)
 {
 	// Gets a main entity manager interface.
@@ -1051,36 +1107,53 @@ bool MenuSystem_Plugin::UnloadSpawnGroups(char *error, size_t maxlen)
 	return true;
 }
 
-void MenuSystem_Plugin::FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation, const Vector &vecScales, const Color rgbaColor,  const char *pszFontName, const char *pszBackgroundMaterialName, const char *pszMessageText)
+void MenuSystem_Plugin::SetMenuEntityKeyValuesByProfile(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation, MenuProfile_t *pProfile, MenuEntityKeyValuesFlags_t eFlags, const char *pszMessageText)
 {
+	Assert(pMenuKV);
+	Assert(pProfile);
+
 	pMenuKV->SetString("classname", "point_worldtext");
 	pMenuKV->SetVector("origin", vecOrigin);
 	pMenuKV->SetQAngle("angles", angRotation);
-	pMenuKV->SetVector("scales", vecScales);
 
-	// Text settings.
-	pMenuKV->SetBool("enabled", true);
-	pMenuKV->SetBool("fullbright", true);
-	pMenuKV->SetColor("color", rgbaColor);
-	pMenuKV->SetFloat("world_units_per_pixel", 0.05f);
-	pMenuKV->SetInt("font_size", 100);
-	pMenuKV->SetString("font_name", pszFontName);
-	pMenuKV->SetInt("justify_horizontal", 0);
-	pMenuKV->SetInt("justify_vertical", 0);
-	pMenuKV->SetFloat("depth_render_offset", 0.25f);
-	pMenuKV->SetInt("reorient_mode", 0);
+	bool bDrawBackground = !(eFlags & MENU_EKV_FLAG_DONT_DRAW_BACKGROUND);
 
-	// Background.
-	pMenuKV->SetBool("draw_background", true);
-	pMenuKV->SetString("background_material_name", pszBackgroundMaterialName);
-	pMenuKV->SetFloat("background_border_width", 4.0f);
-	pMenuKV->SetFloat("background_border_height", 2.0f);
-	pMenuKV->SetFloat("background_world_to_uv", 0.05f);
+	// Copy from profile.
+	{
+		// bDrawBackground: Profile must have a background values.
+		CEntityKeyValues *pProfileKV = pProfile->GetAllocactedEntityKeyValues(Menu::System::CProfiles::GetEntityKeyValuesAllocator());
+
+		pMenuKV->CopyFrom(pProfileKV, false);
+
+		delete pProfileKV;
+	}
+
+	Color *pActiveColor = pProfile->GetActiveColor(), 
+	      *pInactiveColor = pProfile->GetInactiveColor();
+
+	if(bDrawBackground)
+	{
+		if(pActiveColor && pInactiveColor)
+		{
+			pMenuKV->SetColor("color", CalculateBackgroundColor(*pActiveColor, *pInactiveColor));
+		}
+	}
+	else
+	{
+		Color *pColor = (eFlags & MENU_EKV_FLAG_IS_ACTIVE) ? pActiveColor : pInactiveColor;
+
+		if(pColor)
+		{
+			pMenuKV->SetColor("color", *pColor);
+		}
+
+		pMenuKV->SetString("background_material_name", MENUSYSTEM_EMPTY_BACKGROUND_MATERIAL_NAME); // To align with the background.
+	}
 
 	pMenuKV->SetString("message", pszMessageText);
 }
 
-void MenuSystem_Plugin::FillViewModelEntityKeyValues(CEntityKeyValues *pEntityKV, const Vector &vecOrigin, const QAngle &angRotation)
+void MenuSystem_Plugin::SetViewModelEntityKeyValues(CEntityKeyValues *pEntityKV, const Vector &vecOrigin, const QAngle &angRotation)
 {
 	pEntityKV->SetString("classname", "viewmodel");
 	pEntityKV->SetVector("origin", vecOrigin);
@@ -1101,31 +1174,34 @@ Vector MenuSystem_Plugin::GetEntityPosition(CBaseEntity *pEntity, QAngle *pRotat
 	return CGameSceneNode_Helper::GetAbsOriginAccessor(pEntitySceneNode);
 }
 
-void MenuSystem_Plugin::CalculateMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, const float flForwardOffset, const float flLeftOffset, const float flRightOffset, const float flUpOffset, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
+void MenuSystem_Plugin::CalculateMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, const MenuProfile_t *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
-	vecResult = AddToFrontByRotation2(vecOrigin, angRotation, flForwardOffset, flLeftOffset, flRightOffset, flUpOffset);
-	vecBackgroundResult = AddToFrontByRotation2(vecResult, angRotation, MENUSYSTEM_BACKGROUND_AWAY_UNITS, MENUSYSTEM_BACKGROUND_AWAY_UNITS);
+	vecResult = AddToFrontByRotation2(vecOrigin, angRotation, pProfile->GetMatrixForwardOffset(), pProfile->GetMatrixLeftOffset(), pProfile->GetMatrixRightOffset(), pProfile->GetMatrixUpOffset());
+
+	const float flBackgroundAway = pProfile->GetBackgroundAwayUnits();
+
+	vecBackgroundResult = AddToFrontByRotation2(vecResult, angRotation, flBackgroundAway, flBackgroundAway);
 
 	angResult = {0.f, AngleNormalize(angRotation.y - 90.f), AngleNormalize(-angRotation.x + 90.f)};
 }
 
-void MenuSystem_Plugin::CalculateMenuEntitiesPositionByEntity(CBaseEntity *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
+void MenuSystem_Plugin::CalculateMenuEntitiesPositionByEntity(CBaseEntity *pTarget, const MenuProfile_t *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
 	vecResult = GetEntityPosition(pTarget, &angResult);
-	CalculateMenuEntitiesPosition(vecResult, angResult, sm_flForwardOffset, sm_flLeftOffset, sm_flRightOffset, sm_flUpOffset, vecBackgroundResult, vecResult, angResult);
+	CalculateMenuEntitiesPosition(vecResult, angResult, pProfile, vecBackgroundResult, vecResult, angResult);
 }
 
-void MenuSystem_Plugin::CalculateMenuEntitiesPositionByViewModel(CBaseViewModel *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
+void MenuSystem_Plugin::CalculateMenuEntitiesPositionByViewModel(CBaseViewModel *pTarget, const MenuProfile_t *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
 	vecResult = GetEntityPosition(pTarget, &angResult);
-	CalculateMenuEntitiesPosition(vecResult, angResult, sm_flForwardOffset, sm_flLeftOffset, sm_flRightOffset, sm_flUpOffset, vecBackgroundResult, vecResult, angResult);
+	CalculateMenuEntitiesPosition(vecResult, angResult, pProfile, vecBackgroundResult, vecResult, angResult);
 }
 
-void MenuSystem_Plugin::CalculateMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
+void MenuSystem_Plugin::CalculateMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pTarget, const MenuProfile_t *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
 	vecResult = GetEntityPosition(pTarget) + CBaseModelEntity_Helper::GetViewOffsetAccessor(pTarget);
 	angResult = CCSPlayerPawnBase_Helper::GetEyeAnglesAccessor(pTarget);
-	CalculateMenuEntitiesPosition(vecResult, angResult, sm_flForwardOffset, sm_flLeftOffset, sm_flRightOffset, sm_flUpOffset, vecBackgroundResult, vecResult, angResult);
+	CalculateMenuEntitiesPosition(vecResult, angResult, pProfile, vecBackgroundResult, vecResult, angResult);
 }
 
 Color MenuSystem_Plugin::CalculateBackgroundColor(const Color &rgbaActive, const Color &rgbaInactive)
@@ -1231,8 +1307,6 @@ void MenuSystem_Plugin::SpawnMenuEntities(const Vector &vecBackgroundOrigin, con
 
 	CUtlVector<CEntityKeyValues *> vecKeyValues;
 
-	const Vector vecScales {0.1f, 0.1f, 0.1f};
-
 	static const char szMessageTextFull[] = "Заголовок\n"
 	                                        "\n"
 	                                        "1. bratbufi\n"
@@ -1246,19 +1320,6 @@ void MenuSystem_Plugin::SpawnMenuEntities(const Vector &vecBackgroundOrigin, con
 	                                        "8. Вперёд\n"
 	                                        "9. Выход\n",
 
-	                  szMessageTextActive[] = "\n"
-	                                          "\n"
-	                                          "1. bratbufi\n"
-	                                          "\n"
-	                                          "3. doublebufi\n"
-	                                          "4. bufi\n"
-	                                          "\n"
-	                                          "6. superbufi\n"
-	                                          "\n"
-	                                          "7. Назад\n"
-	                                          "8. Вперёд\n"
-	                                          "9. Выход\n",
-
 	                  szMessageTextInactive[] = "Заголовок\n"
 	                                            "\n"
 	                                            "\n"
@@ -1270,11 +1331,29 @@ void MenuSystem_Plugin::SpawnMenuEntities(const Vector &vecBackgroundOrigin, con
 	                                            "\n"
 	                                            "\n"
 	                                            "\n"
-	                                            "\n";
+	                                            "\n",
 
-	FillMenuEntityKeyValues(pMenuKV, vecBackgroundOrigin, angRotation, vecScales, CalculateBackgroundColor(MENUSYSTEM_ACTIVE_COLOR, MENUSYSTEM_INACTIVE_COLOR), MENUSYSTEM_DEFAULT_FONT_FAMILY, MENUSYSTEM_BACKGROUND_MATERIAL_NAME, szMessageTextFull);
-	FillMenuEntityKeyValues(pMenuKV2, vecOrigin, angRotation, vecScales, MENUSYSTEM_ACTIVE_COLOR, MENUSYSTEM_DEFAULT_FONT_FAMILY, MENUSYSTEM_EMPTY_BACKGROUND_MATERIAL_NAME, szMessageTextActive);
-	FillMenuEntityKeyValues(pMenuKV3, vecOrigin, angRotation, vecScales, MENUSYSTEM_INACTIVE_COLOR, MENUSYSTEM_DEFAULT_FONT_FAMILY, MENUSYSTEM_EMPTY_BACKGROUND_MATERIAL_NAME, szMessageTextInactive);
+	                  szMessageTextActive[] = "\n"
+	                                          "\n"
+	                                          "1. bratbufi\n"
+	                                          "\n"
+	                                          "3. doublebufi\n"
+	                                          "4. bufi\n"
+	                                          "\n"
+	                                          "6. superbufi\n"
+	                                          "\n"
+	                                          "7. Назад\n"
+	                                          "8. Вперёд\n"
+	                                          "9. Выход\n";
+
+	{
+		auto *pProfile = Menu::System::CProfiles::Get();
+
+		Assert(pProfile);
+		SetMenuEntityKeyValuesByProfile(pMenuKV, vecBackgroundOrigin, angRotation, pProfile, MENU_EKV_NONE_FLAGS, szMessageTextFull);
+		SetMenuEntityKeyValuesByProfile(pMenuKV2, vecOrigin, angRotation, pProfile, MENU_EKV_FLAG_DONT_DRAW_BACKGROUND, szMessageTextInactive);
+		SetMenuEntityKeyValuesByProfile(pMenuKV3, vecOrigin, angRotation, pProfile, MENU_EKV_INACTIVE_WITHOUT_BACKGROUND, szMessageTextActive);
+	}
 
 	vecKeyValues.AddToTail(pMenuKV);
 	vecKeyValues.AddToTail(pMenuKV2);
@@ -1313,7 +1392,11 @@ void MenuSystem_Plugin::SpawnMenuEntitiesByEntity(CBaseEntity *pTarget, CUtlVect
 
 	QAngle angMenuRotation {};
 
-	CalculateMenuEntitiesPositionByEntity(pTarget, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
+	auto *pProfile = Menu::System::CProfiles::Get();
+
+	Assert(pProfile);
+	Assert(pProfile->m_pMatrixOffset);
+	CalculateMenuEntitiesPositionByEntity(pTarget, pProfile, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 	SpawnMenuEntities(vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation, pEntities);
 }
 
@@ -1357,7 +1440,7 @@ CBaseViewModel *MenuSystem_Plugin::SpawnViewModelEntity(const Vector &vecOrigin,
 		const int m_nSlot;
 	} aViewModelEntitySetup(this, pOwner, nSlot);
 
-	FillViewModelEntityKeyValues(pViewModelKV, vecOrigin, angRotation);
+	SetViewModelEntityKeyValues(pViewModelKV, vecOrigin, angRotation);
 	vecKeyValues.AddToTail(pViewModelKV);
 	SpawnEntities(vecKeyValues, &vecEntities, &aViewModelEntitySetup);
 
@@ -1373,7 +1456,11 @@ void MenuSystem_Plugin::TeleportMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pTarge
 
 	QAngle angMenuRotation {};
 
-	CalculateMenuEntitiesPositionByCSPlayer(pTarget, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
+	auto *pProfile = Menu::System::CProfiles::Get();
+
+	Assert(pProfile);
+	Assert(pProfile->m_pMatrixOffset);
+	CalculateMenuEntitiesPositionByCSPlayer(pTarget, pProfile, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 
 	FOR_EACH_VEC(vecEntities, i)
 	{
@@ -1410,7 +1497,10 @@ bool MenuSystem_Plugin::AttachMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pTarget,
 		return false;
 	}
 
-	static const int s_nExtraViewModelSlot = 2;
+	// 0 - the main one.
+	// 1 - the hostages.
+	// 2 - the extra one.
+	static constexpr int s_nExtraViewModelSlot = 2;
 
 	auto aParentVariant = variant_t("!activator");
 
@@ -1423,7 +1513,11 @@ bool MenuSystem_Plugin::AttachMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pTarget,
 
 	QAngle angMenuRotation {};
 
-	CalculateMenuEntitiesPositionByEntity(pTarget, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
+	auto *pProfile = Menu::System::CProfiles::Get();
+
+	Assert(pProfile);
+	Assert(pProfile->m_pMatrixOffset);
+	CalculateMenuEntitiesPositionByEntity(pTarget, pProfile, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 
 	if(Logger::IsChannelEnabled(LS_DETAILED))
 	{
@@ -1970,21 +2064,31 @@ bool MenuSystem_Plugin::UnhookGameEvents(char *error, size_t maxlen)
 	return true;
 }
 
-void MenuSystem_Plugin::OnReloadGameDataCommand(const CCommandContext &context, const CCommand &args)
+void MenuSystem_Plugin::OnReloadSchemaCommand(const CCommandContext &context, const CCommand &args)
 {
-	char error[256];
+	char error[256] = "";
 
-	if(!LoadProvider(error, sizeof(error)))
+	if(!LoadSchema(error, sizeof(error)) && error[0])
 	{
 		Logger::WarningFormat("%s\n", error);
 	}
 }
 
-void MenuSystem_Plugin::OnReloadSchemaCommand(const CCommandContext &context, const CCommand &args)
+void MenuSystem_Plugin::OnReloadGameDataCommand(const CCommandContext &context, const CCommand &args)
 {
-	char error[256];
+	char error[256] = "";
 
-	if(!LoadSchema(error, sizeof(error)))
+	if(!LoadProvider(error, sizeof(error)) && error[0])
+	{
+		Logger::WarningFormat("%s\n", error);
+	}
+}
+
+void MenuSystem_Plugin::OnReloadProfilesCommand(const CCommandContext &context, const CCommand &args)
+{
+	char error[256] = "";
+
+	if(!LoadProfiles(error, sizeof(error)) && error[0])
 	{
 		Logger::WarningFormat("%s\n", error);
 	}

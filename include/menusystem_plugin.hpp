@@ -41,6 +41,7 @@
 #	include "menu/schema/csplayerbase_cameraservices.hpp"
 #	include "menu/schema/csplayerpawnbase.hpp"
 #	include "menu/schema/gamescenenode.hpp"
+#	include "menu/system/profiles.hpp"
 #	include "concat.hpp"
 
 #	include <logger.hpp>
@@ -67,14 +68,6 @@
 #	include <network_connection.pb.h>
 
 #	define MENUSYSTEM_LOGGINING_COLOR {127, 255, 0, 191} // Green (Chartreuse)
-#	define MENUSYSTEM_MAX_MESSAGE_TEXT_LENGTH 512
-#	define MENUSYSTEM_MAX_FONT_NAME_LENGTH 64
-#	define MENUSYSTEM_MAX_BACKGROUND_MATERIAL_NAME_LENGTH 64
-#	define MENUSYSTEM_BACKGROUND_AWAY_UNITS 0.04f
-#	define MENUSYSTEM_ACTIVE_COLOR {255, 167, 42, 255}
-#	define MENUSYSTEM_INACTIVE_COLOR {233, 208, 173, 255}
-#	define MENUSYSTEM_DEFAULT_FONT_FAMILY "Tahoma"
-#	define MENUSYSTEM_BACKGROUND_MATERIAL_NAME "materials/dev/annotation_worldtext_background.vmat"
 #	define MENUSYSTEM_EMPTY_BACKGROUND_MATERIAL_NAME "materials/editor/icon_empty.vmat"
 
 #	define MENUSYSTEM_GAME_BASE_DIR "addons" CORRECT_PATH_SEPARATOR_S META_PLUGIN_PREFIX
@@ -90,7 +83,7 @@ class INetworkMessageInternal;
 class MenuSystem_Plugin final : public ISmmPlugin, public IMetamodListener, public IMenuSystem, public CBaseGameSystem, public IEntityManager::IProviderAgent::ISpawnGroupNotifications, // Interfaces.
                                 virtual public Menu::Schema::CSystem, virtual public Menu::Schema::CBaseEntity_Helper, virtual public Menu::Schema::CBaseModelEntity_Helper, virtual public Menu::Schema::CBasePlayerController_Helper, virtual public Menu::Schema::CBaseViewModel_Helper, virtual public Menu::Schema::CBodyComponent_Helper, virtual public Menu::Schema::CCSPlayer_ViewModelServices_Helper, virtual public Menu::Schema::CCSPlayerBase_CameraServices_Helper, virtual public Menu::Schema::CCSPlayerPawnBase_Helper, virtual public Menu::Schema::CGameSceneNode_Helper, // Schema helpers.
                                 virtual public Logger, public Translations, public Menu::CPathResolver, public Menu::CProvider, // Components.
-                                public Menu::CChatSystem, public Menu::CGameEventManager2System // Subsystems.
+                                public Menu::System::CProfiles, public Menu::CGameEventManager2System, public Menu::CChatSystem // Subsystems.
 {
 public:
 	using This = MenuSystem_Plugin;
@@ -206,6 +199,8 @@ public: // IMenuSystem
 	IPlayer *GetPlayer(const CPlayerSlot &aSlot) override;
 	CPlayer &GetPlayerData(const CPlayerSlot &aSlot);
 
+	IMenuProfiles *GetProfiles() override;
+
 public: // CBaseGameSystem
 	bool Init() override;
 	void PostInit() override;
@@ -240,6 +235,10 @@ public: // Utils.
 	bool LoadProvider(char *error = nullptr, size_t maxlen = 0);
 	bool UnloadProvider(char *error = nullptr, size_t maxlen = 0);
 
+public: // Profiles.
+	bool LoadProfiles(char *error = nullptr, size_t maxlen = 0);
+	bool ClearProfiles(char *error = nullptr, size_t maxlen = 0);
+
 public: // Entity Manager.
 	bool InitEntityManager(char *error = nullptr, size_t maxlen = 0);
 	void DumpEntityManager(const CConcatLineString &aConcat, CBufferString &sOutput);
@@ -249,22 +248,26 @@ public: // Entity Manager.
 	bool UnloadSpawnGroups(char *error = nullptr, size_t maxlen = 0);
 
 	// Entity keyvalues.
-	void FillMenuEntityKeyValues(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation, const Vector &vecScales, const Color rgbaColor, const char *pszFontName, const char *pszBackgroundMaterialName, const char *pszMessageText);
-	void FillViewModelEntityKeyValues(CEntityKeyValues *pEntityKV, const Vector &vecOrigin, const QAngle &angRotation);
+	enum MenuEntityKeyValuesFlags_t : uint8
+	{
+		MENU_EKV_NONE_FLAGS = 0,
+		MENU_EKV_FLAG_DONT_DRAW_BACKGROUND = (1 << 0),
+		MENU_EKV_FLAG_IS_ACTIVE = (1 << 1),
 
-	// Offset a rotation to display on the left-side of the screen.
-	static constexpr float sm_flForwardOffset = 8.f;
-	// static constexpr float sm_flLeftOffset = 8.f; // 4:3
-	static constexpr float sm_flLeftOffset = 10.65f; // 16:9
-	static constexpr float sm_flRightOffset = 0.f;
-	static constexpr float sm_flUpOffset = -4.25f;
+		MENU_EKV_INACTIVE_WITHOUT_BACKGROUND = (MENU_EKV_FLAG_DONT_DRAW_BACKGROUND | MENU_EKV_FLAG_IS_ACTIVE)
+	};
+
+	void SetMenuEntityKeyValuesByProfile(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation, MenuProfile_t *pProfile, MenuEntityKeyValuesFlags_t eFlags, const char *pszMessageText);
+	void SetViewModelEntityKeyValues(CEntityKeyValues *pEntityKV, const Vector &vecOrigin, const QAngle &angRotation);
+
+	using ProfileMatrixOffset_t = MenuProfile_t::MatrixOffset_t;
 
 	// Get & calculate positions.
 	Vector GetEntityPosition(CBaseEntity *pTarget, QAngle *pRotation = nullptr);
-	void CalculateMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, const float flForwardOffset, const float flLeftOffset, const float flRightOffset, const float flUpOffset, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
-	void CalculateMenuEntitiesPositionByEntity(CBaseEntity *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
-	void CalculateMenuEntitiesPositionByViewModel(CBaseViewModel *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
-	void CalculateMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pTarget, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
+	void CalculateMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, const MenuProfile_t *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
+	void CalculateMenuEntitiesPositionByEntity(CBaseEntity *pTarget, const MenuProfile_t *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
+	void CalculateMenuEntitiesPositionByViewModel(CBaseViewModel *pTarget, const MenuProfile_t *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
+	void CalculateMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pTarget, const MenuProfile_t *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
 
 	// Calculate a color.
 	static Color CalculateBackgroundColor(const Color &rgbaActive, const Color &rgbaInactive);
@@ -319,8 +322,9 @@ public: // Event actions.
 	bool UnhookGameEvents(char *error = nullptr, size_t maxlen = 0);
 
 private: // Commands.
-	CON_COMMAND_MEMBER_F(This, "mm_" META_PLUGIN_PREFIX "_reload_gamedata", OnReloadGameDataCommand, "Reload gamedata configs", FCVAR_LINKED_CONCOMMAND);
 	CON_COMMAND_MEMBER_F(This, "mm_" META_PLUGIN_PREFIX "_reload_schema", OnReloadSchemaCommand, "Reload schema fields of classes", FCVAR_LINKED_CONCOMMAND);
+	CON_COMMAND_MEMBER_F(This, "mm_" META_PLUGIN_PREFIX "_reload_gamedata", OnReloadGameDataCommand, "Reload gamedata configs", FCVAR_LINKED_CONCOMMAND);
+	CON_COMMAND_MEMBER_F(This, "mm_" META_PLUGIN_PREFIX "_reload_profiles", OnReloadProfilesCommand, "Reload menu profiles", FCVAR_LINKED_CONCOMMAND);
 	CON_COMMAND_MEMBER_F(This, "menuselect", OnMenuSelectCommand, "", FCVAR_LINKED_CONCOMMAND | FCVAR_CLIENT_CAN_EXECUTE);
 
 public: // SourceHooks.

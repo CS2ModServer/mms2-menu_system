@@ -27,11 +27,10 @@
 #	include "chatcommandsystem.hpp"
 
 #	include <playerslot.h>
-#	include <tier0/bufferstring.h>
 #	include <tier0/utlstring.h>
+#	include <tier1/utlmap.h>
+#	include <tier1/utlsymbollarge.h>
 #	include <tier1/utlvector.h>
-
-#	include <logger.hpp>
 
 #	define MENU_CHATSYSTEM_BASE_DIR "configs" CORRECT_PATH_SEPARATOR_S "menu" CORRECT_PATH_SEPARATOR_S "chatsystem"
 #	define MENU_CHATSYSTEM_ALIASES_FILENAME MENU_CHATSYSTEM_BASE_DIR CORRECT_PATH_SEPARATOR_S "aliases.*"

@@ -1,0 +1,107 @@
+{
+	"default": "hudmenu_annotation_style",
+
+	"menu_controller":
+	{
+		"display_name": "The menu controller profile of items",
+
+		"items":
+		{
+			"1": "menuselect 1;slot1",
+			"2": "menuselect 2;slot2",
+			"3": "menuselect 3;slot3",
+			"4": "menuselect 4;slot4",
+			"5": "menuselect 5;slot5",
+			"6": "menuselect 6;slot6",
+			"7": "menuselect 7;slot7",
+			"8": "menuselect 8;slot8",
+			"9": "menuselect 9;slot9",
+			"0": "menuselect 0;slot10"
+		},
+		"items_verification_client_convar_name": "closecaption",
+
+		"hidden": true
+	},
+
+	"background_base":
+	{
+		"display_name": "The basic background",
+
+		"draw_background": true,
+		"background_material_name": "materials/dev/point_worldtext_default_background.vmat",
+
+		"hidden": true
+	},
+
+	"annotation_background_base":
+	{
+		"display_name": "The annotation background",
+
+		"inherits": "background_base",
+
+		"background_material_name": "materials/dev/annotation_worldtext_background.vmat",
+		"background_border_width": 4.0,
+		"background_border_height": 2.0,
+		"background_world_to_uv": 0.05,
+
+		"hidden": true
+	},
+
+	"hudmenu_annotation_style":
+	{
+		"display_name": "HUD Menu",
+		"description": "Hud menu (VGUI2) style with annotation background",
+
+		"inherits": ["menu_controller", "annotation_background_base"],
+
+		"inactive_color": "233 208 173 255",
+		"active_color": "255 167 42 255",
+
+		"enabled": true,
+		"fullbright": true,
+		"color": "233 208 173 255",
+		"scales": "0.1 0.1 0.1",
+		"world_units_per_pixel": 0.05,
+		"font_size": 100,
+		"font_name": "Tahoma",
+		"justify_horizontal": 0,
+		"justify_vertical": 0,
+		"reorient_mode": 0,
+		"depth_render_offset": 0.25,
+
+		"background_away_units": 0.04,
+
+		"matrix_offset":
+		{
+			"forward": 8.0,
+			"up": -2.0,
+			"left": 1.5
+		}
+	},
+
+	"hudmenu_annotation_style-4:3":
+	{
+		"display_name": "HUD Menu (4:3, left side)",
+
+		"inherits": ["hudmenu_annotation_style"],
+
+		"matrix_offset":
+		{
+			"up": -4.25,
+			"left": 8.0
+		}
+	},
+
+	"hudmenu_annotation_style-16:9":
+	{
+		"display_name": "HUD Menu (16:9, left side)",
+
+		"inherits": ["hudmenu_annotation_style"],
+
+		"matrix_offset":
+		{
+			"up": -4.25,
+			"left": 10.65
+		}
+	}
+}
