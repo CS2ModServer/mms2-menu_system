@@ -86,7 +86,7 @@ void MenuSystem_Plugin::CPlayer::OnDisconnected(CServerSideClient *pClient, ENet
 	m_vecMenuEntities.Purge();
 
 	m_pLanguage = nullptr;
-	m_aYourArgumentPhrase = {nullptr, nullptr};
+	m_aYourArgumentPhrase = {};
 }
 
 void MenuSystem_Plugin::CPlayer::OnLanguageChanged(CPlayerSlot aSlot, CLanguage *pData)
@@ -104,7 +104,7 @@ void MenuSystem_Plugin::CPlayer::TranslatePhrases(const Translations *pTranslati
 	const struct
 	{
 		const char *pszName;
-		TranslatedPhrase *pTranslated;
+		TranslatedPhrase_t *pTranslated;
 	} aPhrases[] =
 	{
 		{
@@ -161,7 +161,7 @@ void MenuSystem_Plugin::CPlayer::TranslatePhrases(const Translations *pTranslati
 	}
 }
 
-const MenuSystem_Plugin::CPlayer::TranslatedPhrase &MenuSystem_Plugin::CPlayer::GetYourArgumentPhrase() const
+const MenuSystem_Plugin::CPlayer::TranslatedPhrase_t &MenuSystem_Plugin::CPlayer::GetYourArgumentPhrase() const
 {
 	return m_aYourArgumentPhrase;
 }

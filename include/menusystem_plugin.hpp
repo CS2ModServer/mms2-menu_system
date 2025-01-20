@@ -172,14 +172,19 @@ public: // IMenuSystem
 		virtual void OnLanguageChanged(CPlayerSlot aSlot, CLanguage *pData);
 
 	public:
-		struct TranslatedPhrase
+		struct TranslatedPhrase_t
 		{
-			const Translations::CPhrase::CFormat *m_pFormat;
-			const Translations::CPhrase::CContent *m_pContent;
+			const CPhrase::CFormat *m_pFormat = nullptr;
+			const CPhrase::CContent *m_pContent = nullptr;
+
+			bool IsValid() const
+			{
+				return m_pFormat && m_pContent;
+			}
 		};
 
 		void TranslatePhrases(const Translations *pTranslations, const CLanguage &aServerLanguage, CUtlVector<CUtlString> &vecMessages);
-		const TranslatedPhrase &GetYourArgumentPhrase() const;
+		const TranslatedPhrase_t &GetYourArgumentPhrase() const;
 
 	private:
 		CServerSideClient *m_pServerSideClient;
@@ -192,7 +197,7 @@ public: // IMenuSystem
 		CUtlVector<IPlayerLanguageListener *> m_vecLanguageCallbacks;
 
 	private:
-		TranslatedPhrase m_aYourArgumentPhrase;
+		TranslatedPhrase_t m_aYourArgumentPhrase;
 	}; // MenuPlugin::CPlayerBase
 
 	const ILanguage *GetServerLanguage() const override;

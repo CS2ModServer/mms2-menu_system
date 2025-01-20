@@ -152,13 +152,15 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 
 			const auto &aPhrase = aPlayer.GetYourArgumentPhrase();
 
-			if(aPhrase.m_pFormat && aPhrase.m_pContent)
+			if(aPhrase.IsValid())
 			{
 				for(const auto &sArgument : vecArguments)
 				{
 					sBuffer.Insert(sBuffer.Length(), aPhrase.m_pContent->Format(*aPhrase.m_pFormat, 1, sArgument.Get()).Get());
 					sBuffer.Insert(sBuffer.Length(), "\n");
 				}
+
+				sBuffer.SetLength(sBuffer.Length() - 1); // Strip the last next line.
 
 				Menu::CChatSystem::ReplaceString(sBuffer);
 				SendTextMessage(&aFilter, HUD_PRINTTALK, 1, sBuffer.Get());
@@ -2094,7 +2096,7 @@ void MenuSystem_Plugin::OnStartupServerHook(const GameSessionConfiguration_t &co
 }
 
 CServerSideClientBase *MenuSystem_Plugin::OnConnectClientHook(const char *pszName, ns_address *pAddr, void *pNetInfo, C2S_CONNECT_Message *pConnectMsg, 
-                                                             const char *pszChallenge, const byte *pAuthTicket, int nAuthTicketLength, bool bIsLowViolence)
+                                                              const char *pszChallenge, const byte *pAuthTicket, int nAuthTicketLength, bool bIsLowViolence)
 {
 	auto *pNetServer = META_IFACEPTR(CNetworkGameServerBase);
 
