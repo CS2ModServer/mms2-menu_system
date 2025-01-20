@@ -28,7 +28,6 @@ Menu::Schema::CCSPlayerPawnBase_Helper::CCSPlayerPawnBase_Helper(CSystem *pSchem
 	auto &aCallbacks = m_aClassFieldsClassbacks;
 
 	m_pClass = pSchemaSystemHelper->GetClass(CCSPLAYERPAWNBASE_CLASS_NAME);
-
 	Assert(m_pClass);
 
 	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_pViewModelServices"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nViewModelServices));

@@ -28,7 +28,6 @@ Menu::Schema::CGameSceneNode_Helper::CGameSceneNode_Helper(CSystem *pSchemaSyste
 	auto &aCallbacks = m_aClassFieldsClassbacks;
 
 	m_pClass = pSchemaSystemHelper->GetClass(CGAMESCENENODE_CLASS_NAME);
-
 	Assert(m_pClass);
 
 	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_pParent"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nParent));

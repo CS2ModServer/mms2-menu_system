@@ -28,7 +28,6 @@ Menu::Schema::CBaseViewModel_Helper::CBaseViewModel_Helper(CSystem *pSchemaSyste
 	auto &aCallbacks = m_aClassFieldsClassbacks;
 
 	m_pClass = pSchemaSystemHelper->GetClass(CBASEVIEWMODEL_CLASS_NAME);
-
 	Assert(m_pClass);
 
 	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_nViewModelIndex"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nViewModelIndex));

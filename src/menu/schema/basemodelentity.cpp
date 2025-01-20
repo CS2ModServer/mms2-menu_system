@@ -28,7 +28,6 @@ Menu::Schema::CBaseModelEntity_Helper::CBaseModelEntity_Helper(CSystem *pSchemaS
 	auto &aCallbacks = m_aClassFieldsClassbacks;
 
 	m_pClass = pSchemaSystemHelper->GetClass(CBASEMODELENTITY_CLASS_NAME);
-
 	Assert(m_pClass);
 
 	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_vecViewOffset"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nViewOffset));

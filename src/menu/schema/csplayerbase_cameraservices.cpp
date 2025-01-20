@@ -28,7 +28,6 @@ Menu::Schema::CCSPlayerBase_CameraServices_Helper::CCSPlayerBase_CameraServices_
 	auto &aCallbacks = m_aClassFieldsClassbacks;
 
 	m_pClass = pSchemaSystemHelper->GetClass(CCSPLAYERBASE_CAMERASERVICES_CLASS_NAME);
-
 	Assert(m_pClass);
 
 	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_iFOV"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nFOV));

@@ -28,7 +28,6 @@ Menu::Schema::CBasePlayerController_Helper::CBasePlayerController_Helper(CSystem
 	auto &aCallbacks = m_aClassFieldsClassbacks;
 
 	m_pClass = pSchemaSystemHelper->GetClass(CBASEPLAYERCONTROLLER_CLASS_NAME);
-
 	Assert(m_pClass);
 
 	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_hPawn"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nPawn));

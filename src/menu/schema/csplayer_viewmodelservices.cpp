@@ -28,7 +28,6 @@ Menu::Schema::CCSPlayer_ViewModelServices_Helper::CCSPlayer_ViewModelServices_He
 	auto &aCallbacks = m_aClassFieldsClassbacks;
 
 	m_pClass = pSchemaSystemHelper->GetClass(CCSPLAYER_VIEWMODELSERVICES_CLASS_NAME);
-
 	Assert(m_pClass);
 
 	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_hViewModel"), SCHEMA_CLASS_ARRAY_FIELD_SHARED_LAMBDA_CAPTURE(CHandle<CBaseViewModel>, m_aOffsets.m_aViewModel.nValue, m_aOffsets.m_aViewModel.nArraySize));
