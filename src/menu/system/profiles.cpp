@@ -284,6 +284,7 @@ void Menu::CProfile::RemoveStaticMembers(KeyValues3 *pData)
 	pData->RemoveMember("matrix_offset");
 	pData->RemoveMember("inactive_color");
 	pData->RemoveMember("active_color");
+	pData->RemoveMember("background_away_units");
 }
 
 void Menu::CProfile::RemoveStaticMetadataMembers(KeyValues3 *pData)
