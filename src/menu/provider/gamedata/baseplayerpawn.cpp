@@ -24,7 +24,7 @@
 
 #include <dynlibutils/virtual.hpp>
 
-Menu::CProvider::GameDataStorage::CBasePlayerPawn::CBasePlayerPawn()
+Menu::CProvider::CGameDataStorage::CBasePlayerPawn::CBasePlayerPawn()
 {
 	{
 		auto &aCallbacks = m_aOffsetCallbacks;
@@ -35,17 +35,17 @@ Menu::CProvider::GameDataStorage::CBasePlayerPawn::CBasePlayerPawn()
 	}
 }
 
-bool Menu::CProvider::GameDataStorage::CBasePlayerPawn::Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
+bool Menu::CProvider::CGameDataStorage::CBasePlayerPawn::Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
 {
 	return m_aGameConfig.Load(pRoot, pGameConfig, vecMessages);
 }
 
-void Menu::CProvider::GameDataStorage::CBasePlayerPawn::Reset()
+void Menu::CProvider::CGameDataStorage::CBasePlayerPawn::Reset()
 {
 	m_nGetEyePositionOffset = -1;
 }
 
-Vector Menu::CProvider::GameDataStorage::CBasePlayerPawn::GetEyePosition(CEntityInstance *pInstance) const
+Vector Menu::CProvider::CGameDataStorage::CBasePlayerPawn::GetEyePosition(CEntityInstance *pInstance) const
 {
 	return reinterpret_cast<DynLibUtils::VirtualTable *>(pInstance)->CallMethod<Vector>(m_nGetEyePositionOffset);
 }

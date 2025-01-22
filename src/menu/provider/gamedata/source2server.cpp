@@ -21,7 +21,7 @@
 
 #include <menu/provider.hpp>
 
-Menu::CProvider::GameDataStorage::CSource2Server::CSource2Server()
+Menu::CProvider::CGameDataStorage::CSource2Server::CSource2Server()
 {
 	{
 		auto &aCallbacks = m_aAddressCallbacks;
@@ -32,17 +32,17 @@ Menu::CProvider::GameDataStorage::CSource2Server::CSource2Server()
 	}
 }
 
-bool Menu::CProvider::GameDataStorage::CSource2Server::Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
+bool Menu::CProvider::CGameDataStorage::CSource2Server::Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
 {
 	return m_aGameConfig.Load(pRoot, pGameConfig, vecMessages);
 }
 
-void Menu::CProvider::GameDataStorage::CSource2Server::Reset()
+void Menu::CProvider::CGameDataStorage::CSource2Server::Reset()
 {
 	m_ppGameEventManager = nullptr;
 }
 
-CGameEventManager **Menu::CProvider::GameDataStorage::CSource2Server::GetGameEventManagerPointer() const
+CGameEventManager **Menu::CProvider::CGameDataStorage::CSource2Server::GetGameEventManagerPointer() const
 {
 	return m_ppGameEventManager;
 }

@@ -24,7 +24,7 @@
 
 #include <dynlibutils/virtual.hpp>
 
-Menu::CProvider::GameDataStorage::CBaseEntity::CBaseEntity()
+Menu::CProvider::CGameDataStorage::CBaseEntity::CBaseEntity()
 {
 	{
 		auto &aCallbacks = m_aAddressCallbacks;
@@ -43,23 +43,23 @@ Menu::CProvider::GameDataStorage::CBaseEntity::CBaseEntity()
 	}
 }
 
-bool Menu::CProvider::GameDataStorage::CBaseEntity::Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
+bool Menu::CProvider::CGameDataStorage::CBaseEntity::Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
 {
 	return m_aGameConfig.Load(pRoot, pGameConfig, vecMessages);
 }
 
-void Menu::CProvider::GameDataStorage::CBaseEntity::Reset()
+void Menu::CProvider::CGameDataStorage::CBaseEntity::Reset()
 {
 	m_pAcceptInputMethod = nullptr;
 	m_nTeleportOffset = -1;
 }
 
-void Menu::CProvider::GameDataStorage::CBaseEntity::AcceptInput(CEntityInstance *pInstance, const char *pInputName, CEntityInstance *pActivator, CEntityInstance *pCaller, variant_t *pValue, int nOutputID) const
+void Menu::CProvider::CGameDataStorage::CBaseEntity::AcceptInput(CEntityInstance *pInstance, const char *pInputName, CEntityInstance *pActivator, CEntityInstance *pCaller, variant_t *pValue, int nOutputID) const
 {
 	m_pAcceptInputMethod(pInstance, pInputName, pActivator, pCaller, pValue, nOutputID);
 }
 
-void Menu::CProvider::GameDataStorage::CBaseEntity::Teleport(CEntityInstance *pInstance, const Vector &vecPosition, const QAngle &angRotation, const Vector &velocity) const
+void Menu::CProvider::CGameDataStorage::CBaseEntity::Teleport(CEntityInstance *pInstance, const Vector &vecPosition, const QAngle &angRotation, const Vector &velocity) const
 {
 	reinterpret_cast<DynLibUtils::VirtualTable *>(pInstance)->CallMethod<void, const Vector &, const QAngle &, const Vector &>(m_nTeleportOffset, vecPosition, angRotation, velocity);
 }

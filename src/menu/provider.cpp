@@ -124,29 +124,29 @@ bool Menu::CProvider::LoadGameData(const char *pszBaseGameDir, const char *pszPa
 	return m_aStorage.Load(this, pszBaseGameDir, pszPathID, vecMessages);
 }
 
-bool Menu::CProvider::GameDataStorage::Load(IGameData *pRoot, const char *pszBaseGameDir, const char *pszPathID, GameData::CBufferStringVector &vecMessages)
+bool Menu::CProvider::CGameDataStorage::Load(IGameData *pRoot, const char *pszBaseGameDir, const char *pszPathID, GameData::CBufferStringVector &vecMessages)
 {
 	const struct
 	{
 		const char *pszFilename;
-		bool (Menu::CProvider::GameDataStorage::*pfnLoad)(IGameData *, KeyValues3 *, GameData::CBufferStringVector &);
+		bool (Menu::CProvider::CGameDataStorage::*pfnLoad)(IGameData *, KeyValues3 *, GameData::CBufferStringVector &);
 	} aConfigs[] =
 	{
 		{
 			MENU_PROVIDER_BASEENTITY_FILENAME,
-			&GameDataStorage::LoadBaseEntity
+			&CGameDataStorage::LoadBaseEntity
 		},
 		{
 			MENU_PROVIDER_BASEPLAYERPAWN_FILENAME,
-			&GameDataStorage::LoadBasePlayerPawn
+			&CGameDataStorage::LoadBasePlayerPawn
 		},
 		{
 			MENU_PROVIDER_GAMESYSTEM_FILENAME,
-			&GameDataStorage::LoadGameSystem
+			&CGameDataStorage::LoadGameSystem
 		},
 		{
 			MENU_PROVIDER_SOURCE2SERVER_FILENAME,
-			&GameDataStorage::LoadSource2Server
+			&CGameDataStorage::LoadSource2Server
 		}
 	};
 
@@ -206,22 +206,22 @@ bool Menu::CProvider::GameDataStorage::Load(IGameData *pRoot, const char *pszBas
 	return true;
 }
 
-bool Menu::CProvider::GameDataStorage::LoadBaseEntity(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
+bool Menu::CProvider::CGameDataStorage::LoadBaseEntity(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
 {
 	return m_aBaseEntity.Load(pRoot, pGameConfig, vecMessages);
 }
 
-bool Menu::CProvider::GameDataStorage::LoadBasePlayerPawn(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
+bool Menu::CProvider::CGameDataStorage::LoadBasePlayerPawn(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
 {
 	return m_aBasePlayerPawn.Load(pRoot, pGameConfig, vecMessages);
 }
 
-bool Menu::CProvider::GameDataStorage::LoadGameSystem(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
+bool Menu::CProvider::CGameDataStorage::LoadGameSystem(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
 {
 	return m_aGameSystem.Load(pRoot, pGameConfig, vecMessages);
 }
 
-bool Menu::CProvider::GameDataStorage::LoadSource2Server(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
+bool Menu::CProvider::CGameDataStorage::LoadSource2Server(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
 {
 	return m_aSource2Server.Load(pRoot, pGameConfig, vecMessages);
 }

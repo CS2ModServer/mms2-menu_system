@@ -70,7 +70,7 @@ namespace Menu
 		bool LoadGameData(const char *pszBaseGameDir, const char *pszPathID, GameData::CBufferStringVector &vecMessages);
 
 	public:
-		class GameDataStorage
+		class CGameDataStorage
 		{
 		public:
 			bool Load(IGameData *pRoot, const char *pszBaseGameDir, const char *pszPathID, GameData::CBufferStringVector &vecMessages);
@@ -194,9 +194,9 @@ namespace Menu
 			CBasePlayerPawn m_aBasePlayerPawn;
 			CGameSystem m_aGameSystem;
 			CSource2Server m_aSource2Server;
-		}; // Menu::CProvider::GameDataStorage
+		}; // Menu::CProvider::CGameDataStorage
 
-		const GameDataStorage &GetGameDataStorage() const
+		const CGameDataStorage &GetGameDataStorage() const
 		{
 			return m_aStorage;
 		}
@@ -206,7 +206,7 @@ namespace Menu
 		CUtlMap<CUtlSymbolLarge, DynLibUtils::CModule *> m_mapLibraries;
 
 	private:
-		GameDataStorage m_aStorage;
+		CGameDataStorage m_aStorage;
 
 	private:
 		DynLibUtils::CModule m_aEngine2Library, 
