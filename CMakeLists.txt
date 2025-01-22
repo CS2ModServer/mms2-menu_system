@@ -115,6 +115,7 @@ set(SOURCE_MENU_FILES
 
 set(SOURCE_FILES
 	${SOURCE_DIR}/concat.cpp
+	${SOURCE_DIR}/concatglobals.cpp
 	${SOURCE_DIR}/globals.cpp
 
 	${SOURCE_MENU_PROVIDER_FILES}

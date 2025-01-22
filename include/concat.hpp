@@ -202,6 +202,8 @@ public:
 	int AppendStringToVector(CUtlVector<const char *> vecMessage, const char *pszKey, const char *pszValue) const;
 }; // CConcatLineString
 
+// Globals.
+
 extern const std::array<const CConcatLineString, 8> g_arrEmbedsConcat;
 
 // Backward compatibility.
