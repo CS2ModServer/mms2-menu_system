@@ -33,8 +33,6 @@
 class CKeyValues3Context;
 class CEntityKeyValues;
 
-#define MENUPROFILES_DEFAULT_NAME "default"
-
 /**
  * @brief A Menu Profile interface.
 **/

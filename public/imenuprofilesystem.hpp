@@ -24,7 +24,7 @@
 
 #pragma once
 
-#define MENUPROFILES_DEFAULT_NAME "default"
+#define MENUPROFILE_DEFAULT_NAME "default"
 
 class CKeyValues3Context;
 class IMenuProfile; // See "imenuprofile.hpp".
@@ -42,7 +42,7 @@ public:
 	 * .
 	 * @return Pointer to the menu profile interface.
 	 */
-	virtual IMenuProfile *Get(const char *pszName = MENUPROFILES_DEFAULT_NAME) = 0;
+	virtual IMenuProfile *Get(const char *pszName = MENUPROFILE_DEFAULT_NAME) = 0;
 
 	/**
 	 * @brief Adds or replaces a menu profile.

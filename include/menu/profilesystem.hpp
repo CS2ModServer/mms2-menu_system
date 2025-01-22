@@ -65,10 +65,10 @@ namespace Menu
 		bool Load2(KeyValues3 *pData, CUtlVector<CUtlString> &vecMessages);
 
 	public:
-		CProfile *GetInternal(const char *pszName = MENUPROFILES_DEFAULT_NAME);
+		CProfile *GetInternal(const char *pszName = MENUPROFILE_DEFAULT_NAME);
 
 	public: // IMenuProfiles
-		IMenuProfile *Get(const char *pszName = MENUPROFILES_DEFAULT_NAME) override;
+		IMenuProfile *Get(const char *pszName = MENUPROFILE_DEFAULT_NAME) override;
 		void AddOrReplaceRef(const char *pszName, IMenuProfile *pData) override;
 
 		CKeyValues3Context *GetEntityKeyValuesAllocator() override;
