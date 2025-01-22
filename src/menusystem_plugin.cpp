@@ -1130,7 +1130,7 @@ void MenuSystem_Plugin::SetMenuEntityKeyValuesByProfile(CEntityKeyValues *pMenuK
 	// Copy from profile.
 	{
 		// bDrawBackground: Profile must have a background values.
-		const CEntityKeyValues *pProfileKV = pProfile->GetAllocactedFullEntityKeyValues(Menu::CProfileSystem::GetEntityKeyValuesAllocator());
+		const CEntityKeyValues *pProfileKV = pProfile->GetAllocactedEntityKeyValues(Menu::CProfileSystem::GetEntityKeyValuesAllocator());
 
 		pMenuKV->CopyFrom(pProfileKV, false);
 

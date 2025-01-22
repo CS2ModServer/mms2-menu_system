@@ -116,7 +116,7 @@ public: // Abstract methods.
 	 * 
 	 * @return Returns a pointer to allocated entity key values data.
 	 */
-	virtual const CEntityKeyValues *GetAllocactedFullEntityKeyValues(CKeyValues3Context *pAllocator = nullptr, bool bIncludeBackground = true) const = 0;
+	virtual const CEntityKeyValues *GetAllocactedEntityKeyValues(CKeyValues3Context *pAllocator = nullptr, bool bIncludeBackground = true) const = 0;
 };
 
 #endif // _INCLUDE_METAMOD_SOURCE_IMENUPROFILE_HPP_

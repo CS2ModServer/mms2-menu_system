@@ -433,7 +433,7 @@ float Menu::CProfile::GetBackgroundAwayUnits() const
 	return flResult;
 }
 
-const CEntityKeyValues *Menu::CProfile::GetAllocactedFullEntityKeyValues(CKeyValues3Context *pAllocator, bool bIncludeBackground) const
+const CEntityKeyValues *Menu::CProfile::GetAllocactedEntityKeyValues(CKeyValues3Context *pAllocator, bool bIncludeBackground) const
 {
 	CEntityKeyValues *pResult = new CEntityKeyValues(pAllocator, pAllocator ? EKV_ALLOCATOR_EXTERNAL : EKV_ALLOCATOR_NORMAL);
 
