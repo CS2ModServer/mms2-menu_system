@@ -433,11 +433,6 @@ float Menu::CProfile::GetBackgroundAwayUnits() const
 	return flResult;
 }
 
-const CEntityKeyValues *Menu::CProfile::GetTopEntityKeyValues() const
-{
-	return m_pData;
-}
-
 const CEntityKeyValues *Menu::CProfile::GetAllocactedFullEntityKeyValues(CKeyValues3Context *pAllocator, bool bIncludeBackground) const
 {
 	CEntityKeyValues *pResult = new CEntityKeyValues(pAllocator, pAllocator ? EKV_ALLOCATOR_EXTERNAL : EKV_ALLOCATOR_NORMAL);
@@ -453,7 +448,7 @@ const CEntityKeyValues *Menu::CProfile::GetAllocactedFullEntityKeyValues(CKeyVal
 
 	FOR_EACH_VEC_BACK(vecBaseline, i)
 	{
-		const CEntityKeyValues *pCopyData = vecBaseline[i]->GetTopEntityKeyValues();
+		const CEntityKeyValues *pCopyData = vecBaseline[i]->m_pData;
 
 		if(pCopyData)
 		{

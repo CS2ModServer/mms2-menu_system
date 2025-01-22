@@ -109,16 +109,9 @@ public: // Abstract methods.
 	virtual float GetBackgroundAwayUnits() const = 0;
 
 	/**
-	 * @brief Gets top entity key values data.
-	 * 
-	 * @return Returns a pointer to entity key values data.
-	 */
-	virtual const CEntityKeyValues *GetTopEntityKeyValues() const = 0;
-
-	/**
 	 * @brief Allocates and retrieves entity key values data.
 	 * 
-	 * @param pAllocator Optional allocator for key-value data.
+	 * @param pAllocator Optional allocator for entity key values data.
 	 * @param bIncludeBackground Whether to include background-related data.
 	 * 
 	 * @return Returns a pointer to allocated entity key values data.

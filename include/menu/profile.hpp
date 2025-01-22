@@ -146,7 +146,6 @@ namespace Menu
 		const Color *GetInactiveColor() const override;
 		const Color *GetActiveColor() const override;
 		float GetBackgroundAwayUnits() const override;
-		const CEntityKeyValues *GetTopEntityKeyValues() const override;
 		const CEntityKeyValues *GetAllocactedFullEntityKeyValues(CKeyValues3Context *pAllocator = nullptr, bool bIncludeBackground = true) const override;
 	};
 };
