@@ -100,10 +100,6 @@ set(SOURCE_MENU_SCHEMA_FILES
 	${SOURCE_MENU_SCHEMA_DIR}/gamescenenode.cpp
 )
 
-set(SOURCE_MENU_SYSTEM_FILES
-	${SOURCE_MENU_SYSTEM_DIR}/profiles.cpp
-)
-
 set(SOURCE_MENU_FILES
 	${SOURCE_MENU_DIR}/chatcommandsystem.cpp
 	${SOURCE_MENU_DIR}/chatsystem.cpp
@@ -112,6 +108,8 @@ set(SOURCE_MENU_FILES
 	${SOURCE_MENU_DIR}/language.cpp
 	${SOURCE_MENU_DIR}/pathresolver.cpp
 	${SOURCE_MENU_DIR}/player.cpp
+	${SOURCE_MENU_DIR}/profile.cpp
+	${SOURCE_MENU_DIR}/profilesystem.cpp
 	${SOURCE_MENU_DIR}/provider.cpp
 )
 
@@ -124,8 +122,6 @@ set(SOURCE_FILES
 
 	${SOURCE_MENU_SCHEMA_FILES}
 	${SOURCE_MENU_DIR}/schema.cpp
-
-	${SOURCE_MENU_SYSTEM_FILES}
 
 	${SOURCE_MENU_FILES}
 	${SOURCE_DIR}/menusystem_plugin.cpp # The shared entry point.

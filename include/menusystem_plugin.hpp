@@ -29,6 +29,7 @@
 #	include "menu/chatsystem.hpp"
 #	include "menu/gameeventmanager2system.hpp"
 #	include "menu/pathresolver.hpp"
+#	include "menu/profilesystem.hpp"
 #	include "menu/provider.hpp"
 #	include "menu/schema.hpp"
 #	include "menu/schema/baseentity.hpp"
@@ -41,7 +42,6 @@
 #	include "menu/schema/csplayerbase_cameraservices.hpp"
 #	include "menu/schema/csplayerpawnbase.hpp"
 #	include "menu/schema/gamescenenode.hpp"
-#	include "menu/system/profiles.hpp"
 #	include "concat.hpp"
 
 #	include <logger.hpp>
@@ -80,10 +80,15 @@
 
 class INetworkMessageInternal;
 
+namespace Menu
+{
+	class CProfile; // See <menu/profile.hpp>.
+};
+
 class MenuSystem_Plugin final : public ISmmPlugin, public IMetamodListener, public IMenuSystem, public CBaseGameSystem, public IEntityManager::IProviderAgent::ISpawnGroupNotifications, // Interfaces.
                                 virtual public Menu::Schema::CSystem, virtual public Menu::Schema::CBaseEntity_Helper, virtual public Menu::Schema::CBaseModelEntity_Helper, virtual public Menu::Schema::CBasePlayerController_Helper, virtual public Menu::Schema::CBaseViewModel_Helper, virtual public Menu::Schema::CBodyComponent_Helper, virtual public Menu::Schema::CCSPlayer_ViewModelServices_Helper, virtual public Menu::Schema::CCSPlayerBase_CameraServices_Helper, virtual public Menu::Schema::CCSPlayerPawnBase_Helper, virtual public Menu::Schema::CGameSceneNode_Helper, // Schema helpers.
                                 virtual public Logger, public Translations, public Menu::CPathResolver, public Menu::CProvider, // Components.
-                                public Menu::System::CProfiles, public Menu::CGameEventManager2System, public Menu::CChatSystem // Subsystems.
+                                public Menu::CGameEventManager2System, public Menu::CChatSystem, public Menu::CProfileSystem // Subsystems.
 {
 public:
 	using This = MenuSystem_Plugin;
@@ -199,7 +204,7 @@ public: // IMenuSystem
 	IPlayer *GetPlayer(const CPlayerSlot &aSlot) override;
 	CPlayer &GetPlayerData(const CPlayerSlot &aSlot);
 
-	IMenuProfiles *GetProfiles() override;
+	IMenuProfileSystem *GetProfiles() override;
 
 public: // CBaseGameSystem
 	bool Init() override;
@@ -257,17 +262,15 @@ public: // Entity Manager.
 		MENU_EKV_INACTIVE_WITHOUT_BACKGROUND = (MENU_EKV_FLAG_DONT_DRAW_BACKGROUND | MENU_EKV_FLAG_IS_ACTIVE)
 	};
 
-	void SetMenuEntityKeyValuesByProfile(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation, MenuProfile_t *pProfile, MenuEntityKeyValuesFlags_t eFlags, const char *pszMessageText);
+	void SetMenuEntityKeyValuesByProfile(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation, Menu::CProfile *pProfile, MenuEntityKeyValuesFlags_t eFlags, const char *pszMessageText);
 	void SetViewModelEntityKeyValues(CEntityKeyValues *pEntityKV, const Vector &vecOrigin, const QAngle &angRotation);
-
-	using ProfileMatrixOffset_t = MenuProfile_t::MatrixOffset_t;
 
 	// Get & calculate positions.
 	Vector GetEntityPosition(CBaseEntity *pTarget, QAngle *pRotation = nullptr);
-	void CalculateMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, const MenuProfile_t *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
-	void CalculateMenuEntitiesPositionByEntity(CBaseEntity *pTarget, const MenuProfile_t *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
-	void CalculateMenuEntitiesPositionByViewModel(CBaseViewModel *pTarget, const MenuProfile_t *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
-	void CalculateMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pTarget, const MenuProfile_t *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
+	void CalculateMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
+	void CalculateMenuEntitiesPositionByEntity(CBaseEntity *pTarget, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
+	void CalculateMenuEntitiesPositionByViewModel(CBaseViewModel *pTarget, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
+	void CalculateMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pTarget, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
 
 	// Calculate a color.
 	static Color CalculateBackgroundColor(const Color &rgbaActive, const Color &rgbaInactive);

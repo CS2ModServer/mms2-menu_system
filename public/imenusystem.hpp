@@ -25,7 +25,6 @@
 
 #	pragma once
 
-#	include "imenuprofiles.hpp"
 #	include "imenusystem/isample.hpp"
 
 #	include <tier1/utlvector.h>
@@ -33,6 +32,7 @@
 #	define MENUSYSTEM_INTERFACE_NAME "Menu System v1.0.0"
 
 class CEntityInstance;
+class IMenuProfileSystem; // See "imenuprofilesystem.hpp"
 
 /**
  * @brief A Menu System interface.
@@ -69,7 +69,7 @@ public:
 	 * 
 	 * @return              Returns a profiles pointer.
 	 */
-	virtual IMenuProfiles *GetProfiles() = 0;
+	virtual IMenuProfileSystem *GetProfiles() = 0;
 }; // IMenuSystem
 
 #endif // _INCLUDE_METAMOD_SOURCE_IMENUSYSTEM_HPP_

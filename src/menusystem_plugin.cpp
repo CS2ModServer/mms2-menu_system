@@ -20,6 +20,7 @@
  */
 
 #include <menusystem_plugin.hpp>
+#include <menu/profile.hpp>
 #include <globals.hpp>
 #include <math.hpp>
 
@@ -559,9 +560,9 @@ MenuSystem_Plugin::CPlayer &MenuSystem_Plugin::GetPlayerData(const CPlayerSlot &
 	return m_aPlayers[iClient];
 }
 
-IMenuProfiles *MenuSystem_Plugin::GetProfiles()
+IMenuProfileSystem *MenuSystem_Plugin::GetProfiles()
 {
-	return static_cast<IMenuProfiles *>(this);
+	return static_cast<IMenuProfileSystem *>(this);
 }
 
 bool MenuSystem_Plugin::Init()
@@ -701,7 +702,7 @@ void MenuSystem_Plugin::OnSpawnGroupCreateLoading(SpawnGroupHandle_t hSpawnGroup
 
 	const Vector vecScales {1.f, 1.f, 1.f};
 
-	auto *pProfile = Menu::System::CProfiles::Get();
+	auto *pProfile = Menu::CProfileSystem::GetInternal();
 
 	Assert(pProfile);
 
@@ -968,7 +969,7 @@ bool MenuSystem_Plugin::LoadProfiles(char *error, size_t maxlen)
 {
 	CUtlVector<CUtlString> vecMessages;
 
-	if(!Menu::System::CProfiles::Load(m_sBaseGameDirectory.c_str(), MENUSYSTEM_BASE_PATHID, vecMessages))
+	if(!Menu::CProfileSystem::Load(m_sBaseGameDirectory.c_str(), MENUSYSTEM_BASE_PATHID, vecMessages))
 	{
 		if(vecMessages.Count() && Logger::IsChannelEnabled(LS_WARNING))
 		{
@@ -995,7 +996,7 @@ bool MenuSystem_Plugin::LoadProfiles(char *error, size_t maxlen)
 
 bool MenuSystem_Plugin::ClearProfiles(char *error, size_t maxlen)
 {
-	Menu::System::CProfiles::Clear();
+	Menu::CProfileSystem::Clear();
 
 	return true;
 }
@@ -1107,7 +1108,7 @@ bool MenuSystem_Plugin::UnloadSpawnGroups(char *error, size_t maxlen)
 	return true;
 }
 
-void MenuSystem_Plugin::SetMenuEntityKeyValuesByProfile(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation, MenuProfile_t *pProfile, MenuEntityKeyValuesFlags_t eFlags, const char *pszMessageText)
+void MenuSystem_Plugin::SetMenuEntityKeyValuesByProfile(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation, Menu::CProfile *pProfile, MenuEntityKeyValuesFlags_t eFlags, const char *pszMessageText)
 {
 	Assert(pMenuKV);
 	Assert(pProfile);
@@ -1121,15 +1122,15 @@ void MenuSystem_Plugin::SetMenuEntityKeyValuesByProfile(CEntityKeyValues *pMenuK
 	// Copy from profile.
 	{
 		// bDrawBackground: Profile must have a background values.
-		CEntityKeyValues *pProfileKV = pProfile->GetAllocactedEntityKeyValues(Menu::System::CProfiles::GetEntityKeyValuesAllocator());
+		const CEntityKeyValues *pProfileKV = pProfile->GetAllocactedFullEntityKeyValues(Menu::CProfileSystem::GetEntityKeyValuesAllocator());
 
 		pMenuKV->CopyFrom(pProfileKV, false);
 
 		delete pProfileKV;
 	}
 
-	Color *pActiveColor = pProfile->GetActiveColor(), 
-	      *pInactiveColor = pProfile->GetInactiveColor();
+	const Color *pActiveColor = pProfile->GetActiveColor(), 
+	            *pInactiveColor = pProfile->GetInactiveColor();
 
 	if(bDrawBackground)
 	{
@@ -1140,7 +1141,7 @@ void MenuSystem_Plugin::SetMenuEntityKeyValuesByProfile(CEntityKeyValues *pMenuK
 	}
 	else
 	{
-		Color *pColor = (eFlags & MENU_EKV_FLAG_IS_ACTIVE) ? pActiveColor : pInactiveColor;
+		const Color *pColor = (eFlags & MENU_EKV_FLAG_IS_ACTIVE) ? pActiveColor : pInactiveColor;
 
 		if(pColor)
 		{
@@ -1174,30 +1175,39 @@ Vector MenuSystem_Plugin::GetEntityPosition(CBaseEntity *pEntity, QAngle *pRotat
 	return CGameSceneNode_Helper::GetAbsOriginAccessor(pEntitySceneNode);
 }
 
-void MenuSystem_Plugin::CalculateMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, const MenuProfile_t *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
+void MenuSystem_Plugin::CalculateMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
-	vecResult = AddToFrontByRotation2(vecOrigin, angRotation, pProfile->GetMatrixForwardOffset(), pProfile->GetMatrixLeftOffset(), pProfile->GetMatrixRightOffset(), pProfile->GetMatrixUpOffset());
+	const auto *pMatrixOffset = pProfile->m_pMatrixOffset;
 
-	const float flBackgroundAway = pProfile->GetBackgroundAwayUnits();
+	Menu::CProfile::MatrixOffset_t aMatrixOffset {};
+
+	if(pMatrixOffset)
+	{
+		aMatrixOffset = *pMatrixOffset;
+	}
+
+	vecResult = AddToFrontByRotation2(vecOrigin, angRotation, aMatrixOffset.m_flForward, aMatrixOffset.m_flLeft, aMatrixOffset.m_flRight, aMatrixOffset.m_flUp);
+
+	const auto flBackgroundAway = pProfile->GetBackgroundAwayUnits();
 
 	vecBackgroundResult = AddToFrontByRotation2(vecResult, angRotation, flBackgroundAway, flBackgroundAway);
 
 	angResult = {0.f, AngleNormalize(angRotation.y - 90.f), AngleNormalize(-angRotation.x + 90.f)};
 }
 
-void MenuSystem_Plugin::CalculateMenuEntitiesPositionByEntity(CBaseEntity *pTarget, const MenuProfile_t *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
+void MenuSystem_Plugin::CalculateMenuEntitiesPositionByEntity(CBaseEntity *pTarget, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
 	vecResult = GetEntityPosition(pTarget, &angResult);
 	CalculateMenuEntitiesPosition(vecResult, angResult, pProfile, vecBackgroundResult, vecResult, angResult);
 }
 
-void MenuSystem_Plugin::CalculateMenuEntitiesPositionByViewModel(CBaseViewModel *pTarget, const MenuProfile_t *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
+void MenuSystem_Plugin::CalculateMenuEntitiesPositionByViewModel(CBaseViewModel *pTarget, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
 	vecResult = GetEntityPosition(pTarget, &angResult);
 	CalculateMenuEntitiesPosition(vecResult, angResult, pProfile, vecBackgroundResult, vecResult, angResult);
 }
 
-void MenuSystem_Plugin::CalculateMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pTarget, const MenuProfile_t *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
+void MenuSystem_Plugin::CalculateMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pTarget, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
 	vecResult = GetEntityPosition(pTarget) + CBaseModelEntity_Helper::GetViewOffsetAccessor(pTarget);
 	angResult = CCSPlayerPawnBase_Helper::GetEyeAnglesAccessor(pTarget);
@@ -1347,7 +1357,7 @@ void MenuSystem_Plugin::SpawnMenuEntities(const Vector &vecBackgroundOrigin, con
 	                                          "9. Выход\n";
 
 	{
-		auto *pProfile = Menu::System::CProfiles::Get();
+		auto *pProfile = Menu::CProfileSystem::GetInternal();
 
 		Assert(pProfile);
 		SetMenuEntityKeyValuesByProfile(pMenuKV, vecBackgroundOrigin, angRotation, pProfile, MENU_EKV_NONE_FLAGS, szMessageTextFull);
@@ -1392,10 +1402,9 @@ void MenuSystem_Plugin::SpawnMenuEntitiesByEntity(CBaseEntity *pTarget, CUtlVect
 
 	QAngle angMenuRotation {};
 
-	auto *pProfile = Menu::System::CProfiles::Get();
+	auto *pProfile = Menu::CProfileSystem::GetInternal();
 
 	Assert(pProfile);
-	Assert(pProfile->m_pMatrixOffset);
 	CalculateMenuEntitiesPositionByEntity(pTarget, pProfile, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 	SpawnMenuEntities(vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation, pEntities);
 }
@@ -1456,10 +1465,9 @@ void MenuSystem_Plugin::TeleportMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pTarge
 
 	QAngle angMenuRotation {};
 
-	auto *pProfile = Menu::System::CProfiles::Get();
+	auto *pProfile = Menu::CProfileSystem::GetInternal();
 
 	Assert(pProfile);
-	Assert(pProfile->m_pMatrixOffset);
 	CalculateMenuEntitiesPositionByCSPlayer(pTarget, pProfile, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 
 	FOR_EACH_VEC(vecEntities, i)
@@ -1513,10 +1521,9 @@ bool MenuSystem_Plugin::AttachMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pTarget,
 
 	QAngle angMenuRotation {};
 
-	auto *pProfile = Menu::System::CProfiles::Get();
+	auto *pProfile = Menu::CProfileSystem::GetInternal();
 
 	Assert(pProfile);
-	Assert(pProfile->m_pMatrixOffset);
 	CalculateMenuEntitiesPositionByEntity(pTarget, pProfile, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 
 	if(Logger::IsChannelEnabled(LS_DETAILED))
