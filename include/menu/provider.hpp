@@ -169,10 +169,25 @@ namespace Menu
 				CGameEventManager **m_ppGameEventManager = nullptr;
 			}; // Menu::CProvider::GameStorage::CSource2Server
 
-			const CBaseEntity &GetBaseEntity() const;
-			const CBasePlayerPawn &GetBasePlayerPawn() const;
-			const CGameSystem &GetGameSystem() const;
-			const CSource2Server &GetSource2Server() const;
+			const CBaseEntity &GetBaseEntity() const
+			{
+				return m_aBaseEntity;
+			}
+
+			const CBasePlayerPawn &GetBasePlayerPawn() const
+			{
+				return m_aBasePlayerPawn;
+			}
+
+			const CGameSystem &GetGameSystem() const
+			{
+				return m_aGameSystem;
+			}
+
+			const CSource2Server &GetSource2Server() const
+			{
+				return m_aSource2Server;
+			}
 
 		private:
 			CBaseEntity m_aBaseEntity;
@@ -181,7 +196,10 @@ namespace Menu
 			CSource2Server m_aSource2Server;
 		}; // Menu::CProvider::GameDataStorage
 
-		const GameDataStorage &GetGameDataStorage() const;
+		const GameDataStorage &GetGameDataStorage() const
+		{
+			return m_aStorage;
+		}
 
 	private:
 		CUtlSymbolTableLarge_CI m_aSymbolTable;

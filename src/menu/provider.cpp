@@ -225,28 +225,3 @@ bool Menu::CProvider::GameDataStorage::LoadSource2Server(IGameData *pRoot, KeyVa
 {
 	return m_aSource2Server.Load(pRoot, pGameConfig, vecMessages);
 }
-
-const Menu::CProvider::GameDataStorage::CBaseEntity &Menu::CProvider::GameDataStorage::GetBaseEntity() const
-{
-	return m_aBaseEntity;
-}
-
-const Menu::CProvider::GameDataStorage::CBasePlayerPawn &Menu::CProvider::GameDataStorage::GetBasePlayerPawn() const
-{
-	return m_aBasePlayerPawn;
-}
-
-const Menu::CProvider::GameDataStorage::CGameSystem &Menu::CProvider::GameDataStorage::GetGameSystem() const
-{
-	return m_aGameSystem;
-}
-
-const Menu::CProvider::GameDataStorage::CSource2Server &Menu::CProvider::GameDataStorage::GetSource2Server() const
-{
-	return m_aSource2Server;
-}
-
-const Menu::CProvider::GameDataStorage &Menu::CProvider::GetGameDataStorage() const
-{
-	return m_aStorage;
-}
