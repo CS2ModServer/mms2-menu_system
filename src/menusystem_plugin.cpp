@@ -821,6 +821,14 @@ bool MenuSystem_Plugin::LoadSchema(char *error, size_t maxlen)
 		bResult = Menu::Schema::CSystem::Load();
 	}
 
+	if(!bResult)
+	{
+		if(error && maxlen)
+		{
+			strncpy(error, "Failed to load a schema. See warnings. See warnings", maxlen);
+		}
+	}
+
 	return bResult;
 }
 
@@ -839,6 +847,7 @@ bool MenuSystem_Plugin::InitPathResolver(char *error, size_t maxlen)
 		{
 			strncpy(error, "Failed to initialize a path resolver", maxlen);
 		}
+
 		return false;
 	}
 
@@ -897,24 +906,21 @@ bool MenuSystem_Plugin::LoadProvider(char *error, size_t maxlen)
 
 	bool bResult = CProvider::Load(m_sBaseGameDirectory.c_str(), MENUSYSTEM_BASE_PATHID, vecMessages);
 
-	if(vecMessages.Count())
+	if(vecMessages.Count() && Logger::IsChannelEnabled(LS_WARNING))
 	{
-		if(Logger::IsChannelEnabled(LS_WARNING))
+		auto aWarnings = Logger::CreateWarningsScope();
+
+		FOR_EACH_VEC(vecMessages, i)
 		{
-			auto aWarnings = Logger::CreateWarningsScope();
+			auto &aMessage = vecMessages[i];
 
-			FOR_EACH_VEC(vecMessages, i)
-			{
-				auto &aMessage = vecMessages[i];
-
-				aWarnings.Push(aMessage.Get());
-			}
-
-			aWarnings.SendColor([&](Color rgba, const CUtlString &sContext)
-			{
-				Logger::Warning(rgba, sContext);
-			});
+			aWarnings.Push(aMessage.Get());
 		}
+
+		aWarnings.SendColor([&](Color rgba, const CUtlString &sContext)
+		{
+			Logger::Warning(rgba, sContext);
+		});
 	}
 
 	if(!bResult)
@@ -934,24 +940,21 @@ bool MenuSystem_Plugin::UnloadProvider(char *error, size_t maxlen)
 
 	bool bResult = CProvider::Destroy(vecMessages);
 
-	if(vecMessages.Count())
+	if(vecMessages.Count() && Logger::IsChannelEnabled(LS_WARNING))
 	{
-		if(Logger::IsChannelEnabled(LS_WARNING))
+		auto aWarnings = Logger::CreateWarningsScope();
+
+		FOR_EACH_VEC(vecMessages, i)
 		{
-			auto aWarnings = Logger::CreateWarningsScope();
+			auto &aMessage = vecMessages[i];
 
-			FOR_EACH_VEC(vecMessages, i)
-			{
-				auto &aMessage = vecMessages[i];
-
-				aWarnings.Push(aMessage.Get());
-			}
-
-			aWarnings.SendColor([&](Color rgba, const CUtlString &sContext)
-			{
-				Logger::Warning(rgba, sContext);
-			});
+			aWarnings.Push(aMessage.Get());
 		}
+
+		aWarnings.SendColor([&](Color rgba, const CUtlString &sContext)
+		{
+			Logger::Warning(rgba, sContext);
+		});
 	}
 
 	if(!bResult)
@@ -969,29 +972,34 @@ bool MenuSystem_Plugin::LoadProfiles(char *error, size_t maxlen)
 {
 	CUtlVector<CUtlString> vecMessages;
 
-	if(!Menu::CProfileSystem::Load(m_sBaseGameDirectory.c_str(), MENUSYSTEM_BASE_PATHID, vecMessages))
+	bool bResult = Menu::CProfileSystem::Load(m_sBaseGameDirectory.c_str(), MENUSYSTEM_BASE_PATHID, vecMessages);
+
+	if(vecMessages.Count() && Logger::IsChannelEnabled(LS_WARNING))
 	{
-		if(vecMessages.Count() && Logger::IsChannelEnabled(LS_WARNING))
+		auto aWarnings = Logger::CreateWarningsScope();
+
+		FOR_EACH_VEC(vecMessages, i)
 		{
-			auto aWarnings = Logger::CreateWarningsScope();
+			auto &aMessage = vecMessages[i];
 
-			FOR_EACH_VEC(vecMessages, i)
-			{
-				auto &aMessage = vecMessages[i];
-
-				aWarnings.Push(aMessage.Get());
-			}
-
-			aWarnings.SendColor([&](Color rgba, const CUtlString &sContext)
-			{
-				Logger::Warning(rgba, sContext);
-			});
+			aWarnings.Push(aMessage.Get());
 		}
 
-		return false;
+		aWarnings.SendColor([&](Color rgba, const CUtlString &sContext)
+		{
+			Logger::Warning(rgba, sContext);
+		});
 	}
 
-	return true;
+	if(!bResult)
+	{
+		if(error && maxlen)
+		{
+			strncpy(error, "Failed to load a profile system. See warnings", maxlen);
+		}
+	}
+
+	return bResult;
 }
 
 bool MenuSystem_Plugin::ClearProfiles(char *error, size_t maxlen)
@@ -1027,13 +1035,13 @@ bool MenuSystem_Plugin::InitEntityManager(char *error, size_t maxlen)
 		}
 	}
 
-	// Gets an entity manager spawn group mgr interface.
+	// Gets an entity manager spawn group provider interface.
 	{
 		m_pEntityManagerSpawnGroupProvider = m_pEntityManager->GetSpawnGroupProvider();
 
 		if(!m_pEntityManagerSpawnGroupProvider)
 		{
-			strncpy(error, "Failed to get a entity manager spawn group mgr interface", maxlen);
+			strncpy(error, "Failed to get a entity manager spawn group provider interface", maxlen);
 
 			return false;
 		}
@@ -2073,9 +2081,9 @@ bool MenuSystem_Plugin::UnhookGameEvents(char *error, size_t maxlen)
 
 void MenuSystem_Plugin::OnReloadSchemaCommand(const CCommandContext &context, const CCommand &args)
 {
-	char error[256] = "";
+	char error[256];
 
-	if(!LoadSchema(error, sizeof(error)) && error[0])
+	if(!LoadSchema(error, sizeof(error)))
 	{
 		Logger::WarningFormat("%s\n", error);
 	}
@@ -2083,9 +2091,9 @@ void MenuSystem_Plugin::OnReloadSchemaCommand(const CCommandContext &context, co
 
 void MenuSystem_Plugin::OnReloadGameDataCommand(const CCommandContext &context, const CCommand &args)
 {
-	char error[256] = "";
+	char error[256];
 
-	if(!LoadProvider(error, sizeof(error)) && error[0])
+	if(!LoadProvider(error, sizeof(error)))
 	{
 		Logger::WarningFormat("%s\n", error);
 	}
@@ -2093,9 +2101,9 @@ void MenuSystem_Plugin::OnReloadGameDataCommand(const CCommandContext &context, 
 
 void MenuSystem_Plugin::OnReloadProfilesCommand(const CCommandContext &context, const CCommand &args)
 {
-	char error[256] = "";
+	char error[256];
 
-	if(!LoadProfiles(error, sizeof(error)) && error[0])
+	if(!LoadProfiles(error, sizeof(error)))
 	{
 		Logger::WarningFormat("%s\n", error);
 	}
