@@ -1,5 +1,5 @@
 {
-	"default": "hudmenu_annotation_style",
+	"default": "hudmenu_annotation_style-4:3",
 
 	"menu_controller":
 	{
@@ -86,6 +86,7 @@
 
 		"matrix_offset":
 		{
+			"forward": 8.0,
 			"up": -4.25,
 			"left": 8.0
 		}
@@ -99,6 +100,7 @@
 
 		"matrix_offset":
 		{
+			"forward": 8.0,
 			"up": -4.25,
 			"left": 10.65
 		}
