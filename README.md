@@ -1,16 +1,23 @@
 ## Menu System
+> This is a unifying menu system for interacting with the player displayed control panel for your plugin
 
-## Preview profiles
-
+### Basic menu 
+* Normal menu to interactive press on items
 -----
 <p align="center">
   <img height="650px" src="https://github.com/Wend4r/mms2-menu_system/blob/main/.github/resources/preview-profile-hudmenu_annotation_style.png">
   <img height="420px" src="https://github.com/Wend4r/mms2-menu_system/blob/main/.github/resources/preview-profile-hudmenu_annotation_style2.png">
+</p>
+
+### Custom profiles
+* You can customize the menu to any style you like
+-----
+<p align="center">
   <img height="650px"src="https://github.com/Wend4r/mms2-menu_system/blob/main/.github/resources/preview-profile-hudmenu_annotation_style-custom.png">
   <img height="650px"src="https://github.com/Wend4r/mms2-menu_system/blob/main/.github/resources/preview-profile-hudmenu_annotation_style-custom2.png">
 </p>
 
------
+* You can see the API system in `public` folder
 
 ## Requirements (included)
 
