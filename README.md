@@ -5,8 +5,9 @@
 -----
 <p align="center">
   <img height="650px" src="https://github.com/Wend4r/mms2-menu_system/blob/main/.github/resources/preview-profile-hudmenu_annotation_style.png">
-  <img height="420px" src="https://github.com/Wend4r/mms2-menu_system/blob/main/.github/resources/preview-profile-hudmenu_annotation_style-2.png">
+  <img height="420px" src="https://github.com/Wend4r/mms2-menu_system/blob/main/.github/resources/preview-profile-hudmenu_annotation_style2.png">
   <img height="650px"src="https://github.com/Wend4r/mms2-menu_system/blob/main/.github/resources/preview-profile-hudmenu_annotation_style-custom.png">
+  <img height="650px"src="https://github.com/Wend4r/mms2-menu_system/blob/main/.github/resources/preview-profile-hudmenu_annotation_style-custom2.png">
 </p>
 
 -----
