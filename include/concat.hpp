@@ -41,8 +41,8 @@ struct ConcatLine_t
 	T m_aStartWith;
 	T m_aBefore;
 	T m_aBetween;
-	T m_aEnd;
-	T m_aEndAndStartWith;
+	T m_aEnds;
+	T m_aEndsAndStartsWith;
 }; // ConcatLine_t<T>
 
 template<class T>
@@ -62,7 +62,7 @@ protected:
 			vecResult.push_back(Base_t::m_aBefore);
 		}
 
-		vecResult.push_back(Base_t::m_aEnd);
+		vecResult.push_back(Base_t::m_aEnds);
 
 		return vecResult;
 	}
@@ -77,7 +77,7 @@ protected:
 			vecResult.push_back(Base_t::m_aBefore);
 		}
 
-		vecResult.push_back(Base_t::m_aEnd);
+		vecResult.push_back(Base_t::m_aEnds);
 
 		return vecResult;
 	}
@@ -92,14 +92,14 @@ protected:
 			vecResult.push_back(Base_t::m_aBefore);
 		}
 
-		vecResult.push_back(Base_t::m_aEnd);
+		vecResult.push_back(Base_t::m_aEnds);
 
 		return vecResult;
 	}
 
 	inline std::vector<T> GetKeyValueConcat(const T &aKey, const T &aValue) const
 	{
-		return {Base_t::m_aStartWith, aKey, Base_t::m_aBetween, aValue, Base_t::m_aEnd};
+		return {Base_t::m_aStartWith, aKey, Base_t::m_aBetween, aValue, Base_t::m_aEnds};
 	}
 
 	inline std::vector<T> GetKeyValueConcat(const T &aKey, const std::vector<T> &vecValues) const
@@ -107,19 +107,19 @@ protected:
 		std::vector<T> vecResult = {Base_t::m_aStartWith, aKey, Base_t::m_aBefore};
 
 		vecResult.insert(vecResult.cend(), vecValues.cbegin(), vecValues.cend());
-		vecResult.push_back(Base_t::m_aEnd);
+		vecResult.push_back(Base_t::m_aEnds);
 
 		return vecResult;
 	}
 
 	inline std::vector<T> GetKeyValueStringConcat(const T &aKey, const T &aValue) const
 	{
-		return {Base_t::m_aStartWith, aKey, Base_t::m_aBetween, "\"", aValue, "\"", Base_t::m_aEnd};
+		return {Base_t::m_aStartWith, aKey, Base_t::m_aBetween, "\"", aValue, "\"", Base_t::m_aEnds};
 	}
 
 	inline std::vector<T> GetKeyStringValueStringConcat(const T &aKey, const T &aValue) const
 	{
-		return {Base_t::m_aStartWith, "\"", aKey, "\"", Base_t::m_aBetween, "\"", aValue, "\"", Base_t::m_aEnd};
+		return {Base_t::m_aStartWith, "\"", aKey, "\"", Base_t::m_aBetween, "\"", aValue, "\"", Base_t::m_aEnds};
 	}
 }; // CConcatLineStringImpl<T>
 
@@ -133,12 +133,12 @@ public:
 	CConcatLineStringBase() = delete;
 
 public:
-	const char *GetHeadWith() const
+	const char *GetHeadsWith() const
 	{
 		return m_aHeadWith;
 	}
 
-	const char *GetStartWith() const
+	const char *GetStartsWith() const
 	{
 		return m_aStartWith;
 	}
@@ -153,14 +153,14 @@ public:
 		return m_aBetween;
 	}
 
-	const char *GetEnd() const
+	const char *GetEnds() const
 	{
-		return m_aEnd;
+		return m_aEnds;
 	}
 
-	const char *GetEndAndStartWith() const
+	const char *GetEndsAndStartsWith() const
 	{
-		return m_aEndAndStartWith;
+		return m_aEndsAndStartsWith;
 	}
 }; // CConcatLineStringBase
 
@@ -168,12 +168,12 @@ class CConcatLineString : public CConcatLineStringBase
 {
 public:
 	using Base = CConcatLineStringBase;
-	using Base::GetHeadWith;
-	using Base::GetStartWith;
+	using Base::GetHeadsWith;
+	using Base::GetStartsWith;
 	using Base::GetBefore;
 	using Base::GetBetween;
-	using Base::GetEnd;
-	using Base::GetEndAndStartWith;
+	using Base::GetEnds;
+	using Base::GetEndsAndStartsWith;
 
 public:
 	const char *AppendHeadToBuffer(CBufferString &sMessage, const char *pszHeadKey) const;
@@ -197,17 +197,21 @@ public:
 	const char *AppendPointerToBuffer(CBufferString &sMessage, const char *pszKey, const void *pValue) const;
 	const char *AppendStringToBuffer(CBufferString &sMessage, const char *pszKey, const char *pszValue) const;
 	const char *AppendKeyStringValueStringToBuffer(CBufferString &sMessage, const char *pszKey, const char *pszValue) const;
+	const char *AppendEndsToBuffer(CBufferString &sMessage) const;
+	const char *AppendEndsAndStartsToBuffer(CBufferString &sMessage) const;
 
 	int AppendToVector(CUtlVector<const char *> vecMessage, const char *pszKey, const char *pszValue) const;
 	int AppendStringToVector(CUtlVector<const char *> vecMessage, const char *pszKey, const char *pszValue) const;
 }; // CConcatLineString
 
 // Globals.
-
 extern const std::array<const CConcatLineString, 8> g_arrEmbedsConcat;
 
-// Backward compatibility.
+// Bcompatibility.
 #define g_aEmbedConcat g_arrEmbedsConcat[0]
 #define g_aEmbed2Concat g_arrEmbedsConcat[1] // Next nesting.
+
+// Menu thing.
+extern const CConcatLineString g_aMenuConcat;
 
 #endif // _INCLUDE_METAMOD_SOURCE_CONCAT_HPP_

@@ -1,0 +1,102 @@
+// This content is derived from SourceMod, a project by AlliedModders.
+// SourceMod is licensed under the GNU General Public License version 3 (GPLv3).
+// 
+// For more information about SourceMod, visit: https://www.sourcemod.net/
+// 
+// The GPLv3 license allows you to use, modify, and redistribute this code
+// provided that you comply with its terms, such as retaining this notice and 
+// providing the source code for any derived works. For details on the GPLv3 license, 
+// visit: https://www.gnu.org/licenses/gpl-3.0.html
+
+"Phrases"
+{
+	"No Access"
+	{
+		"en"			"You do not have access to this command"
+	}
+	
+	"Back"
+	{
+		"en"			"Back"
+	}
+	
+	"Next"
+	{
+		"en"			"Next"
+	}
+	
+	"Exit"
+	{
+		"en"			"Exit"
+	}
+	
+	"Previous"
+	{
+		"en"			"Previous"
+	}
+	
+	"all players"
+	{
+		"en"			"all players"
+	}
+	
+	"all humans"
+	{
+		"en"			"all humans"
+	}
+	
+	"all bots"
+	{
+		"en"			"all bots"
+	}
+	
+	"all dead players"
+	{
+		"en"			"all dead players"
+	}
+	
+	"all alive players"
+	{
+		"en"			"all alive players"
+	}
+
+	"all spectators"
+	{
+		"en"			"all spectators"
+	}
+
+	"Vote Count"
+	{
+		"#format"		"{1:i},{2:i},{3:i}"
+		"en"			"Votes: {1}/{2}, {3}s left"
+	}
+
+	"Voted For"
+	{
+		"#format"		"{1:s},{2:s}"
+		"en"			"{1} voted for {2}"	
+	}
+
+	"Changed Vote"
+	{
+		"#format"		"{1:s},{2:s}"
+		"en"			"{1} changed their vote to {2}"	
+	}
+
+	"No Vote"
+	{
+		"en"			"No Vote"
+	}
+	
+	"Name Reserved"
+	{
+		"en"			"Your name is reserved by SourceMod; set your password to use it."
+	}
+	
+	/* This is a special "pass-thru" translation */
+	"_s"
+	{
+		"#format"		"{1:s}"
+		"en"			"{1}"
+	}
+}

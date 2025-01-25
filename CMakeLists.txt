@@ -98,13 +98,13 @@ set(SOURCE_MENU_SCHEMA_FILES
 	${SOURCE_MENU_SCHEMA_DIR}/csplayerbase_cameraservices.cpp
 	${SOURCE_MENU_SCHEMA_DIR}/csplayerpawnbase.cpp
 	${SOURCE_MENU_SCHEMA_DIR}/gamescenenode.cpp
+	${SOURCE_MENU_SCHEMA_DIR}/pointworldtext.cpp
 )
 
 set(SOURCE_MENU_FILES
 	${SOURCE_MENU_DIR}/chatcommandsystem.cpp
 	${SOURCE_MENU_DIR}/chatsystem.cpp
 	${SOURCE_MENU_DIR}/gameeventmanager2system.cpp
-	# ${SOURCE_MENU_DIR}/instance.cpp
 	${SOURCE_MENU_DIR}/language.cpp
 	${SOURCE_MENU_DIR}/pathresolver.cpp
 	${SOURCE_MENU_DIR}/player.cpp
@@ -125,6 +125,7 @@ set(SOURCE_FILES
 	${SOURCE_MENU_DIR}/schema.cpp
 
 	${SOURCE_MENU_FILES}
+	${SOURCE_DIR}/menu.cpp
 	${SOURCE_DIR}/menusystem_plugin.cpp # The shared entry point.
 )
 

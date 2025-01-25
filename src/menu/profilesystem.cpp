@@ -252,6 +252,26 @@ CKeyValues3Context *Menu::CProfileSystem::GetEntityKeyValuesAllocator()
 	return &m_aEntityKeyValuesAllocator;
 }
 
+uint Menu::CProfileSystem::LoopByProfiles(const OnProfileCallback_t &funcCallback)
+{
+	FOR_EACH_MAP(m_map, i)
+	{
+		funcCallback(m_map.Key(i), m_map.Element(i));
+	}
+
+	return m_map.Count();
+}
+
+uint Menu::CProfileSystem::LoopByProfileRefs(const OnProfileCallback_t &funcCallback)
+{
+	FOR_EACH_MAP(m_mapRefs, i)
+	{
+		funcCallback(m_mapRefs.Key(i), m_mapRefs.Element(i));
+	}
+
+	return m_mapRefs.Count();
+}
+
 CUtlSymbolLarge Menu::CProfileSystem::GetSymbol(const char *pszName)
 {
 	return m_tableSymbols.AddString(pszName);

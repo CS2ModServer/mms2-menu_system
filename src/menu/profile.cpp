@@ -69,6 +69,7 @@ bool Menu::CProfile::Load(CProfileSystem *pSystem, KeyValues3 *pData, ProfileLoa
 	m_pInactiveColor = new Color(pData->GetMemberColor("inactive_color"));
 	m_pActiveColor = new Color(pData->GetMemberColor("active_color"));
 	m_flBackgroundAwayUnits = pData->GetMemberFloat("background_away_units");
+	m_vecResources.AddToTail(pData->GetMemberString("background_material_name"));
 
 	if(!(eFlags & PROFILE_LOAD_FLAG_DONT_REMOVE_STATIC_MEMBERS))
 	{
@@ -433,7 +434,26 @@ float Menu::CProfile::GetBackgroundAwayUnits() const
 	return flResult;
 }
 
-const CEntityKeyValues *Menu::CProfile::GetAllocactedEntityKeyValues(CKeyValues3Context *pAllocator, bool bIncludeBackground) const
+
+CUtlVector<const char *> Menu::CProfile::GetResources() const
+{
+	CUtlVector<const char *> vecResult = m_vecResources.GetExports();
+
+	Metadata_t::Bases_t vecBaseline = m_aMetadata.GetBaseline();
+
+	FOR_EACH_VEC_BACK(vecBaseline, i)
+	{
+		const Resources_t &vecBaseResources = vecBaseline[i]->m_vecResources;
+
+		auto vecSubresult = vecBaseResources.GetExports();
+
+		vecResult.AddMultipleToTail(vecSubresult.Count(), vecSubresult.Base());
+	}
+
+	return vecResult;
+}
+
+CEntityKeyValues *Menu::CProfile::GetAllocactedEntityKeyValues(CKeyValues3Context *pAllocator, bool bIncludeBackground) const
 {
 	CEntityKeyValues *pResult = new CEntityKeyValues(pAllocator, pAllocator ? EKV_ALLOCATOR_EXTERNAL : EKV_ALLOCATOR_NORMAL);
 

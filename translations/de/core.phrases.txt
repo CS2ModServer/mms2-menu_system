@@ -1,0 +1,98 @@
+// This content is derived from SourceMod, a project by AlliedModders.
+// SourceMod is licensed under the GNU General Public License version 3 (GPLv3).
+// 
+// For more information about SourceMod, visit: https://www.sourcemod.net/
+// 
+// The GPLv3 license allows you to use, modify, and redistribute this code
+// provided that you comply with its terms, such as retaining this notice and 
+// providing the source code for any derived works. For details on the GPLv3 license, 
+// visit: https://www.gnu.org/licenses/gpl-3.0.html
+
+"Phrases"
+{
+	"No Access"
+	{
+		"de"		"Du hast keinen Zugriff auf diesen Befehl"
+	}
+
+	"Back"
+	{
+		"de"		"Zurück "
+	}
+
+	"Next"
+	{
+		"de"		"Weiter"
+	}
+
+	"Exit"
+	{
+		"de"		"Verlassen"
+	}
+
+	"Previous"
+	{
+		"de"		"Vorherige"
+	}
+
+	"all players"
+	{
+		"de"		"alle Spieler"
+	}
+
+	"all humans"
+	{
+		"de"		"alle Menschen"
+	}
+
+	"all bots"
+	{
+		"de"		"alle Bots"
+	}
+
+	"all dead players"
+	{
+		"de"		"alle toten Spieler"
+	}
+
+	"all alive players"
+	{
+		"de"		"alle lebenden Spieler"
+	}
+
+	"_s"
+	{
+		"de"		"{1}"
+	}
+
+	"all spectators"
+	{
+		"de"		"alle Zuschauer"
+	}
+
+	"Vote Count"
+	{
+		"de"		"Stimmen: {1}/{2}, {3} Sekunden übrig."
+	}
+
+	"Voted For"
+	{
+		"de"		"{1} stimmte für {2}"
+	}
+
+	"Changed Vote"
+	{
+		"de"		"{1} änderte seine Abstimmung zu {2}"
+	}
+
+	"No Vote"
+	{
+		"de"		"Nicht abstimmen"
+	}
+
+	"Name Reserved"
+	{
+		"de"		"Dein Name ist durch SourceMod reserviert; setze Dein Passwort um ihn zu nutzen."
+	}
+
+}

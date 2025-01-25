@@ -72,6 +72,7 @@ MenuSystem_Plugin::MenuSystem_Plugin()
     CCSPlayerBase_CameraServices_Helper(this),
     CCSPlayerPawnBase_Helper(this),
     CGameSceneNode_Helper(this),
+    CPointWorldText_Helper(this),
 
     Logger(GetName(), [](LoggingChannelID_t nTagChannelID)
     {
@@ -80,7 +81,14 @@ MenuSystem_Plugin::MenuSystem_Plugin()
     CPathResolver(this),
 
     m_mapConVarCookies(DefLessFunc(const CUtlSymbolLarge)),
-    m_mapLanguages(DefLessFunc(const CUtlSymbolLarge))
+    m_mapLanguages(DefLessFunc(const CUtlSymbolLarge)),
+
+    m_aBackControlItem(CMenu::MENU_ITEM_FULL, "Back"),
+    m_aNextControlItem(CMenu::MENU_ITEM_FULL, "Next"),
+    m_aExitControlItem(CMenu::MENU_ITEM_FULL, "Exit"),
+    m_aControls({&m_aBackControlItem, &m_aNextControlItem, &m_aExitControlItem}),
+
+    m_mapMenuHandlers(DefLessFunc(const IMenu *))
 {
 	// Game events.
 	{
@@ -95,9 +103,9 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 
 			auto &aPlayerData = GetPlayerData(aPlayerSlot);
 
-			const auto &vecMenuEntities = aPlayerData.GetMenuEntities();
+			const auto &vecMenus = aPlayerData.GetMenus();
 
-			if(!vecMenuEntities.Count())
+			if(!vecMenus.Count())
 			{
 				return false;
 			}
@@ -117,15 +125,23 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 			int iNewTeam = pEvent->GetInt("team"), 
 			    iOldTeam = pEvent->GetInt("oldteam");
 
-			if(iNewTeam <= TEAM_SPECTATOR)
+			for(const auto &[nEndTimestamp, pMenu] : vecMenus)
 			{
-				AttachMenuEntitiesToEntity(pPlayerPawn, vecMenuEntities);
-			}
-			else
-			{
-				auto *pCSPlayerPawn = entity_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
+				CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
 
-				AttachMenuEntitiesToCSPlayer(pCSPlayerPawn, vecMenuEntities);
+				if(pInternalMenu)
+				{
+					if(iNewTeam <= TEAM_SPECTATOR)
+					{
+						AttachMenuInstanceToEntity(pInternalMenu, pPlayerPawn);
+					}
+					else
+					{
+						auto *pCSPlayerPawn = entity_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
+
+						AttachMenuInstanceToCSPlayer(pInternalMenu, pCSPlayerPawn);
+					}
+				}
 			}
 
 			return true;
@@ -138,11 +154,11 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 		{
 			CSingleRecipientFilter aFilter(aSlot);
 
-			int iClient = aSlot.Get();
+			int iSlot = aSlot.Get();
 
-			Assert(0 <= iClient && iClient < ABSOLUTE_PLAYER_LIMIT);
+			Assert(0 <= iSlot && iSlot < sizeof(m_aPlayers));
 
-			auto &aPlayer = m_aPlayers[iClient];
+			auto &aPlayer = m_aPlayers[iSlot];
 
 			if(!aPlayer.IsConnected())
 			{
@@ -171,47 +187,27 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 				Logger::Warning("Not found a your argument phrase\n");
 			}
 
-			// Spawn & attach menus.
+			// Create & display menu.
 			{
-				auto *pPlayerController = entity_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient + 1)));
+				auto *pProfile = Menu::CProfileSystem::GetInternal();
 
-				if(!pPlayerController)
-				{
-					Logger::WarningFormat("Failed to get player entity. Client index is %d\n", iClient);
+				CMenu *pInternalMenu = CreateInternalMenu(pProfile);
 
-					return false;
-				}
+				pInternalMenu->GetTitleRef().Set("Title");
 
-				CBasePlayerPawn *pPlayerPawn = CBasePlayerController_Helper::GetPawnAccessor(pPlayerController)->Get();
+				auto &vecItems = pInternalMenu->GetItemsRef();
 
-				if(!pPlayerPawn)
-				{
-					Logger::WarningFormat("Failed to get player pawn. Client index is %d\n", iClient);
+				vecItems.AddToTail("fatherbufi");
+				vecItems.AddToTail("mamabufi");
+				vecItems.AddToTail("sisterbufi");
+				vecItems.AddToTail("doublebufi");
+				vecItems.AddToTail("bufi");
+				vecItems.AddToTail("superbufi");
+				vecItems.AddToTail("megabufi");
+				vecItems.AddToTail("ultrabufi");
+				vecItems.AddToTail("ultradoublebufi");
 
-					return false;
-				}
-
-				CUtlVector<CEntityInstance *> vecEntitites;
-
-				SpawnMenuEntitiesByEntity(pPlayerPawn, &vecEntitites);
-
-				uint8 iTeam = CBaseEntity_Helper::GetTeamNumAccessor(pPlayerController);
-
-				auto *pCSPlayerPawn = entity_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
-
-				if(iTeam <= TEAM_SPECTATOR)
-				{
-					AttachMenuEntitiesToEntity(pPlayerPawn, vecEntitites);
-					TeleportMenuEntitiesToCSPlayer(pCSPlayerPawn, vecEntitites);
-				}
-				else
-				{
-					AttachMenuEntitiesToCSPlayer(pCSPlayerPawn, vecEntitites);
-				}
-
-				aPlayer.GetMenuEntities().AddVectorToTail(vecEntitites);
-
-				return true;
+				return DisplayInternalMenuToPlayer(pInternalMenu, aSlot);
 			}
 		}});
 
@@ -224,15 +220,12 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 				return false;
 			}
 
-			auto &vecMenuEntities = aPlayer.GetMenuEntities();
+			const auto &vecMenus = aPlayer.GetMenus();
 
-			for(auto *pMenuEntity : vecMenuEntities)
+			for(const auto &[nEndTimestamp, pMenu] : vecMenus)
 			{
-				m_pEntityManagerProviderAgent->PushDestroyQueue(pMenuEntity);
+				CloseMenu(pMenu);
 			}
-
-			m_pEntityManagerProviderAgent->ExecuteDestroyQueued();
-			vecMenuEntities.Purge();
 
 			return true;
 		}});
@@ -460,6 +453,9 @@ bool MenuSystem_Plugin::Unload(char *error, size_t maxlen)
 		return false;
 	}
 
+	m_MenuAllocator.Purge();
+	m_mapMenuHandlers.Purge();
+
 	ConVar_Unregister();
 
 	// ...
@@ -553,16 +549,306 @@ IMenuSystem::IPlayer *MenuSystem_Plugin::GetPlayer(const CPlayerSlot &aSlot)
 
 MenuSystem_Plugin::CPlayer &MenuSystem_Plugin::GetPlayerData(const CPlayerSlot &aSlot)
 {
-	int iClient = aSlot.Get();
+	int iSlot = aSlot.Get();
 
-	Assert(0 <= iClient && iClient < ABSOLUTE_PLAYER_LIMIT);
+	Assert(0 <= iSlot && iSlot < sizeof(m_aPlayers));
 
-	return m_aPlayers[iClient];
+	return m_aPlayers[iSlot];
 }
 
 IMenuProfileSystem *MenuSystem_Plugin::GetProfiles()
 {
 	return static_cast<IMenuProfileSystem *>(this);
+}
+
+IMenu *MenuSystem_Plugin::CreateMenu(IMenuProfile *pProfile, IMenuHandler *pHandler)
+{
+	return static_cast<IMenu *>(CreateInternalMenu(pProfile, pHandler));
+}
+
+bool MenuSystem_Plugin::DisplayMenuToPlayer(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iStartItem, int nManyTimes)
+{
+	CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
+
+	if(!pInternalMenu)
+	{
+		return false;
+	}
+
+	return DisplayInternalMenuToPlayer(pInternalMenu, aSlot, iStartItem, nManyTimes);
+}
+
+bool MenuSystem_Plugin::CloseMenu(IMenu *pMenu)
+{
+	DestroyMenuEntities(pMenu);
+	CloseMenuHandler(pMenu);
+
+	return m_MenuAllocator.Free(pMenu);
+}
+
+CMenu *MenuSystem_Plugin::CreateInternalMenu(IMenuProfile *pProfile, IMenuHandler *pHandler)
+{
+	auto *pNewMenu = m_MenuAllocator.Alloc(static_cast<CMenu::CPointWorldText_Helper *>(this), &GetGameDataStorage().GetBaseEntity(), pProfile, this, &m_aControls);
+
+	m_mapMenuHandlers.InsertOrReplace(pNewMenu, pHandler);
+
+	return pNewMenu;
+}
+
+bool MenuSystem_Plugin::DisplayInternalMenuToPlayer(CMenu *pInternalMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iStartItem, int nManyTimes)
+{
+	auto &aPlayer = GetPlayerData(aSlot);
+
+	int iClient = aSlot.Get() + 1;
+
+	if(!aPlayer.IsConnected())
+	{
+		Logger::WarningFormat("Client #%d is not connected\n", iClient);
+
+		return false;
+	}
+
+	auto *pPlayerController = entity_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient)));
+
+	if(!pPlayerController)
+	{
+		Logger::WarningFormat("Failed to get a player entity controller. Client index is %d\n", iClient);
+
+		return false;
+	}
+
+	CBasePlayerPawn *pPlayerPawn = CBasePlayerController_Helper::GetPawnAccessor(pPlayerController)->Get();
+
+	if(!pPlayerPawn)
+	{
+		Logger::WarningFormat("Failed to get a player pawn. Client index is %d\n", iClient);
+
+		return false;
+	}
+
+	SpawnMenuByEntityPosition(pInternalMenu, aSlot, pPlayerPawn);
+
+	uint8 iTeam = CBaseEntity_Helper::GetTeamNumAccessor(pPlayerController);
+
+	auto *pCSPlayerPawn = entity_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
+
+	if(iTeam <= TEAM_SPECTATOR)
+	{
+		AttachMenuInstanceToEntity(pInternalMenu, pPlayerPawn);
+		TeleportMenuInstanceToCSPlayer(pInternalMenu, pCSPlayerPawn);
+	}
+	else
+	{
+		AttachMenuInstanceToCSPlayer(pInternalMenu, pCSPlayerPawn);
+	}
+
+	aPlayer.GetMenus().AddToTail({nManyTimes ? Plat_GetTime() + nManyTimes : 0, static_cast<IMenu *>(pInternalMenu)});
+
+	return pInternalMenu->InternalDisplayAt(aSlot, iStartItem);
+}
+
+IMenuHandler *MenuSystem_Plugin::FindMenuHandler(IMenu *pMenu)
+{
+	int iFound = m_mapMenuHandlers.Find(pMenu);
+
+	return iFound == m_mapMenuHandlers.InvalidIndex() ? nullptr : m_mapMenuHandlers[iFound];
+}
+
+int MenuSystem_Plugin::DestroyMenuEntities(IMenu *pMenu)
+{
+	for(auto *pMenuEntity : pMenu->GetActiveEntities())
+	{
+		m_pEntityManagerProviderAgent->PushDestroyQueue(pMenuEntity);
+	}
+
+	return m_pEntityManagerProviderAgent->ExecuteDestroyQueued();
+}
+
+bool MenuSystem_Plugin::CloseMenuHandler(IMenu *pMenu)
+{
+	auto *pHandler = FindMenuHandler(pMenu);
+
+	if(!pHandler)
+	{
+		return false;
+	}
+
+	delete pHandler;
+
+	return true;
+}
+
+void MenuSystem_Plugin::OnMenuStart(IMenu *pMenu)
+{
+	if(Logger::IsChannelEnabled(LV_DETAILED))
+	{
+		Logger::DetailedFormat("%s(pMenu = %p)\n", __FUNCTION__, pMenu);
+	}
+
+	auto *pHandler = FindMenuHandler(pMenu);
+
+	if(pHandler)
+	{
+		pHandler->OnMenuStart(pMenu);
+	}
+}
+
+void MenuSystem_Plugin::OnMenuDisplay(IMenu *pMenu, CPlayerSlot aSlot)
+{
+	if(Logger::IsChannelEnabled(LV_DETAILED))
+	{
+		Logger::DetailedFormat("%s(pMenu = %p, iClient = %d)\n", __FUNCTION__, pMenu, aSlot.GetClientIndex());
+	}
+
+	auto *pHandler = FindMenuHandler(pMenu);
+
+	if(pHandler)
+	{
+		pHandler->OnMenuDisplay(pMenu, aSlot);
+	}
+}
+
+void MenuSystem_Plugin::OnMenuSelect(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iItem)
+{
+	if(Logger::IsChannelEnabled(LV_DETAILED))
+	{
+		Logger::DetailedFormat("%s(pMenu = %p, iClient = %d, iItem = %d)\n", __FUNCTION__, pMenu, aSlot.GetClientIndex(), iItem);
+	}
+
+	if(iItem == IMenu::MENU_ITEM_CONTROL_EXIT_INDEX)
+	{
+		auto *pMemBlock = m_MenuAllocator.Find(pMenu);
+
+		if(pMemBlock)
+		{
+			// vecMenus.FastRemove(i);
+
+			CMenu *pInternalMenu = m_MenuAllocator.GetInstanceByHandle(pMemBlock->GetHandle());
+
+			pInternalMenu->Close(IMenuHandler::MenuEnd_Exit);
+			DestroyMenuEntities(pMenu);
+			CloseMenuHandler(pMenu);
+			m_MenuAllocator.Free(pMemBlock);
+		}
+	}
+
+	auto *pHandler = FindMenuHandler(pMenu);
+
+	if(pHandler)
+	{
+		pHandler->OnMenuSelect(pMenu, aSlot, iItem);
+	}
+}
+
+void MenuSystem_Plugin::OnMenuEnd(IMenu *pMenu, EndReason_t eReason)
+{
+	if(Logger::IsChannelEnabled(LV_DETAILED))
+	{
+		Logger::DetailedFormat("%s(pMenu = %p, eReason = %d)\n", __FUNCTION__, pMenu, eReason);
+	}
+
+	auto *pHandler = FindMenuHandler(pMenu);
+
+	if(pHandler)
+	{
+		pHandler->OnMenuEnd(pMenu, eReason);
+	}
+}
+
+void MenuSystem_Plugin::OnMenuDestroy(IMenu *pMenu)
+{
+	if(Logger::IsChannelEnabled(LV_DETAILED))
+	{
+		Logger::DetailedFormat("%s(pMenu = %p)\n", __FUNCTION__, pMenu);
+	}
+
+	auto *pHandler = FindMenuHandler(pMenu);
+
+	if(pHandler)
+	{
+		pHandler->OnMenuDestroy(pMenu);
+	}
+}
+
+void MenuSystem_Plugin::OnMenuDrawTitle(IMenu *pMenu, CPlayerSlot aSlot, IMenu::Title_t &aTitle)
+{
+	if(Logger::IsChannelEnabled(LV_DETAILED))
+	{
+		Logger::DetailedFormat("%s(pMenu = %p, iClient = %d, sTitle = \"%s\")\n", __FUNCTION__, pMenu, aSlot.GetClientIndex(), aTitle.Get());
+	}
+
+	const char *pszPhraseName = aTitle.Get();
+
+	int iFound;
+
+	if(Translations::FindPhrase(pszPhraseName, iFound))
+	{
+		const auto &aTranslationsPhrase = Translations::GetPhrase(iFound);
+
+		const char *pszServerContryCode = m_aServerLanguage.GetCountryCode();
+
+		const Translations::CPhrase::CContent *pContent;
+
+		if(aTranslationsPhrase.Find(pszServerContryCode, pContent))
+		{
+			aTitle.m_sText = *pContent;
+		}
+	}
+
+	auto *pHandler = FindMenuHandler(pMenu);
+
+	if(pHandler)
+	{
+		pHandler->OnMenuDrawTitle(pMenu, aSlot, aTitle);
+	}
+}
+
+void MenuSystem_Plugin::OnMenuDisplayItem(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iItem, IMenu::Item_t &aData)
+{
+	if(Logger::IsChannelEnabled(LV_DETAILED))
+	{
+		Logger::DetailedFormat("%s(pMenu = %p, iClient = %d, iItem = %d, aData = \"%s\")\n", __FUNCTION__, pMenu, aSlot.GetClientIndex(), iItem, aData.Get());
+	}
+
+	bool bPlayerAreTranslated = false;
+
+	if(aSlot != CPlayerSlot::InvalidIndex())
+	{
+		auto &aPlayer = GetPlayerData(aSlot);
+
+		if(aPlayer.IsConnected())
+		{
+			bPlayerAreTranslated = aPlayer.OnMenuDisplayItem(pMenu, aSlot, iItem, aData);
+		}
+	}
+
+	if(!bPlayerAreTranslated)
+	{
+		const char *pszPhraseName = aData.Get();
+
+		int iFound;
+
+		if(Translations::FindPhrase(pszPhraseName, iFound))
+		{
+			const auto &aTranslationsPhrase = Translations::GetPhrase(iFound);
+
+			const char *pszServerContryCode = m_aServerLanguage.GetCountryCode();
+
+			const Translations::CPhrase::CContent *pContent;
+
+			if(aTranslationsPhrase.Find(pszServerContryCode, pContent))
+			{
+				aData.m_sContent = *pContent;
+			}
+		}
+	}
+
+	auto *pHandler = FindMenuHandler(pMenu);
+
+	if(pHandler)
+	{
+		pHandler->OnMenuDisplayItem(pMenu, aSlot, iItem, aData);
+	}
 }
 
 bool MenuSystem_Plugin::Init()
@@ -627,18 +913,18 @@ GS_EVENT_MEMBER(MenuSystem_Plugin, ServerPreEntityThink)
 			continue;
 		}
 
-		const auto &vecMenuEntities = aPlayer.GetMenuEntities();
+		const auto &vecMenus = aPlayer.GetMenus();
 
-		if(!vecMenuEntities.Count())
+		if(!vecMenus.Count())
 		{
 			continue;
 		}
 
 		auto *pServerSideClient = aPlayer.GetServerSideClient();
 
-		int iClient = pServerSideClient->GetPlayerSlot().Get();
+		int iSlot = pServerSideClient->GetPlayerSlot().Get();
 
-		auto *pPlayerController = entity_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient + 1)));
+		auto *pPlayerController = entity_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(iSlot + 1)));
 
 		if(!pPlayerController)
 		{
@@ -661,7 +947,55 @@ GS_EVENT_MEMBER(MenuSystem_Plugin, ServerPreEntityThink)
 
 		auto *pCSPlayerPawn = entity_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
 
-		TeleportMenuEntitiesToCSPlayer(pCSPlayerPawn, vecMenuEntities);
+		for(const auto &[nEndTimestamp, pMenu] : vecMenus)
+		{
+			CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
+
+			if(pInternalMenu)
+			{
+				TeleportMenuInstanceToCSPlayer(pInternalMenu, pCSPlayerPawn);
+			}
+		}
+	}
+}
+
+GS_EVENT_MEMBER(MenuSystem_Plugin, GameFrameBoundary)
+{
+	// Check the lifecycle of timed menus.
+	for(auto &aPlayer : m_aPlayers)
+	{
+		if(!aPlayer.IsConnected())
+		{
+			continue;
+		}
+
+		auto &vecMenus = aPlayer.GetMenus();
+
+		FOR_EACH_VEC_BACK(vecMenus, i)
+		{
+			const auto &[nEndTimestamp, pMenu] = vecMenus.Element(i);
+
+			if(!nEndTimestamp || nEndTimestamp > Plat_GetTime())
+			{
+				continue;
+			}
+
+			auto *pMemBlock = m_MenuAllocator.Find(pMenu);
+
+			if(!pMemBlock)
+			{
+				continue;
+			}
+
+			vecMenus.FastRemove(i);
+
+			CMenu *pInternalMenu = m_MenuAllocator.GetInstanceByHandle(pMemBlock->GetHandle());
+
+			pInternalMenu->Close(IMenuHandler::MenuEnd_Timeout);
+			DestroyMenuEntities(pMenu);
+			CloseMenuHandler(pMenu);
+			m_MenuAllocator.Free(pMemBlock);
+		}
 	}
 }
 
@@ -684,8 +1018,51 @@ void MenuSystem_Plugin::OnSpawnGroupInit(SpawnGroupHandle_t hSpawnGroup, IEntity
 
 	Assert(pManifest);
 
-	m_pEntityManagerProviderAgent->AddResourceToEntityManifest(pManifest, "materials/dev/annotation_worldtext_background.vmat");
-	m_pEntityManagerProviderAgent->AddResourceToEntityManifest(pManifest, MENUSYSTEM_EMPTY_BACKGROUND_MATERIAL_NAME);
+	CUtlVector<const char *> vecExportResources;
+
+	Menu::CProfileSystem::LoopByProfiles([&vecExports = vecExportResources](CUtlSymbolLarge sName, Menu::CProfile *pProfile)
+	{
+		auto vecResources = pProfile->GetResources();
+
+		vecExports.AddMultipleToTail(vecResources.Count(), vecResources.Base());
+	});
+
+	// Removes empty & dublicate ones.
+	FOR_EACH_VEC(vecExportResources, i)
+	{
+		const char *pszCurrent = vecExportResources[i];
+
+		if(pszCurrent && pszCurrent[0])
+		{
+			for(int j = i + 1; j < vecExportResources.Count(); j++)
+			{
+				if(!V_strcmp(pszCurrent, vecExportResources[j]))
+				{
+					vecExportResources.Remove(j);
+					j--;
+				}
+			}
+		}
+		else
+		{
+			vecExportResources.Remove(i);
+			i--;
+		}
+	}
+
+	// Adds clean resutl to an entity resource manifest.
+	for(const char *pszResource : vecExportResources)
+	{
+		m_pEntityManagerProviderAgent->AddResourceToEntityManifest(pManifest, pszResource);
+
+		if(Logger::IsChannelEnabled(LV_DETAILED))
+		{
+			Logger::DetailedFormat("%s: Added \"%s\" export resource from the profile system to a manifest\n", __FUNCTION__, pszResource);
+		}
+	}
+
+	// CMenu resource.
+	m_pEntityManagerProviderAgent->AddResourceToEntityManifest(pManifest, MENU_EMPTY_BACKGROUND_MATERIAL_NAME);
 }
 
 void MenuSystem_Plugin::OnSpawnGroupCreateLoading(SpawnGroupHandle_t hSpawnGroup, CMapSpawnGroup *pMapSpawnGroup, bool bSynchronouslySpawnEntities, bool bConfirmResourcesLoaded, CUtlVector<const CEntityKeyValues *> &vecKeyValues)
@@ -706,21 +1083,29 @@ void MenuSystem_Plugin::OnSpawnGroupCreateLoading(SpawnGroupHandle_t hSpawnGroup
 
 	Assert(pProfile);
 
-	CEntityKeyValues *pMenuKV = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL),
-	                 *pMenuKV2 = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL), 
-	                 *pMenuKV3 = new CEntityKeyValues(g_pEntitySystem->GetEntityKeyValuesAllocator(), EKV_ALLOCATOR_EXTERNAL);
+	CMenu *pInternalMenu = CreateInternalMenu(pProfile);
 
-	SetMenuEntityKeyValuesByProfile(pMenuKV, vecBackgroundOrigin, angRotation, pProfile, MENU_EKV_NONE_FLAGS, "Title\n\n1. Active");
-	SetMenuEntityKeyValuesByProfile(pMenuKV2, vecOrigin, angRotation, pProfile, MENU_EKV_FLAG_DONT_DRAW_BACKGROUND, "\n\n1. Active");
-	SetMenuEntityKeyValuesByProfile(pMenuKV3, vecOrigin, angRotation, pProfile, MENU_EKV_INACTIVE_WITHOUT_BACKGROUND, "Title\n\n");
+	pInternalMenu->GetTitleRef().Set("Title");
 
-	g_pEntitySystem->AddRefKeyValues(pMenuKV);
-	g_pEntitySystem->AddRefKeyValues(pMenuKV2);
-	g_pEntitySystem->AddRefKeyValues(pMenuKV3);
+	auto &vecItems = pInternalMenu->GetItemsRef();
 
-	vecKeyValues.AddToTail(pMenuKV);
-	vecKeyValues.AddToTail(pMenuKV2);
-	vecKeyValues.AddToTail(pMenuKV3);
+	vecItems.AddToTail({IMenu::MENU_ITEM_DEFAULT, "Active"});
+	vecItems.AddToTail({IMenu::MENU_ITEM_HASNUMBER, "Inactive"});
+
+	CUtlVector<CEntityKeyValues *> vecMenuKVs = pInternalMenu->GenerateKeyValues(INVALID_PLAYER_SLOT, g_pEntitySystem->GetEntityKeyValuesAllocator());
+
+	{
+		SetMenuKeyValues(vecMenuKVs[MENU_ENTITY_BACKGROUND_INDEX], vecBackgroundOrigin, angRotation);
+		SetMenuKeyValues(vecMenuKVs[MENU_ENTITY_INACTIVE_INDEX], vecOrigin, angRotation);
+		SetMenuKeyValues(vecMenuKVs[MENU_ENTITY_ACTIVE_INDEX], vecOrigin, angRotation);
+	}
+
+	for(auto *pMenuKV : vecMenuKVs)
+	{
+		g_pEntitySystem->AddRefKeyValues(pMenuKV);
+	}
+
+	vecKeyValues.AddMultipleToTail(vecMenuKVs.Count(), vecMenuKVs.Base());
 }
 
 void MenuSystem_Plugin::OnSpawnGroupDestroyed(SpawnGroupHandle_t hSpawnGroup)
@@ -825,7 +1210,7 @@ bool MenuSystem_Plugin::LoadSchema(char *error, size_t maxlen)
 	{
 		if(error && maxlen)
 		{
-			strncpy(error, "Failed to load a schema. See warnings. See warnings", maxlen);
+			strncpy(error, "Failed to load a schema. See warnings", maxlen);
 		}
 	}
 
@@ -1116,57 +1501,22 @@ bool MenuSystem_Plugin::UnloadSpawnGroups(char *error, size_t maxlen)
 	return true;
 }
 
-void MenuSystem_Plugin::SetMenuEntityKeyValuesByProfile(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation, Menu::CProfile *pProfile, MenuEntityKeyValuesFlags_t eFlags, const char *pszMessageText)
+void MenuSystem_Plugin::SetMenuKeyValues(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation)
 {
 	Assert(pMenuKV);
-	Assert(pProfile);
 
 	pMenuKV->SetString("classname", "point_worldtext");
 	pMenuKV->SetVector("origin", vecOrigin);
 	pMenuKV->SetQAngle("angles", angRotation);
-
-	bool bDrawBackground = !(eFlags & MENU_EKV_FLAG_DONT_DRAW_BACKGROUND);
-
-	// Copy from profile.
-	{
-		// bDrawBackground: Profile must have a background values.
-		const CEntityKeyValues *pProfileKV = pProfile->GetAllocactedEntityKeyValues(Menu::CProfileSystem::GetEntityKeyValuesAllocator());
-
-		pMenuKV->CopyFrom(pProfileKV, false);
-
-		delete pProfileKV;
-	}
-
-	const Color *pActiveColor = pProfile->GetActiveColor(), 
-	            *pInactiveColor = pProfile->GetInactiveColor();
-
-	if(bDrawBackground)
-	{
-		if(pActiveColor && pInactiveColor)
-		{
-			pMenuKV->SetColor("color", CalculateBackgroundColor(*pActiveColor, *pInactiveColor));
-		}
-	}
-	else
-	{
-		const Color *pColor = (eFlags & MENU_EKV_FLAG_IS_ACTIVE) ? pActiveColor : pInactiveColor;
-
-		if(pColor)
-		{
-			pMenuKV->SetColor("color", *pColor);
-		}
-
-		pMenuKV->SetString("background_material_name", MENUSYSTEM_EMPTY_BACKGROUND_MATERIAL_NAME); // To align with the background.
-	}
-
-	pMenuKV->SetString("message", pszMessageText);
 }
 
-void MenuSystem_Plugin::SetViewModelEntityKeyValues(CEntityKeyValues *pEntityKV, const Vector &vecOrigin, const QAngle &angRotation)
+void MenuSystem_Plugin::SetViewModelKeyValues(CEntityKeyValues *pViewModelKV, const Vector &vecOrigin, const QAngle &angRotation)
 {
-	pEntityKV->SetString("classname", "viewmodel");
-	pEntityKV->SetVector("origin", vecOrigin);
-	pEntityKV->SetQAngle("angles", angRotation);
+	Assert(pViewModelKV);
+
+	pViewModelKV->SetString("classname", "viewmodel");
+	pViewModelKV->SetVector("origin", vecOrigin);
+	pViewModelKV->SetQAngle("angles", angRotation);
 }
 
 Vector MenuSystem_Plugin::GetEntityPosition(CBaseEntity *pEntity, QAngle *pRotation)
@@ -1222,33 +1572,6 @@ void MenuSystem_Plugin::CalculateMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBas
 	CalculateMenuEntitiesPosition(vecResult, angResult, pProfile, vecBackgroundResult, vecResult, angResult);
 }
 
-Color MenuSystem_Plugin::CalculateBackgroundColor(const Color &rgbaActive, const Color &rgbaInactive)
-{
-	struct BackgroundColor_t
-	{
-		uint16 _r_sum;
-		uint16 _g_sum;
-		uint16 _b_sum;
-		uint16 _a_sum;
-
-		BackgroundColor_t() = delete;
-		inline BackgroundColor_t(const Color &left, const Color &right)
-		 :  _r_sum(left.r() + right.r()),
-		    _g_sum(left.g() + right.g()),
-		    _b_sum(left.b() + right.b()),
-		    _a_sum(left.a() + right.a())
-		{
-		}
-
-		inline Color GetPassiveColor()
-		{
-			return {_r_sum / 3, _g_sum / 3, _b_sum / 3, _a_sum / 3};
-		}
-	};
-
-	return BackgroundColor_t(rgbaActive, rgbaInactive).GetPassiveColor();
-}
-
 void MenuSystem_Plugin::SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKeyValues, CUtlVector<CEntityInstance *> *pEntities, IEntityManager::IProviderAgent::IEntityListener *pListener)
 {
 	if(Logger::IsChannelEnabled(LS_DETAILED))
@@ -1264,6 +1587,7 @@ void MenuSystem_Plugin::SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecK
 
 	for(auto *pKeyValues : vecKeyValues)
 	{
+		g_pEntitySystem->AddRefKeyValues(pKeyValues);
 		m_pEntityManagerProviderAgent->PushSpawnQueue(pKeyValues, hSpawnGroup);
 	}
 
@@ -1311,7 +1635,7 @@ void MenuSystem_Plugin::SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecK
 	}
 }
 
-void MenuSystem_Plugin::SpawnMenuEntities(const Vector &vecBackgroundOrigin, const Vector &vecOrigin, const QAngle &angRotation, CUtlVector<CEntityInstance *> *pEntities)
+void MenuSystem_Plugin::SpawnMenu(CMenu *pInternalMenu, CPlayerSlot aInitiatorSlot, const Vector &vecBackgroundOrigin, const Vector &vecOrigin, const QAngle &angRotation)
 {
 	auto *pEntitySystemAllocator = g_pEntitySystem->GetEntityKeyValuesAllocator();
 
@@ -1319,63 +1643,13 @@ void MenuSystem_Plugin::SpawnMenuEntities(const Vector &vecBackgroundOrigin, con
 
 	static_assert(INVALID_SPAWN_GROUP == ANY_SPAWN_GROUP);
 
-	CEntityKeyValues *pMenuKV = new CEntityKeyValues(pEntitySystemAllocator, EKV_ALLOCATOR_EXTERNAL),
-	                 *pMenuKV2 = new CEntityKeyValues(pEntitySystemAllocator, EKV_ALLOCATOR_EXTERNAL), 
-	                 *pMenuKV3 = new CEntityKeyValues(pEntitySystemAllocator, EKV_ALLOCATOR_EXTERNAL);
-
-	CUtlVector<CEntityKeyValues *> vecKeyValues;
-
-	static const char szMessageTextFull[] = "Заголовок\n"
-	                                        "\n"
-	                                        "1. bratbufi\n"
-	                                        "2. mamabufi\n"
-	                                        "3. doublebufi\n"
-	                                        "4. bufi\n"
-	                                        "5. megabufi\n"
-	                                        "6. superbufi\n"
-	                                        "\n"
-	                                        "7. Назад\n"
-	                                        "8. Вперёд\n"
-	                                        "9. Выход\n",
-
-	                  szMessageTextInactive[] = "Заголовок\n"
-	                                            "\n"
-	                                            "\n"
-	                                            "2. mamabufi\n"
-	                                            "\n"
-	                                            "\n"
-	                                            "5. megabufi\n"
-	                                            "\n"
-	                                            "\n"
-	                                            "\n"
-	                                            "\n"
-	                                            "\n",
-
-	                  szMessageTextActive[] = "\n"
-	                                          "\n"
-	                                          "1. bratbufi\n"
-	                                          "\n"
-	                                          "3. doublebufi\n"
-	                                          "4. bufi\n"
-	                                          "\n"
-	                                          "6. superbufi\n"
-	                                          "\n"
-	                                          "7. Назад\n"
-	                                          "8. Вперёд\n"
-	                                          "9. Выход\n";
+	CUtlVector<CEntityKeyValues *> vecMenuKVs = pInternalMenu->GenerateKeyValues(aInitiatorSlot, pEntitySystemAllocator, true);
 
 	{
-		auto *pProfile = Menu::CProfileSystem::GetInternal();
-
-		Assert(pProfile);
-		SetMenuEntityKeyValuesByProfile(pMenuKV, vecBackgroundOrigin, angRotation, pProfile, MENU_EKV_NONE_FLAGS, szMessageTextFull);
-		SetMenuEntityKeyValuesByProfile(pMenuKV2, vecOrigin, angRotation, pProfile, MENU_EKV_FLAG_DONT_DRAW_BACKGROUND, szMessageTextInactive);
-		SetMenuEntityKeyValuesByProfile(pMenuKV3, vecOrigin, angRotation, pProfile, MENU_EKV_INACTIVE_WITHOUT_BACKGROUND, szMessageTextActive);
+		SetMenuKeyValues(vecMenuKVs[MENU_ENTITY_BACKGROUND_INDEX], vecBackgroundOrigin, angRotation);
+		SetMenuKeyValues(vecMenuKVs[MENU_ENTITY_INACTIVE_INDEX], vecOrigin, angRotation);
+		SetMenuKeyValues(vecMenuKVs[MENU_ENTITY_ACTIVE_INDEX], vecOrigin, angRotation);
 	}
-
-	vecKeyValues.AddToTail(pMenuKV);
-	vecKeyValues.AddToTail(pMenuKV2);
-	vecKeyValues.AddToTail(pMenuKV3);
 
 	class CMenuEntityListener : public IEntityManager::IProviderAgent::IEntityListener
 	{
@@ -1400,10 +1674,16 @@ void MenuSystem_Plugin::SpawnMenuEntities(const Vector &vecBackgroundOrigin, con
 		MenuSystem_Plugin *m_pPlugin;
 	} aMenuEntitySetup(this);
 
-	SpawnEntities(vecKeyValues, pEntities, &aMenuEntitySetup);
+	CUtlVector<CEntityInstance *> vecEntities;
+
+	SpawnEntities(vecMenuKVs, &vecEntities, &aMenuEntitySetup);
+	Assert(vecEntities.Count() == MENU_MAX_ENTITIES);
+	pInternalMenu->Emit(vecEntities);
+
+	vecMenuKVs.PurgeAndDeleteElements();
 }
 
-void MenuSystem_Plugin::SpawnMenuEntitiesByEntity(CBaseEntity *pTarget, CUtlVector<CEntityInstance *> *pEntities)
+void MenuSystem_Plugin::SpawnMenuByEntityPosition(CMenu *pInternalMenu, CPlayerSlot aInitiatorSlot, CBaseEntity *pTarget)
 {
 	Vector vecMenuAbsOriginBackground {},
 	       vecMenuAbsOrigin {};
@@ -1414,7 +1694,7 @@ void MenuSystem_Plugin::SpawnMenuEntitiesByEntity(CBaseEntity *pTarget, CUtlVect
 
 	Assert(pProfile);
 	CalculateMenuEntitiesPositionByEntity(pTarget, pProfile, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
-	SpawnMenuEntities(vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation, pEntities);
+	SpawnMenu(pInternalMenu, aInitiatorSlot, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 }
 
 // A universal way to create a second view model.
@@ -1457,14 +1737,14 @@ CBaseViewModel *MenuSystem_Plugin::SpawnViewModelEntity(const Vector &vecOrigin,
 		const int m_nSlot;
 	} aViewModelEntitySetup(this, pOwner, nSlot);
 
-	SetViewModelEntityKeyValues(pViewModelKV, vecOrigin, angRotation);
+	SetViewModelKeyValues(pViewModelKV, vecOrigin, angRotation);
 	vecKeyValues.AddToTail(pViewModelKV);
 	SpawnEntities(vecKeyValues, &vecEntities, &aViewModelEntitySetup);
 
 	return entity_upper_cast<CBaseViewModel *>(vecEntities[0]);
 }
 
-void MenuSystem_Plugin::TeleportMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pTarget, const CUtlVector<CEntityInstance *> &vecEntities)
+void MenuSystem_Plugin::TeleportMenuInstanceToCSPlayer(CMenu *pInternalMenu, CCSPlayerPawnBase *pTarget)
 {
 	auto &aBaseEntity = GetGameDataStorage().GetBaseEntity();
 
@@ -1478,6 +1758,8 @@ void MenuSystem_Plugin::TeleportMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pTarge
 	Assert(pProfile);
 	CalculateMenuEntitiesPositionByCSPlayer(pTarget, pProfile, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 
+	const auto &vecEntities = pInternalMenu->GetActiveEntities();
+
 	FOR_EACH_VEC(vecEntities, i)
 	{
 		auto *pEntity = vecEntities[i];
@@ -1486,11 +1768,13 @@ void MenuSystem_Plugin::TeleportMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pTarge
 	}
 }
 
-void MenuSystem_Plugin::AttachMenuEntitiesToEntity(CBaseEntity *pTarget, const CUtlVector<CEntityInstance *> &vecEntities)
+void MenuSystem_Plugin::AttachMenuInstanceToEntity(CMenu *pInternalMenu, CBaseEntity *pTarget)
 {
 	auto &aBaseEntity = GetGameDataStorage().GetBaseEntity();
 
 	auto aParentVariant = variant_t("!activator");
+
+	const auto &vecEntities = pInternalMenu->GetActiveEntities();
 
 	for(auto *pEntity : vecEntities)
 	{
@@ -1498,7 +1782,7 @@ void MenuSystem_Plugin::AttachMenuEntitiesToEntity(CBaseEntity *pTarget, const C
 	}
 }
 
-bool MenuSystem_Plugin::AttachMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pTarget, const CUtlVector<CEntityInstance *> &vecEntities)
+bool MenuSystem_Plugin::AttachMenuInstanceToCSPlayer(CMenu *pInternalMenu, CCSPlayerPawnBase *pTarget)
 {
 	auto &aBaseEntity = GetGameDataStorage().GetBaseEntity();
 
@@ -1561,6 +1845,8 @@ bool MenuSystem_Plugin::AttachMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pTarget,
 	{
 		Logger::DetailedFormat("Player view model: \"%s\" (%d)\n", pPlayerViewModel->GetClassname(), pPlayerViewModel->GetEntityIndex().Get());
 	}
+
+	const auto &vecEntities = pInternalMenu->GetActiveEntities();
 
 	FOR_EACH_VEC(vecEntities, i)
 	{
@@ -2009,6 +2295,101 @@ bool MenuSystem_Plugin::ParseTranslations(char *error, size_t maxlen)
 		});
 	}
 
+	return ParseTranslations2(error, maxlen);
+}
+
+bool MenuSystem_Plugin::ParseTranslations2(char *error, size_t maxlen)
+{
+	std::string sTranslationsDirsPath = m_sBaseGameDirectory + CORRECT_PATH_SEPARATOR_S MENUSYSTEM_GAME_TRANSLATIONS_COUNTRY_CODES_DIRS;
+
+	const char *pszPathID = MENUSYSTEM_BASE_PATHID, 
+	           *pszTranslationsDirs = sTranslationsDirsPath.c_str();
+
+	CUtlVector<CUtlString> vecTranslationsDirs, 
+	                       vecTranslationFilenames;
+
+	Translations::CBufferStringVector vecSubmessages;
+
+	CUtlString sMessage;
+
+	auto aWarnings = Logger::CreateWarningsScope();
+
+	AnyConfig::LoadFromFile_Generic_t aLoadPresets({{&sMessage, NULL, pszPathID}, g_KV3Format_Generic});
+
+	g_pFullFileSystem->FindFileAbsoluteList(vecTranslationsDirs, pszTranslationsDirs, pszPathID);
+
+	if(!vecTranslationsDirs.Count())
+	{
+		if(error && maxlen)
+		{
+			snprintf(error, maxlen, "No found translations directories by \"%s\" path", pszTranslationsDirs);
+		}
+
+		return false;
+	}
+
+	AnyConfig::Anyone aTranslationsConfig;
+
+	for(const auto &sDir : vecTranslationsDirs)
+	{
+		const char *pszDirectory = sDir.Get();
+
+		if(g_pFullFileSystem->IsDirectory(pszDirectory, pszPathID))
+		{
+			std::string sTranslationsFilesPath = std::string(pszDirectory) + CORRECT_PATH_SEPARATOR_S MENUSYSTEM_GAME_TRANSLATIONS_FILENAMES;
+
+			const char *pszTranslationsFiles = sTranslationsFilesPath.c_str();
+
+			g_pFullFileSystem->FindFileAbsoluteList(vecTranslationFilenames, pszTranslationsFiles, pszPathID);
+
+			if(!vecTranslationFilenames.Count())
+			{
+				if(error && maxlen)
+				{
+					snprintf(error, maxlen, "No found translations by \"%s\" path", pszTranslationsFiles);
+				}
+
+				return false;
+			}
+
+			for(const auto &sFilename : vecTranslationFilenames)
+			{
+				const char *pszFilename = sFilename.Get();
+
+				aLoadPresets.m_pszFilename = pszFilename;
+
+				if(!aTranslationsConfig.Load(aLoadPresets))
+				{
+					aWarnings.PushFormat("\"%s\": %s", pszFilename, sMessage.Get());
+
+					continue;
+				}
+
+				KeyValues3 *pData = aTranslationsConfig.Get();
+
+				if(!Translations::Parse(pData, vecSubmessages))
+				{
+					aWarnings.PushFormat("\"%s\":", pszFilename);
+
+					for(const auto &sSubmessage : vecSubmessages)
+					{
+						aWarnings.PushFormat("\t%s", sSubmessage.Get());
+					}
+
+					continue;
+				}
+			}
+		}
+	}
+
+	if(aWarnings.Count())
+	{
+		aWarnings.Send([&](const CUtlString &sMessage)
+		{
+			Logger::Warning(sMessage);
+		});
+	}
+
 	return true;
 }
 
@@ -2111,7 +2492,40 @@ void MenuSystem_Plugin::OnReloadProfilesCommand(const CCommandContext &context, 
 
 void MenuSystem_Plugin::OnMenuSelectCommand(const CCommandContext &context, const CCommand &args)
 {
-	Logger::MessageFormat("Menu select: slot %d!!!\n", args.ArgC() > 1 ? atoi(args.Arg(1)) : -1);
+	int iSelectItem = args.ArgC() > 1 ? V_atoi(args.Arg(1)) : -1;
+
+	if(Logger::IsChannelEnabled(LV_DETAILED))
+	{
+		Logger::DetailedFormat("Menu: select item is %d!!!\n", iSelectItem);
+	}
+
+	auto aSlot = context.GetPlayerSlot();
+
+	if(aSlot == CPlayerSlot::InvalidIndex())
+	{
+		Logger::MessageFormat("Menu select item is %d from a root console? ^_-\n", iSelectItem);
+
+		return;
+	}
+
+	auto &aPlayer = GetPlayerData(aSlot);
+
+	if(!aPlayer.IsConnected())
+	{
+		return;
+	}
+
+	for(const auto &[nEndTimestamp, pMenu] : aPlayer.GetMenus())
+	{
+		CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
+
+		if(pInternalMenu)
+		{
+			pInternalMenu->OnSelect(aSlot, iSelectItem);
+		}
+
+		break;
+	}
 }
 
 void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandHandle hCommand, const CCommandContext &aContext, const CCommand &aArgs)
@@ -2186,7 +2600,7 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandHandle hCommand, cons
 
 						for(const auto &sArg : vecArgs)
 						{
-							const char *pszMessageConcat[] = {aConcat2.GetStartWith(), "\"", sArg.Get(), "\"", aConcat2.GetEnd()};
+							const char *pszMessageConcat[] = {aConcat2.GetStartsWith(), "\"", sArg.Get(), "\"", aConcat2.GetEnds()};
 
 							sBuffer.AppendConcat(ARRAYSIZE(pszMessageConcat), pszMessageConcat, NULL);
 						}
@@ -2593,7 +3007,7 @@ bool MenuSystem_Plugin::OnProcessRespondCvarValue(CServerSideClientBase *pClient
 
 		auto aWarnings = Logger::CreateWarningsScope();
 
-		aPlayer.TranslatePhrases(this, this->m_aServerLanguage, vecMessages);
+		aPlayer.TranslatePhrases(this, m_aServerLanguage, vecMessages);
 
 		for(const auto &sMessage : vecMessages)
 		{

@@ -2,21 +2,23 @@
 
 #include <concat.hpp>
 
-#define CONCAT_LINE_STRING_CONSTRUCT(head, start, before, between, end, endAndStartWith) {{{{head, start, before, between, end, endAndStartWith}}}}
+#define CONCAT_LINE_STRING_CONSTRUCT(head, starts, before, between, ends, endsAndStartsWith) {{{{head, starts, before, between, ends, endsAndStartsWith}}}}
 
 const std::array<const CConcatLineString, 8> g_arrEmbedsConcat = 
 {
 	{
 		// 0-3
-		CONCAT_LINE_STRING_CONSTRUCT(
-			"",     // Head with.
-			"\t",   // Start with.
-			":",    // Before value.
+		CONCAT_LINE_STRING_CONSTRUCT
+		(
+			"",     // Heads with.
+			"\t",   // Starts with.
+			":",    // Before key.
 			": ",   // Between key & value.
-			"\n",   // End.
-			"\n\t"  // End and next line.
+			"\n",   // Ends.
+			"\n\t"  // Ends and starts of next line.
 		),
-		CONCAT_LINE_STRING_CONSTRUCT(
+		CONCAT_LINE_STRING_CONSTRUCT
+		(
 			"\t",
 			"\t\t",
 			":",
@@ -24,7 +26,8 @@ const std::array<const CConcatLineString, 8> g_arrEmbedsConcat =
 			"\n",
 			"\n\t\t"
 		),
-		CONCAT_LINE_STRING_CONSTRUCT(
+		CONCAT_LINE_STRING_CONSTRUCT
+		(
 			"\t\t",
 			"\t\t\t",
 			":",
@@ -32,7 +35,8 @@ const std::array<const CConcatLineString, 8> g_arrEmbedsConcat =
 			"\n",
 			"\n\t\t\t"
 		),
-		CONCAT_LINE_STRING_CONSTRUCT(
+		CONCAT_LINE_STRING_CONSTRUCT
+		(
 			"\t\t\t",
 			"\t\t\t\t",
 			":",
@@ -42,7 +46,8 @@ const std::array<const CConcatLineString, 8> g_arrEmbedsConcat =
 		),
 
 		// 3-7
-		CONCAT_LINE_STRING_CONSTRUCT(
+		CONCAT_LINE_STRING_CONSTRUCT
+		(
 			"\t\t\t\t",
 			"\t\t\t\t\t",
 			":",
@@ -50,7 +55,8 @@ const std::array<const CConcatLineString, 8> g_arrEmbedsConcat =
 			"\n",
 			"\n\t\t\t\t\t"
 		),
-		CONCAT_LINE_STRING_CONSTRUCT(
+		CONCAT_LINE_STRING_CONSTRUCT
+		(
 			"\t\t\t\t\t",
 			"\t\t\t\t\t\t",
 			":",
@@ -58,7 +64,8 @@ const std::array<const CConcatLineString, 8> g_arrEmbedsConcat =
 			"\n",
 			"\n\t\t\t\t\t\t"
 		),
-		CONCAT_LINE_STRING_CONSTRUCT(
+		CONCAT_LINE_STRING_CONSTRUCT
+		(
 			"\t\t\t\t\t\t",
 			"\t\t\t\t\t\t\t",
 			":",
@@ -66,7 +73,8 @@ const std::array<const CConcatLineString, 8> g_arrEmbedsConcat =
 			"\n",
 			"\n\t\t\t\t\t\t\t"
 		),
-		CONCAT_LINE_STRING_CONSTRUCT(
+		CONCAT_LINE_STRING_CONSTRUCT
+		(
 			"\t\t\t\t\t\t\t",
 			"\t\t\t\t\t\t\t\t",
 			":",
@@ -76,3 +84,13 @@ const std::array<const CConcatLineString, 8> g_arrEmbedsConcat =
 		)
 	}
 };
+
+const CConcatLineString g_aMenuConcat = CONCAT_LINE_STRING_CONSTRUCT
+(
+	"",     // Heads with.
+	"",     // Starts with.
+	"",     // Before key.
+	". ",   // Between key & value.
+	"\n",   // Ends.
+	"\n\n"  // Ends every title.
+);

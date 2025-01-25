@@ -1,0 +1,98 @@
+// This content is derived from SourceMod, a project by AlliedModders.
+// SourceMod is licensed under the GNU General Public License version 3 (GPLv3).
+// 
+// For more information about SourceMod, visit: https://www.sourcemod.net/
+// 
+// The GPLv3 license allows you to use, modify, and redistribute this code
+// provided that you comply with its terms, such as retaining this notice and 
+// providing the source code for any derived works. For details on the GPLv3 license, 
+// visit: https://www.gnu.org/licenses/gpl-3.0.html
+
+"Phrases"
+{
+	"No Access"
+	{
+		"sk"		"Nemáš prístup k tomuto príkazu"
+	}
+
+	"Back"
+	{
+		"sk"		"Späť"
+	}
+
+	"Next"
+	{
+		"sk"		"Ďalší"
+	}
+
+	"Exit"
+	{
+		"sk"		"Koniec"
+	}
+
+	"Previous"
+	{
+		"sk"		"Predchádzajúci"
+	}
+
+	"all players"
+	{
+		"sk"		"všetkých hráčov"
+	}
+
+	"all humans"
+	{
+		"sk"		"všetkých ľudí"
+	}
+
+	"all bots"
+	{
+		"sk"		"všetkých botov"
+	}
+
+	"all dead players"
+	{
+		"sk"		"všetkých mŕtvych hráčov "
+	}
+
+	"all alive players"
+	{
+		"sk"		"všetkých živých hráčov"
+	}
+
+	"_s"
+	{
+		"sk"		"{1}"
+	}
+
+	"all spectators"
+	{
+		"sk"		"všetkých divákov"
+	}
+
+	"Vote Count"
+	{
+		"sk"		"Hlasov: {1}/{2}, {3}s zostáva"
+	}
+
+	"Voted For"
+	{
+		"sk"		"{1} hlasoval za {2} "
+	}
+
+	"Changed Vote"
+	{
+		"sk"		"{1} zmenil/a svoj hlas na {2} "
+	}
+
+	"No Vote"
+	{
+		"sk"		"Žiadne hlasovanie"
+	}
+
+	"Name Reserved"
+	{
+		"sk"		"Tvoje meno je rezervované; nastav si heslo aby si ho mohol použiť."
+	}
+
+}

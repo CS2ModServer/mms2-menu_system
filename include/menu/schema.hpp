@@ -51,7 +51,7 @@
 #	endif
 
 #	define SCHEMA_METHOD_ACCESSOR(methodName, classType, fieldAccessor, fieldType, fieldOffsetVar) \
-	SCHEMA_FORCEINLINE fieldAccessor<fieldType> methodName(classType *pInstance) \
+	SCHEMA_FORCEINLINE fieldAccessor<fieldType> methodName(classType *pInstance) const \
 	{ \
 		Assert(fieldOffsetVar != INVALID_SCHEMA_FIELD_OFFSET); \
 	\
@@ -59,7 +59,7 @@
 	}
 
 #	define SCHEMA_METHOD_ACCESSOR2(methodName, classType, fieldAccessor, fieldType, fieldOffsetVar) \
-	SCHEMA_FORCEINLINE fieldAccessor<classType, fieldType> methodName(classType *pComponent) \
+	SCHEMA_FORCEINLINE fieldAccessor<classType, fieldType> methodName(classType *pComponent) const \
 	{ \
 		Assert(fieldOffsetVar != INVALID_SCHEMA_FIELD_OFFSET); \
 	\
@@ -67,7 +67,7 @@
 	}
 
 #	define SCHEMA_METHOD_ARRAY_ACCESSOR(methodName, classType, fieldAccessor, fieldType, fieldOffsetVar, fieldSizeVar) \
-	SCHEMA_FORCEINLINE fieldAccessor<fieldType> methodName(classType *pInstance) \
+	SCHEMA_FORCEINLINE fieldAccessor<fieldType> methodName(classType *pInstance) const \
 	{ \
 		Assert(fieldOffsetVar != INVALID_SCHEMA_FIELD_OFFSET); \
 		Assert(fieldSizeVar != INVALID_SCHEMA_FIELD_ARRAY_SIZE); \
@@ -76,7 +76,7 @@
 	}
 
 #	define SCHEMA_METHOD_ARRAY_ACCESSOR2(methodName, classType, fieldAccessor, fieldType, fieldOffsetVar, fieldSizeVar) \
-	SCHEMA_FORCEINLINE fieldAccessor<classType, fieldType> methodName(classType *pComponent) \
+	SCHEMA_FORCEINLINE fieldAccessor<classType, fieldType> methodName(classType *pComponent) const \
 	{ \
 		Assert(fieldOffsetVar != INVALID_SCHEMA_FIELD_OFFSET); \
 		Assert(fieldSizeVar != INVALID_SCHEMA_FIELD_ARRAY_SIZE); \
@@ -125,7 +125,7 @@ class CConcatLineString;
 template<class T, class CLASS>
 T entity_upper_cast(CLASS aEntity)
 {
-	if constexpr (std::is_pointer_v<T>)
+	if constexpr (std::is_pointer_v<std::remove_reference_t<T>>)
 	{
 		return reinterpret_cast<T>(aEntity);
 	}
@@ -332,7 +332,10 @@ namespace Menu
 			public:
 				using Fields = GameData::Config::Storage<CUtlSymbolLarge, SchemaClassFieldData_t *>;
 
-				Fields &GetFields();
+				Fields &GetFields()
+				{
+					return m_aFieldStorage;
+				}
 
 				SchemaClassFieldData_t *GetField(const CUtlSymbolLarge &sName) const;
 				void SetField(const CUtlSymbolLarge &sName, SchemaClassFieldData_t *pData);
@@ -378,7 +381,6 @@ namespace Menu
 			{
 			public:
 				CField() = delete;
-
 				FORCEINLINE CField(T *pInitTarget, uintp nInitOffset)
 				:  m_pTarget(pInitTarget), 
 				   m_nOffset(nInitOffset)
@@ -398,7 +400,7 @@ namespace Menu
 
 				FORCEINLINE F *operator->()
 				{
-					return &GetRef();
+					return GetPointer();
 				}
 
 			protected:
@@ -412,9 +414,14 @@ namespace Menu
 					return m_nOffset;
 				}
 
+				FORCEINLINE F *GetPointer(uintp nExtraOffset = 0)
+				{
+					return reinterpret_cast<F *>(reinterpret_cast<uintp>(GetTarget()) + GetOffset() + nExtraOffset);
+				}
+
 				FORCEINLINE F &GetRef(uintp nExtraOffset = 0)
 				{
-					return *reinterpret_cast<F *>(reinterpret_cast<uintp>(GetTarget()) + GetOffset() + nExtraOffset);
+					return *GetPointer(nExtraOffset);
 				}
 
 			private:
@@ -423,13 +430,12 @@ namespace Menu
 			}; // Menu::Schema::Accessor::CField<T, F>
 
 			template<class T, typename F>
-			class CArrayField : virtual public CField<T, F>
+			class CArrayField : public CField<T, F>
 			{
 			public:
 				using Base = CField<T, F>;
 
 				CArrayField() = delete;
-
 				FORCEINLINE CArrayField(const Base &aInitField, uintp nInitSize)
 				 :  Base(aInitField), 
 				    m_nSize(nInitSize)
@@ -437,11 +443,21 @@ namespace Menu
 				}
 
 			public:
+				FORCEINLINE operator F*()
+				{
+					return Base::GetPointer();
+				}
+
 				FORCEINLINE F &operator[](uintp nCell)
 				{
 					Assert(nCell < m_nSize);
 
 					return Base::GetRef(nCell * sizeof(F));
+				}
+
+				FORCEINLINE uintp GetSize()
+				{
+					return m_nSize;
 				}
 
 			private:
@@ -452,7 +468,7 @@ namespace Menu
 			using CInstanceFieldBase = CField<CEntityInstance, F>;
 
 			template<typename F>
-			class CInstanceField : virtual public CInstanceFieldBase<F>
+			class CInstanceField : public CInstanceFieldBase<F>
 			{
 			public:
 				using Base = CInstanceFieldBase<F>;
@@ -472,7 +488,7 @@ namespace Menu
 			using CInstanceArrayFieldBase = CArrayField<CEntityInstance, F>;
 
 			template<typename F>
-			class CInstanceArrayField : public CInstanceArrayFieldBase<F>, virtual public CInstanceField<F>
+			class CInstanceArrayField : public CInstanceArrayFieldBase<F>
 			{
 			public:
 				using Base = CInstanceArrayFieldBase<F>;
@@ -481,6 +497,12 @@ namespace Menu
 				using Base::operator=;
 				using Base::operator->;
 				using Base::operator[];
+
+			public:
+				FORCEINLINE void MarkNetworkChanged()
+				{
+					Base::GetTarget()->NetworkStateChanged(Base::GetOffset());
+				}
 			}; // Menu::Schema::Accessor::CInstanceArrayField<F>
 		}; // Menu::Schema::Accessor
 	}; // Menu::Schema

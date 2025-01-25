@@ -38,7 +38,7 @@ namespace Menu
 {
 	using CGameEventSystemBase = CSystemBase<IGameEvent *>;
 
-	class CGameEventManager2System : public CGameEventSystemBase, public IGameEventListener2
+	class CGameEventManager2System : public IGameEventListener2, public CGameEventSystemBase
 	{
 	public:
 		using Base = CGameEventSystemBase;

@@ -193,7 +193,7 @@ bool Menu::CProvider::CGameDataStorage::Load(IGameData *pRoot, const char *pszBa
 
 		if(!(this->*(aConfig.pfnLoad))(pRoot, aGameConfig.Get(), vecMessages))
 		{
-			const char *pszMessageConcat[] = {"Failed to ", "parse \"", pszConfigFile, "\" file", ": ", sError.Get()};
+			const char *pszMessageConcat[] = {"Failed to ", "apply \"", pszConfigFile, "\" file", ": ", sError.Get()};
 
 			vecMessages.AddToTail({pszMessageConcat});
 

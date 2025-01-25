@@ -38,26 +38,26 @@ public:
 	/**
 	 * @brief Retrieves a menu profile by name.
 	 * 
-	 * @param pszName Name of the profile. Defaults to "default"
+	 * @param pszName       Name of the profile. Defaults to "default"
 	 * .
-	 * @return Pointer to the menu profile interface.
+	 * @return              Returns a pointer to the menu profile interface.
 	 */
 	virtual IMenuProfile *Get(const char *pszName = MENUPROFILE_DEFAULT_NAME) = 0;
 
 	/**
 	 * @brief Adds or replaces a menu profile.
 	 * 
-	 * @param pszName Name of the profile.
-	 * @param pData Pointer to the profile data.
+	 * @param pszName       Name of the profile.
+	 * @param pData         A pointer to new profile data.
 	 */
 	virtual void AddOrReplaceRef(const char *pszName, IMenuProfile *pData) = 0;
 
 	/**
 	 * @brief Retrieves the entity key values allocator.
 	 * 
-	 * @return Pointer to the entity key values allocator.
+	 * @return              Returns a pointer to the entity key values allocator.
 	 */
 	virtual CKeyValues3Context *GetEntityKeyValuesAllocator() = 0;
-};
+}; // IMenuProfileSystem
 
 #endif // _INCLUDE_METAMOD_SOURCE_IMENUPROFILESYSTEM_HPP_

@@ -25,7 +25,7 @@
 
 MenuSystem_Plugin::CPlayer::CPlayer()
  :  m_pServerSideClient(nullptr), 
-    m_vecMenuEntities(), 
+    m_vecMenus(1), 
     m_pLanguage(nullptr), 
     m_aYourArgumentPhrase({nullptr, nullptr})
 {
@@ -70,9 +70,9 @@ CServerSideClient *MenuSystem_Plugin::CPlayer::GetServerSideClient()
 	return m_pServerSideClient;
 }
 
-CUtlVector<CEntityInstance *> &MenuSystem_Plugin::CPlayer::GetMenuEntities()
+CUtlVector<IMenuSystem::IPlayer::MenuData_t> &MenuSystem_Plugin::CPlayer::GetMenus()
 {
-	return m_vecMenuEntities;
+	return m_vecMenus;
 }
 
 void MenuSystem_Plugin::CPlayer::OnConnected(CServerSideClient *pClient)
@@ -83,7 +83,7 @@ void MenuSystem_Plugin::CPlayer::OnConnected(CServerSideClient *pClient)
 void MenuSystem_Plugin::CPlayer::OnDisconnected(CServerSideClient *pClient, ENetworkDisconnectionReason eReason)
 {
 	m_pServerSideClient = nullptr;
-	m_vecMenuEntities.Purge();
+	m_vecMenus.Purge();
 
 	m_pLanguage = nullptr;
 	m_aYourArgumentPhrase = {};
@@ -99,6 +99,43 @@ void MenuSystem_Plugin::CPlayer::OnLanguageChanged(CPlayerSlot aSlot, CLanguage 
 	}
 }
 
+bool MenuSystem_Plugin::CPlayer::OnMenuDisplayItem(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iItem, IMenu::Item_t &aData)
+{
+	const TranslatedPhrase_t *pPhrase = nullptr;
+
+	switch(iItem)
+	{
+	case IMenu::MENU_ITEM_CONTROL_BACK_INDEX:
+		pPhrase = &GetBackItemPhrase();
+		break;
+
+	case IMenu::MENU_ITEM_CONTROL_NEXT_INDEX:
+		pPhrase = &GetNextItemPhrase();
+		break;
+
+	case IMenu::MENU_ITEM_CONTROL_EXIT_INDEX:
+		pPhrase = &GetExitItemPhrase();
+		break;
+
+	default:
+		break;
+	}
+
+	bool bHasPhrase = pPhrase != nullptr;
+
+	if(bHasPhrase)
+	{
+		if(!pPhrase->IsValid())
+		{
+			return false;
+		}
+
+		aData.m_sContent = *pPhrase->m_pContent;
+	}
+
+	return bHasPhrase;
+}
+
 void MenuSystem_Plugin::CPlayer::TranslatePhrases(const Translations *pTranslations, const CLanguage &aServerLanguage, CUtlVector<CUtlString> &vecMessages)
 {
 	const struct
@@ -110,6 +147,18 @@ void MenuSystem_Plugin::CPlayer::TranslatePhrases(const Translations *pTranslati
 		{
 			"Your argument",
 			&m_aYourArgumentPhrase,
+		},
+		{
+			"Back",
+			&m_aBackItemPhrase,
+		},
+		{
+			"Next",
+			&m_aNextItemPhrase,
+		},
+		{
+			"Exit",
+			&m_aExitItemPhrase,
 		}
 	};
 
@@ -136,7 +185,7 @@ void MenuSystem_Plugin::CPlayer::TranslatePhrases(const Translations *pTranslati
 			{
 				CUtlString sMessage;
 
-				sMessage.Format("Not found \"%s\" country code for \"%s\" phrase\n", pszContryCode, pszPhraseName);
+				sMessage.Format("Not found \"%s\" country code for \"%s\" phrase", pszContryCode, pszPhraseName);
 				vecMessages.AddToTail(sMessage);
 
 				continue;
@@ -148,7 +197,7 @@ void MenuSystem_Plugin::CPlayer::TranslatePhrases(const Translations *pTranslati
 		{
 			CUtlString sMessage;
 
-			sMessage.Format("Not found \"%s\" phrase\n", pszPhraseName);
+			sMessage.Format("Not found \"%s\" phrase", pszPhraseName);
 			vecMessages.AddToTail(sMessage);
 
 			continue;
@@ -159,14 +208,4 @@ void MenuSystem_Plugin::CPlayer::TranslatePhrases(const Translations *pTranslati
 			aPhrase.pTranslated->m_pContent = paContent;
 		}
 	}
-}
-
-const MenuSystem_Plugin::CPlayer::TranslatedPhrase_t &MenuSystem_Plugin::CPlayer::GetYourArgumentPhrase() const
-{
-	return m_aYourArgumentPhrase;
-}
-
-const IMenuSystem::ILanguage *MenuSystem_Plugin::GetServerLanguage() const
-{
-	return &m_aServerLanguage;
 }

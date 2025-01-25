@@ -29,6 +29,7 @@
 
 #	include <tier0/platform.h>
 
+#	include <basetypes.h>
 #	include <playerslot.h>
 #	include <tier0/bufferstring.h>
 #	include <tier0/utlstring.h>
@@ -70,8 +71,13 @@ namespace Menu
 	public: // IMenuProfiles
 		IMenuProfile *Get(const char *pszName = MENUPROFILE_DEFAULT_NAME) override;
 		void AddOrReplaceRef(const char *pszName, IMenuProfile *pData) override;
-
 		CKeyValues3Context *GetEntityKeyValuesAllocator() override;
+
+	public: // Utils.
+		using OnProfileCallback_t = std::function<void (CUtlSymbolLarge, CProfile *)>;
+
+		uint LoopByProfiles(const OnProfileCallback_t &funcCallback);
+		uint LoopByProfileRefs(const OnProfileCallback_t &funcCallback);
 
 	protected:
 		CUtlSymbolLarge GetSymbol(const char *pszName);

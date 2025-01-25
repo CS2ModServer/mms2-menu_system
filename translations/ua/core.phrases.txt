@@ -1,0 +1,98 @@
+// This content is derived from SourceMod, a project by AlliedModders.
+// SourceMod is licensed under the GNU General Public License version 3 (GPLv3).
+// 
+// For more information about SourceMod, visit: https://www.sourcemod.net/
+// 
+// The GPLv3 license allows you to use, modify, and redistribute this code
+// provided that you comply with its terms, such as retaining this notice and 
+// providing the source code for any derived works. For details on the GPLv3 license, 
+// visit: https://www.gnu.org/licenses/gpl-3.0.html
+
+"Phrases"
+{
+	"No Access"
+	{
+		"ua"		"У вас немає доступу до цієї команди"
+	}
+
+	"Back"
+	{
+		"ua"		"Назад"
+	}
+
+	"Next"
+	{
+		"ua"		"Наступна"
+	}
+
+	"Exit"
+	{
+		"ua"		"Вихід"
+	}
+
+	"Previous"
+	{
+		"ua"		"Попередня"
+	}
+
+	"all players"
+	{
+		"ua"		"всі гравці"
+	}
+
+	"all humans"
+	{
+		"ua"		"всі люди"
+	}
+
+	"all bots"
+	{
+		"ua"		"всі боти"
+	}
+
+	"all dead players"
+	{
+		"ua"		"всі мертві гравці"
+	}
+
+	"all alive players"
+	{
+		"ua"		"всі живі гравці"
+	}
+
+	"_s"
+	{
+		"ua"		"{1}"
+	}
+
+	"all spectators"
+	{
+		"ua"		"всі глядачі"
+	}
+
+	"Vote Count"
+	{
+		"ua"		"Голосів: {1}/{2}, залишилось {3}"
+	}
+
+	"Voted For"
+	{
+		"ua"		"Гравець {1} проголосував за {2}"
+	}
+
+	"Changed Vote"
+	{
+		"ua"		"Гравець {1} змінив свій голос на {2}"
+	}
+
+	"No Vote"
+	{
+		"ua"		"Нема голосування"
+	}
+
+	"Name Reserved"
+	{
+		"ua"		"Ваше ім'я зарезервовано, введіть пароль щоб його використовувати."
+	}
+
+}

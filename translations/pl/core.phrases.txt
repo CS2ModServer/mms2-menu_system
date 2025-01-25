@@ -1,0 +1,98 @@
+// This content is derived from SourceMod, a project by AlliedModders.
+// SourceMod is licensed under the GNU General Public License version 3 (GPLv3).
+// 
+// For more information about SourceMod, visit: https://www.sourcemod.net/
+// 
+// The GPLv3 license allows you to use, modify, and redistribute this code
+// provided that you comply with its terms, such as retaining this notice and 
+// providing the source code for any derived works. For details on the GPLv3 license, 
+// visit: https://www.gnu.org/licenses/gpl-3.0.html
+
+"Phrases"
+{
+	"No Access"
+	{
+		"pl"		"Nie masz dostępu do tej komendy."
+	}
+
+	"Back"
+	{
+		"pl"		"Wstecz"
+	}
+
+	"Next"
+	{
+		"pl"		"Dalej"
+	}
+
+	"Exit"
+	{
+		"pl"		"Wyjdź"
+	}
+
+	"Previous"
+	{
+		"pl"		"Poprzednia"
+	}
+
+	"all players"
+	{
+		"pl"		"wszyscy gracze"
+	}
+
+	"all humans"
+	{
+		"pl"		"wszyscy ludzie"
+	}
+
+	"all bots"
+	{
+		"pl"		"wszystkie boty"
+	}
+
+	"all dead players"
+	{
+		"pl"		"wszyscy martwi gracze"
+	}
+
+	"all alive players"
+	{
+		"pl"		"wszyscy żywi gracze"
+	}
+
+	"_s"
+	{
+		"pl"		"{1} "
+	}
+
+	"all spectators"
+	{
+		"pl"		"wszyscy obserwatorzy"
+	}
+
+	"Vote Count"
+	{
+		"pl"		"Głosy: {1}/{2}, pozostało {3}"
+	}
+
+	"Voted For"
+	{
+		"pl"		"{1} głosuje na {2}"
+	}
+
+	"Changed Vote"
+	{
+		"pl"		"{1} zmienił swój głos na {2}"
+	}
+
+	"No Vote"
+	{
+		"pl"		"Brak głosowania"
+	}
+
+	"Name Reserved"
+	{
+		"pl"		"Twój nick jest zarezerwowany przez SourceModa; ustaw swoje hasło, aby go użyć."
+	}
+
+}

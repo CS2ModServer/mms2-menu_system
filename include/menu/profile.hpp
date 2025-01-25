@@ -100,6 +100,26 @@ namespace Menu
 
 		float m_flBackgroundAwayUnits = 0.f; // "background_away_units"
 
+		using ResourcesBase_t = CUtlVector<CUtlString>;
+
+		struct Resources_t : ResourcesBase_t
+		{
+			using Base_t = ResourcesBase_t;
+
+			CUtlVector<const char *> GetExports() const
+			{
+				CUtlVector<const char *> vecResult(Base_t::Count());
+
+				for(const auto &sResource : *this)
+				{
+					vecResult.AddToTail(sResource.Get());
+				}
+
+				return vecResult;
+			}
+		};
+
+		Resources_t m_vecResources;
 		CEntityKeyValues *m_pData = nullptr; // Other elements.
 	};
 
@@ -146,7 +166,8 @@ namespace Menu
 		const Color *GetInactiveColor() const override;
 		const Color *GetActiveColor() const override;
 		float GetBackgroundAwayUnits() const override;
-		const CEntityKeyValues *GetAllocactedEntityKeyValues(CKeyValues3Context *pAllocator = nullptr, bool bIncludeBackground = true) const override;
+		CUtlVector<const char *> GetResources() const override;
+		CEntityKeyValues *GetAllocactedEntityKeyValues(CKeyValues3Context *pAllocator = nullptr, bool bIncludeBackground = true) const override;
 	};
 };
 

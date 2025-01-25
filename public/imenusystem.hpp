@@ -26,17 +26,22 @@
 #	pragma once
 
 #	include "imenusystem/isample.hpp"
+#	include "imenu.hpp"
 
 #	include <tier1/utlvector.h>
 
 #	define MENUSYSTEM_INTERFACE_NAME "Menu System v1.0.0"
+#	define MENU_TIME_FOREVER 0      ///< The menu/panel should be displayed as long as possible.
 
-class CEntityInstance;
-class IMenuProfileSystem; // See "imenuprofilesystem.hpp"
+class CEntityInstance; // See <entity2/entitysystem.h> of Source SDK.
+class IMenu; // See "imenu.hpp".
+class IMenuProfile; // See "imenuprofile.hpp".
+class IMenuProfileSystem; // See "imenuprofilesystem.hpp".
+class IMenuHandler; // See "imenuhandler.hpp".
 
 /**
  * @brief A Menu System interface.
- * Note: gets with "ismm->MetaFactory(MENUSYSTEM_INTERFACE_NAME, NULL, NULL);"
+ * Note: gets with `ismm->MetaFactory(MENUSYSTEM_INTERFACE_NAME, NULL, NULL);`
 **/
 class IMenuSystem : public ISample
 {
@@ -47,12 +52,18 @@ public:
 	class IPlayer : public IPlayerBase
 	{
 	public:
+		struct MenuData_t
+		{
+			uint64 m_nEndTimestamp = MENU_TIME_FOREVER;
+			IMenu *m_pInstance = nullptr;
+		};
+
 		/**
 		 * @brief Gets menu entities of the player.
 		 * 
 		 * @return              A vector of menu entities.
 		 */
-		virtual CUtlVector<CEntityInstance *> &GetMenuEntities() = 0;
+		virtual CUtlVector<MenuData_t> &GetMenus() = 0;
 	};
 
 	/**
@@ -70,6 +81,38 @@ public:
 	 * @return              Returns a profiles pointer.
 	 */
 	virtual IMenuProfileSystem *GetProfiles() = 0;
+
+	/**
+	 * @brief Allocates a menu instance. 
+	 * NOTE: Must be closed with CloseMenu()!
+	 * 
+	 * @param pProfile      The profile styles of new menu.
+	 * @param pHandler      A menu handler.
+	 * 
+	 * @return              Returns the allocated menu instance.
+	 */
+	virtual IMenu *CreateMenu(IMenuProfile *pProfile, IMenuHandler *pHandler = nullptr) = 0;
+
+	/**
+	 * @brief Display a menu instance to the player.
+	 * 
+	 * @param pMenu         The menu instance.
+	 * @param aSlot         The player slot.
+	 * @param nManyTimes    The display time in seconds (default: MENU_TIME_FOREVER).
+	 * 
+	 * @return              `true` if the menu was displayed successfully,
+	 *                      `false` otherwise.
+	 */
+	virtual bool DisplayMenuToPlayer(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iStartItem = MENU_FIRST_ITEM_INDEX, int nManyTimes = MENU_TIME_FOREVER) = 0;
+
+	/**
+	 * @brief Closes a menu instance.
+	 * 
+	 * @param pMenu         A menu instance to close.
+	 * 
+	 * @return              
+	 */
+	virtual bool CloseMenu(IMenu *pMenu) = 0;
 }; // IMenuSystem
 
 #endif // _INCLUDE_METAMOD_SOURCE_IMENUSYSTEM_HPP_

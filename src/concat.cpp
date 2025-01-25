@@ -192,6 +192,20 @@ const char *CConcatLineString::AppendKeyStringValueStringToBuffer(CBufferString 
 	return sMessage.AppendConcat(vecConcat.size(), vecConcat.data(), NULL);
 }
 
+const char *CConcatLineString::AppendEndsToBuffer(CBufferString &sMessage) const
+{
+	const auto vecConcat = std::vector {GetEnds()};
+
+	return sMessage.AppendConcat(vecConcat.size(), vecConcat.data(), NULL);
+}
+
+const char *CConcatLineString::AppendEndsAndStartsToBuffer(CBufferString &sMessage) const
+{
+	const auto vecConcat = std::vector {GetEndsAndStartsWith()};
+
+	return sMessage.AppendConcat(vecConcat.size(), vecConcat.data(), NULL);
+}
+
 int CConcatLineString::AppendToVector(CUtlVector<const char *> vecMessage, const char *pszKey, const char *pszValue) const
 {
 	const auto vecConcat = Base::GetKeyValueConcat(pszKey, pszValue);

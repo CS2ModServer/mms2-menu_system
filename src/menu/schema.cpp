@@ -159,7 +159,7 @@ void Menu::Schema::CSystem::CDetailsConcatBase::AppendEmpty()
 {
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
-	pMessages->AddToTail({pConcat->GetEnd()});
+	pMessages->AddToTail({pConcat->GetEnds()});
 }
 
 void Menu::Schema::CSystem::CDetailsConcatTypeScope::AppendHeader()
@@ -503,11 +503,6 @@ void Menu::Schema::CSystem::Clear()
 {
 	ClearClasses();
 	m_vecTypeScopes.Purge();
-}
-
-Menu::Schema::CSystem::CClass::Fields &Menu::Schema::CSystem::CClass::GetFields()
-{
-	return m_aFieldStorage;
 }
 
 SchemaClassFieldData_t *Menu::Schema::CSystem::CClass::GetField(const CUtlSymbolLarge &sName) const

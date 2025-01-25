@@ -24,8 +24,11 @@
 
 #	pragma once
 
+#	include "imenuhandler.hpp"
 #	include "imenusystem.hpp"
 #	include "ientitymgr.hpp"
+#	include "menu.hpp"
+#	include "menuallocator.hpp"
 #	include "menu/chatsystem.hpp"
 #	include "menu/gameeventmanager2system.hpp"
 #	include "menu/pathresolver.hpp"
@@ -42,6 +45,7 @@
 #	include "menu/schema/csplayerbase_cameraservices.hpp"
 #	include "menu/schema/csplayerpawnbase.hpp"
 #	include "menu/schema/gamescenenode.hpp"
+#	include "menu/schema/pointworldtext.hpp"
 #	include "concat.hpp"
 
 #	include <logger.hpp>
@@ -68,11 +72,12 @@
 #	include <network_connection.pb.h>
 
 #	define MENUSYSTEM_LOGGINING_COLOR {127, 255, 0, 191} // Green (Chartreuse)
-#	define MENUSYSTEM_EMPTY_BACKGROUND_MATERIAL_NAME "materials/editor/icon_empty.vmat"
 
 #	define MENUSYSTEM_GAME_BASE_DIR "addons" CORRECT_PATH_SEPARATOR_S META_PLUGIN_PREFIX
 #	define MENUSYSTEM_GAME_EVENTS_FILES "resource" CORRECT_PATH_SEPARATOR_S "*.gameevents"
-#	define MENUSYSTEM_GAME_TRANSLATIONS_FILES "translations" CORRECT_PATH_SEPARATOR_S "*.phrases.*"
+#	define MENUSYSTEM_GAME_TRANSLATIONS_FILENAMES "*.phrases.*"
+#	define MENUSYSTEM_GAME_TRANSLATIONS_FILES "translations" CORRECT_PATH_SEPARATOR_S MENUSYSTEM_GAME_TRANSLATIONS_FILENAMES
+#	define MENUSYSTEM_GAME_TRANSLATIONS_COUNTRY_CODES_DIRS "translations" CORRECT_PATH_SEPARATOR_S "*"
 #	define MENUSYSTEM_GAME_LANGUAGES_FILES "configs" CORRECT_PATH_SEPARATOR_S "languages.*"
 #	define MENUSYSTEM_BASE_PATHID "GAME"
 
@@ -85,8 +90,8 @@ namespace Menu
 	class CProfile; // See <menu/profile.hpp>.
 };
 
-class MenuSystem_Plugin final : public ISmmPlugin, public IMetamodListener, public IMenuSystem, public CBaseGameSystem, public IEntityManager::IProviderAgent::ISpawnGroupNotifications, // Interfaces.
-                                virtual public Menu::Schema::CSystem, virtual public Menu::Schema::CBaseEntity_Helper, virtual public Menu::Schema::CBaseModelEntity_Helper, virtual public Menu::Schema::CBasePlayerController_Helper, virtual public Menu::Schema::CBaseViewModel_Helper, virtual public Menu::Schema::CBodyComponent_Helper, virtual public Menu::Schema::CCSPlayer_ViewModelServices_Helper, virtual public Menu::Schema::CCSPlayerBase_CameraServices_Helper, virtual public Menu::Schema::CCSPlayerPawnBase_Helper, virtual public Menu::Schema::CGameSceneNode_Helper, // Schema helpers.
+class MenuSystem_Plugin final : public ISmmPlugin, public IMetamodListener, public IMenuSystem, public IMenuHandler, public CBaseGameSystem, public IEntityManager::IProviderAgent::ISpawnGroupNotifications, // Interfaces.
+                                virtual public Menu::Schema::CSystem, virtual public Menu::Schema::CBaseEntity_Helper, virtual public Menu::Schema::CBaseModelEntity_Helper, virtual public Menu::Schema::CBasePlayerController_Helper, virtual public Menu::Schema::CBaseViewModel_Helper, virtual public Menu::Schema::CBodyComponent_Helper, virtual public Menu::Schema::CCSPlayer_ViewModelServices_Helper, virtual public Menu::Schema::CCSPlayerBase_CameraServices_Helper, virtual public Menu::Schema::CCSPlayerPawnBase_Helper, virtual public Menu::Schema::CGameSceneNode_Helper, virtual public Menu::Schema::CPointWorldText_Helper, // Schema helpers.
                                 virtual public Logger, public Translations, public Menu::CPathResolver, public Menu::CProvider, // Components.
                                 public Menu::CGameEventManager2System, public Menu::CChatSystem, public Menu::CProfileSystem // Subsystems.
 {
@@ -160,7 +165,7 @@ public: // IMenuSystem
 		CServerSideClient *GetServerSideClient() override;
 
 	public: // IMenuSystem::IPlayer
-		CUtlVector<CEntityInstance *> &GetMenuEntities() override;
+		CUtlVector<MenuData_t> &GetMenus() override;
 
 	public:
 		virtual void OnConnected(CServerSideClient *pClient);
@@ -168,6 +173,9 @@ public: // IMenuSystem
 
 	public:
 		virtual void OnLanguageChanged(CPlayerSlot aSlot, CLanguage *pData);
+
+	public: // Menu callbacks.
+		virtual bool OnMenuDisplayItem(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iItem, IMenu::Item_t &aData);
 
 	public:
 		struct TranslatedPhrase_t
@@ -182,13 +190,32 @@ public: // IMenuSystem
 		};
 
 		void TranslatePhrases(const Translations *pTranslations, const CLanguage &aServerLanguage, CUtlVector<CUtlString> &vecMessages);
-		const TranslatedPhrase_t &GetYourArgumentPhrase() const;
+
+		const TranslatedPhrase_t &GetYourArgumentPhrase() const
+		{
+			return m_aYourArgumentPhrase;
+		}
+
+		const TranslatedPhrase_t &GetBackItemPhrase() const
+		{
+			return m_aBackItemPhrase;
+		}
+
+		const TranslatedPhrase_t &GetNextItemPhrase() const
+		{
+			return m_aNextItemPhrase;
+		}
+
+		const TranslatedPhrase_t &GetExitItemPhrase() const
+		{
+			return m_aExitItemPhrase;
+		}
 
 	private:
 		CServerSideClient *m_pServerSideClient;
 
 	private: // Menus data.
-		CUtlVector<CEntityInstance *> m_vecMenuEntities;
+		CUtlVector<MenuData_t> m_vecMenus;
 
 	private:
 		const ILanguage *m_pLanguage;
@@ -196,15 +223,40 @@ public: // IMenuSystem
 
 	private:
 		TranslatedPhrase_t m_aYourArgumentPhrase;
+		TranslatedPhrase_t m_aBackItemPhrase;
+		TranslatedPhrase_t m_aNextItemPhrase;
+		TranslatedPhrase_t m_aExitItemPhrase;
 	}; // MenuPlugin::CPlayerBase
 
-	const ILanguage *GetServerLanguage() const override;
+	const ILanguage *GetServerLanguage() const override
+	{
+		return &m_aServerLanguage;
+	}
+
 	const ILanguage *GetLanguageByName(const char *psz) const override;
 	IPlayerBase *GetPlayerBase(const CPlayerSlot &aSlot) override;
 	IPlayer *GetPlayer(const CPlayerSlot &aSlot) override;
 	CPlayer &GetPlayerData(const CPlayerSlot &aSlot);
 
 	IMenuProfileSystem *GetProfiles() override;
+	IMenu *CreateMenu(IMenuProfile *pProfile, IMenuHandler *pHandler = nullptr) override;
+	bool DisplayMenuToPlayer(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iStartItem = MENU_FIRST_ITEM_INDEX, int nManyTimes = MENU_TIME_FOREVER) override;
+	bool CloseMenu(IMenu *pMenu) override;
+
+	CMenu *CreateInternalMenu(IMenuProfile *pProfile, IMenuHandler *pHandler = nullptr);
+	bool DisplayInternalMenuToPlayer(CMenu *pInternalMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iStartItem = MENU_FIRST_ITEM_INDEX, int nManyTimes = MENU_TIME_FOREVER);
+	IMenuHandler *FindMenuHandler(IMenu *pMenu);
+	int DestroyMenuEntities(IMenu *pMenu);
+	bool CloseMenuHandler(IMenu *pMenu);
+
+public: // IMenuHandler
+	void OnMenuStart(IMenu *pMenu) override;
+	void OnMenuDisplay(IMenu *pMenu, CPlayerSlot aSlot) override;
+	void OnMenuSelect(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iItem) override;
+	void OnMenuEnd(IMenu *pMenu, EndReason_t eReason) override;
+	void OnMenuDestroy(IMenu *pMenu) override;
+	void OnMenuDrawTitle(IMenu *pMenu, CPlayerSlot aSlot, IMenu::Title_t &aTitle) override;
+	void OnMenuDisplayItem(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iItem, IMenu::Item_t &aData) override;
 
 public: // CBaseGameSystem
 	bool Init() override;
@@ -214,6 +266,7 @@ public: // CBaseGameSystem
 	GS_EVENT(GameActivate);
 	GS_EVENT(GameDeactivate);
 	GS_EVENT(ServerPreEntityThink);
+	GS_EVENT(GameFrameBoundary);
 
 public: // IEntityManager::IProviderAgent::ISpawnGroupNotifications
 	void OnSpawnGroupAllocated(SpawnGroupHandle_t hSpawnGroup, ISpawnGroup *pSpawnGroup) override;
@@ -262,8 +315,8 @@ public: // Entity Manager.
 		MENU_EKV_INACTIVE_WITHOUT_BACKGROUND = (MENU_EKV_FLAG_DONT_DRAW_BACKGROUND | MENU_EKV_FLAG_IS_ACTIVE)
 	};
 
-	void SetMenuEntityKeyValuesByProfile(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation, Menu::CProfile *pProfile, MenuEntityKeyValuesFlags_t eFlags, const char *pszMessageText);
-	void SetViewModelEntityKeyValues(CEntityKeyValues *pEntityKV, const Vector &vecOrigin, const QAngle &angRotation);
+	void SetMenuKeyValues(CEntityKeyValues *pMenuKV, const Vector &vecOrigin, const QAngle &angRotation);
+	void SetViewModelKeyValues(CEntityKeyValues *pViewModelKV, const Vector &vecOrigin, const QAngle &angRotation);
 
 	// Get & calculate positions.
 	Vector GetEntityPosition(CBaseEntity *pTarget, QAngle *pRotation = nullptr);
@@ -272,19 +325,16 @@ public: // Entity Manager.
 	void CalculateMenuEntitiesPositionByViewModel(CBaseViewModel *pTarget, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
 	void CalculateMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pTarget, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
 
-	// Calculate a color.
-	static Color CalculateBackgroundColor(const Color &rgbaActive, const Color &rgbaInactive);
-
 	// Spawn entities.
 	void SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKeyValues, CUtlVector<CEntityInstance *> *pEntities = nullptr, IEntityManager::IProviderAgent::IEntityListener *pListener = nullptr);
-	void SpawnMenuEntities(const Vector &vecBackgroundOrigin, const Vector &vecOrigin, const QAngle &angRotation, CUtlVector<CEntityInstance *> *pEntities);
-	void SpawnMenuEntitiesByEntity(CBaseEntity *pTarget, CUtlVector<CEntityInstance *> *pEntities);
+	void SpawnMenu(CMenu *pMenu, CPlayerSlot aInitiatorSlot, const Vector &vecBackgroundOrigin, const Vector &vecOrigin, const QAngle &angRotation);
+	void SpawnMenuByEntityPosition(CMenu *pMenu, CPlayerSlot aInitiatorSlot, CBaseEntity *pTarget);
 	CBaseViewModel *SpawnViewModelEntity(const Vector &vecOrigin, const QAngle &angRotation, CBaseEntity *pOwner, const int nSlot);
 
-	// Menus movement.
-	void TeleportMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pTarget, const CUtlVector<CEntityInstance *> &vecEntities);
-	void AttachMenuEntitiesToEntity(CBaseEntity *pTarget, const CUtlVector<CEntityInstance *> &vecEntities);
-	bool AttachMenuEntitiesToCSPlayer(CCSPlayerPawnBase *pTarget, const CUtlVector<CEntityInstance *> &vecEntities);
+	// Menu movement.
+	void TeleportMenuInstanceToCSPlayer(CMenu *pInternalMenu, CCSPlayerPawnBase *pTarget);
+	void AttachMenuInstanceToEntity(CMenu *pInternalMenu, CBaseEntity *pTarget);
+	bool AttachMenuInstanceToCSPlayer(CMenu *pInternalMenu, CCSPlayerPawnBase *pTarget);
 
 	// Setting up the entities.
 	bool SettingMenuEntity(CEntityInstance *pEntity);
@@ -313,6 +363,7 @@ public: // Languages.
 
 public: // Translations.
 	bool ParseTranslations(char *error = nullptr, size_t maxlen = 0);
+	bool ParseTranslations2(char *error = nullptr, size_t maxlen = 0); // Parse country code subfolders.
 	bool ClearTranslations(char *error = nullptr, size_t maxlen = 0);
 
 // Subsystems.
@@ -384,7 +435,15 @@ private: // Fields.
 	CLanguage m_aServerLanguage;
 	CUtlVector<CLanguage> m_vecLanguages;
 
-	CPlayer m_aPlayers[ABSOLUTE_PLAYER_LIMIT];
+	CPlayer m_aPlayers[ABSOLUTE_PLAYER_LIMIT]; // Per slot.
+
+	IMenu::Item_t m_aBackControlItem;
+	IMenu::Item_t m_aNextControlItem;
+	IMenu::Item_t m_aExitControlItem;
+	CMenuData_t::ControlItems_t m_aControls;
+
+	CMenuAllocator<sizeof(CMenu) * ABSOLUTE_PLAYER_LIMIT> m_MenuAllocator;
+	CUtlMap<const IMenu *, IMenuHandler *> m_mapMenuHandlers;
 }; // MenuSystem_Plugin
 
 extern MenuSystem_Plugin *g_pMenuPlugin;

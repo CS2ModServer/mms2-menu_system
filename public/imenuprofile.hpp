@@ -34,6 +34,14 @@ class CKeyValues3Context;
 class CEntityKeyValues;
 
 /**
+ * @file imenuprofile.hpp
+ * @brief Defines the IMenuProfile interface for menu customization ones.
+ */
+
+#define MENU_MAX_FONT_NAME_LENGTH 64
+#define MENU_MAX_FONT_BACKGROUND_MATERIAL_NAME_LENGTH 64
+
+/**
  * @brief A Menu Profile interface.
 **/
 class IMenuProfile
@@ -60,6 +68,7 @@ public: // Abstract methods.
 
 	/**
 	 * @brief Gets the description of the profile.
+	 * 
 	 * @return Returns the description.
 	 */
 	virtual const CUtlString &GetDescription() const = 0;
@@ -67,7 +76,7 @@ public: // Abstract methods.
 	/**
 	 * @brief Gets the items of the profile.
 	 * 
-	 * @return Returns pointer to items.
+	 * @return Returns a pointer to items.
 	 */
 	virtual const Items_t *GetItems() const = 0;
 
@@ -102,19 +111,27 @@ public: // Abstract methods.
 	/**
 	 * @brief Gets the background away units.
 	 * 
-	 * @return Returns background away units value.
+	 * @return Returns a background away units value.
 	 */
 	virtual float GetBackgroundAwayUnits() const = 0;
 
 	/**
+	 * @brief Gets a list of resources that need to be precached.
+	 * 
+	 * @return Returns a list of resources.
+	 */
+	virtual CUtlVector<const char *> GetResources() const = 0;
+
+	/**
 	 * @brief Allocates and retrieves entity key values data.
 	 * 
-	 * @param pAllocator Optional allocator for entity key values data.
-	 * @param bIncludeBackground Whether to include background-related data.
+	 * @param pAllocator            Optional allocator for entity key values data.
+	 * @param bIncludeBackground    Whether to include background-related data.
 	 * 
-	 * @return Returns a pointer to allocated entity key values data.
+	 * @return                      Returns a pointer to allocated entity key values data. 
+	 *                              Must be deleted!
 	 */
-	virtual const CEntityKeyValues *GetAllocactedEntityKeyValues(CKeyValues3Context *pAllocator = nullptr, bool bIncludeBackground = true) const = 0;
-};
+	virtual CEntityKeyValues *GetAllocactedEntityKeyValues(CKeyValues3Context *pAllocator = nullptr, bool bIncludeBackground = true) const = 0;
+}; // IMenuProfile
 
 #endif // _INCLUDE_METAMOD_SOURCE_IMENUPROFILE_HPP_

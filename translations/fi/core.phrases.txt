@@ -1,0 +1,98 @@
+// This content is derived from SourceMod, a project by AlliedModders.
+// SourceMod is licensed under the GNU General Public License version 3 (GPLv3).
+// 
+// For more information about SourceMod, visit: https://www.sourcemod.net/
+// 
+// The GPLv3 license allows you to use, modify, and redistribute this code
+// provided that you comply with its terms, such as retaining this notice and 
+// providing the source code for any derived works. For details on the GPLv3 license, 
+// visit: https://www.gnu.org/licenses/gpl-3.0.html
+
+"Phrases"
+{
+	"No Access"
+	{
+		"fi"		"Sinulla ei ole oikeuksia tähän komentoon"
+	}
+
+	"Back"
+	{
+		"fi"		"Takaisin"
+	}
+
+	"Next"
+	{
+		"fi"		"Seuraava"
+	}
+
+	"Exit"
+	{
+		"fi"		"Poistu"
+	}
+
+	"Previous"
+	{
+		"fi"		"Edellinen"
+	}
+
+	"all players"
+	{
+		"fi"		"kaikki pelaajat"
+	}
+
+	"all humans"
+	{
+		"fi"		"kaikki ihmiset"
+	}
+
+	"all bots"
+	{
+		"fi"		"kaikki botit"
+	}
+
+	"all dead players"
+	{
+		"fi"		"kaikki kuolleet pelaajat"
+	}
+
+	"all alive players"
+	{
+		"fi"		"kaikki elossa olevat pelaajat"
+	}
+
+	"_s"
+	{
+		"fi"		"{1}"
+	}
+
+	"all spectators"
+	{
+		"fi"		"kaikki katsojat"
+	}
+
+	"Vote Count"
+	{
+		"fi"		"Äänet: {1}/{2}, {3}s jäljellä"
+	}
+
+	"Voted For"
+	{
+		"fi"		"{1} äänesti vaihtoehtoa {2}"
+	}
+
+	"Changed Vote"
+	{
+		"fi"		"{1} vaihtoi äänekseen {2}"
+	}
+
+	"No Vote"
+	{
+		"fi"		"Ei ääntä"
+	}
+
+	"Name Reserved"
+	{
+		"fi"		"SourceMod on varannut nimesi, kirjoita salasanasi jatkaaksesi."
+	}
+
+}
