@@ -60,14 +60,16 @@ bool Menu::CProfile::Load(CProfileSystem *pSystem, KeyValues3 *pData, ProfileLoa
 		LoadMetadataBase(pSystem, pData, vecMessages);
 	}
 
+	KeyValues3 *pMember;
+
 	// MenuProfile_t fields.
 	m_sDisplayName = pData->GetMemberString("display_name");
 	m_sDescription = pData->GetMemberString("description");
 	m_pItems = LoadAllocatedItems(pData->FindMember("items"), vecMessages);
 	m_sItemsVerificationClientConVarName = pData->GetMemberString("items_verification_client_convar_name");
 	m_pMatrixOffset = LoadAllocatedMatrixOffset(pData->FindMember("matrix_offset"), vecMessages);
-	m_pInactiveColor = new Color(pData->GetMemberColor("inactive_color"));
-	m_pActiveColor = new Color(pData->GetMemberColor("active_color"));
+	m_pInactiveColor = (pMember = pData->FindMember("inactive_color")) ? new Color(pMember->GetColor()) : nullptr;
+	m_pActiveColor = (pMember = pData->FindMember("active_color")) ? new Color(pMember->GetColor()) : nullptr;
 	m_flBackgroundAwayUnits = pData->GetMemberFloat("background_away_units");
 	m_vecResources.AddToTail(pData->GetMemberString("background_material_name"));
 
@@ -124,7 +126,7 @@ bool Menu::CProfile::LoadMetadataBases(CProfileSystem *pSystem, const char *pszN
 			}
 			else
 			{
-				const char *pszMessageConcat[] = {"No handler ", "for \"", pData->GetTypeAsString(), "\" type", "of array by \"", pszName, "\" member"};
+				const char *pszMessageConcat[] = {"No handler ", "for \"", pArrayMember->GetTypeAsString(), "\" type", "of array by \"", pszName, "\" member"};
 
 				sMessage.AppendConcat(ARRAYSIZE(pszMessageConcat), pszMessageConcat, NULL);
 				vecMessages.AddToTail(sMessage);
