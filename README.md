@@ -4,13 +4,13 @@
 
 -----
 <p align="left">
-  <img height="650px" src="https://raw.githubusercontent.com/Wend4r/mms2-menu_system/main/.github/resources/preview-profile-hudmenu_annotation_style.png">
+  <img height="650px" src="https://github.com/Wend4r/mms2-menu_system/blob/main/.github/resources/preview-profile-hudmenu_annotation_style.png">
 </p>
 <p align="center">
-  <img height="420px" src="https://raw.githubusercontent.com/Wend4r/mms2-menu_system/main/.github/resources/preview-profile-hudmenu_annotation_style-2.png">
+  <img height="420px" src="https://github.com/Wend4r/mms2-menu_system/blob/main/.github/resources/preview-profile-hudmenu_annotation_style-2.png">
 </p>
 <p align="right">
-  <img height="650px"src="https://raw.githubusercontent.com/Wend4r/mms2-menu_system/main/.github/resources/preview-profile-hudmenu_annotation_style-cutstom.png">
+  <img height="650px"src="https://github.com/Wend4r/mms2-menu_system/blob/main/.github/resources/preview-profile-hudmenu_annotation_style-custom.png">
 </p>
 
 -----
