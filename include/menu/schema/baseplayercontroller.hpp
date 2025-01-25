@@ -45,7 +45,7 @@ namespace Menu
 {
 	namespace Schema
 	{
-		class CBasePlayerController_Helper
+		class CBasePlayerController_Helper : virtual public CBaseEntity_Helper
 		{
 		public:
 			CBasePlayerController_Helper(CSystem *pSchemaSystemHelper);

@@ -65,7 +65,7 @@ namespace Menu
 {
 	namespace Schema
 	{
-		class CPointWorldText_Helper
+		class CPointWorldText_Helper : virtual public CBaseModelEntity_Helper
 		{
 		public:
 			CPointWorldText_Helper(CSystem *pSchemaSystemHelper);

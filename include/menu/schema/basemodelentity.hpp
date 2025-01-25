@@ -42,7 +42,7 @@ namespace Menu
 {
 	namespace Schema
 	{
-		class CBaseModelEntity_Helper
+		class CBaseModelEntity_Helper : virtual public CBaseEntity_Helper
 		{
 		public:
 			CBaseModelEntity_Helper(CSystem *pSchemaSystemHelper);

@@ -24,6 +24,8 @@
 #include <schemasystem/schemasystem.h>
 
 Menu::Schema::CCSPlayerPawnBase_Helper::CCSPlayerPawnBase_Helper(CSystem *pSchemaSystemHelper)
+ :  CBaseEntity_Helper(pSchemaSystemHelper), 
+    CBaseModelEntity_Helper(pSchemaSystemHelper)
 {
 	auto &aCallbacks = m_aClassFieldsClassbacks;
 

@@ -45,7 +45,7 @@ namespace Menu
 {
 	namespace Schema
 	{
-		class CBaseViewModel_Helper
+		class CBaseViewModel_Helper : virtual public CBaseEntity_Helper
 		{
 		public:
 			CBaseViewModel_Helper(CSystem *pSchemaSystemHelper);
