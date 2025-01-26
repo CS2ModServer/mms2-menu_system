@@ -197,15 +197,15 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 
 				auto &vecItems = pInternalMenu->GetItemsRef();
 
-				vecItems.AddToTail("fatherbufi");
-				vecItems.AddToTail("mamabufi");
-				vecItems.AddToTail("sisterbufi");
-				vecItems.AddToTail("doublebufi");
-				vecItems.AddToTail("bufi");
-				vecItems.AddToTail("superbufi");
-				vecItems.AddToTail("megabufi");
-				vecItems.AddToTail("ultrabufi");
-				vecItems.AddToTail("ultradoublebufi");
+				vecItems.AddToTail("First Item");
+				vecItems.AddToTail("Item");
+				vecItems.AddToTail("Item");
+				vecItems.AddToTail("Item");
+				vecItems.AddToTail("Item");
+				vecItems.AddToTail("Item");
+				vecItems.AddToTail("Item");
+				vecItems.AddToTail("Item");
+				vecItems.AddToTail("Last Item");
 
 				return DisplayInternalMenuToPlayer(pInternalMenu, aSlot);
 			}
