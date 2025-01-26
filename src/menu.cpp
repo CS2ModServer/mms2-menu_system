@@ -20,6 +20,7 @@
  */
 
 #include <menu.hpp>
+#include <menu/utils.hpp>
 #include <menu/schema.hpp>
 #include <imenuhandler.hpp>
 #include <imenuprofile.hpp>
@@ -29,26 +30,6 @@
 #include <utility>
 
 #include <entity2/entitykeyvalues.h>
-
-namespace Menu
-{
-	namespace Utils
-	{
-		template<typename T, std::size_t... Seq, typename... Args>
-		constexpr std::array<T, sizeof...(Seq)> MakeArraySeq(std::index_sequence<Seq...>, Args &... args)
-		{
-			return {(static_cast<void>(Seq), T(args...))...};
-		}
-
-		template <typename T, std::size_t N, typename... Args>
-		constexpr std::array<T, N> MakeArray(Args &... args)
-		{
-			return MakeArraySeq<T>(std::make_index_sequence<N>(), args...);
-		}
-
-	}; // Menu::Utils
-}; // Menu
-
 
 CMenu::CMenu(const CPointWorldText_Helper *pSchemaHelper, const CGameData_BaseEntity *pGameData, IMenuProfile *pProfile, IMenuHandler *pHandler, CMenuData_t::ControlItems_t *pControls)
  :  CMenuBase(MENU_MAX_ENTITIES),
@@ -61,14 +42,12 @@ CMenu::CMenu(const CPointWorldText_Helper *pSchemaHelper, const CGameData_BaseEn
 
     m_aData(pControls), 
     m_arrCurrentPositions(), 
-    m_arrCachedPagesMap(Menu::Utils::MakeArray<ItemPages_t, ABSOLUTE_PLAYER_LIMIT + 1>(DefLessFunc(const ItemPosition_t)))
+    m_arrCachedPagesMap(Menu::Utils::MakeArrayRepeat<ItemPages_t, ABSOLUTE_PLAYER_LIMIT + 1>(DefLessFunc(const ItemPosition_t)))
 {
 }
 
 CMenu::~CMenu()
 {
-	Purge();
-
 	// Let's make it a level higher. See MenuSystem_Plugin.
 	// variant_t aEmptyVariant {};
 
@@ -79,6 +58,8 @@ CMenu::~CMenu()
 	// 		m_pGameData_BaseEntity->AcceptInput(pEntity, "Kill", NULL, NULL, &aEmptyVariant, 0);
 	// 	}
 	// }
+
+	Purge();
 }
 
 void CMenu::Close(IMenuHandler::EndReason_t eReason)
@@ -101,17 +82,15 @@ void CMenu::Destroy()
 	{
 		pHandler->OnMenuDestroy(static_cast<IMenu *>(this));
 	}
-
-	Purge();
 }
 
 void CMenu::Purge()
 {
-	for(auto &pCachedPages : m_arrCachedPagesMap)
+	for(auto &mapCachedPages : m_arrCachedPagesMap)
 	{
-		if(pCachedPages.Count())
+		FOR_EACH_MAP(mapCachedPages, i)
 		{
-			pCachedPages.PurgeAndDeleteElements();
+			delete mapCachedPages[i];
 		}
 	}
 }
@@ -162,23 +141,25 @@ CMenu::CPageBuilder *CMenu::Render(CPlayerSlot aSlot, ItemPosition_t iStartItem)
 {
 	int iClient = aSlot.GetClientIndex();
 
-	auto iFoundPage = m_arrCachedPagesMap[iClient].Find(iStartItem);
+	auto &mapCachedPages = m_arrCachedPagesMap[iClient];
+
+	auto iFoundPage = mapCachedPages.Find(iStartItem);
 
 	CPageBuilder *pPage {};
 
-	if(iFoundPage == m_arrCachedPagesMap[iClient].InvalidIndex())
+	if(iFoundPage == mapCachedPages.InvalidIndex())
 	{
 		pPage = new CPageBuilder(m_pSchemaHelper_PointWorldText->GetMessageTextSize());
 
 		if(pPage)
 		{
 			pPage->Render(static_cast<IMenu *>(this), m_aData, aSlot, iStartItem);
-			m_arrCachedPagesMap[iClient].Insert(iStartItem, pPage);
+			mapCachedPages.Insert(iStartItem, pPage);
 		}
 	}
 	else
 	{
-		pPage = m_arrCachedPagesMap[iClient].Element(iFoundPage);
+		pPage = mapCachedPages.Element(iFoundPage);
 	}
 
 	m_arrCurrentPositions[aSlot] = iStartItem;
