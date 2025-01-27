@@ -50,6 +50,7 @@ sudo apt-get install cmake ninja-build
 ```
 git clone https://github.com/Wend4r/mms2-menu_system.git "Menu System"
 cd "Menu System"
+git submodule update --init --depth 1
 git submodule update --init --recursive external/sourcesdk
 ```
 
