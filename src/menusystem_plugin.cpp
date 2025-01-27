@@ -198,6 +198,13 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 				auto &vecItems = pInternalMenu->GetItemsRef();
 
 				vecItems.AddToTail("First Item");
+				vecItems.AddToTail("Second Item");
+				vecItems.AddToTail("Item");
+				vecItems.AddToTail("Item");
+				vecItems.AddToTail("Item");
+				vecItems.AddToTail("Item");
+				vecItems.AddToTail("Item");
+				vecItems.AddToTail("Item");
 				vecItems.AddToTail("Item");
 				vecItems.AddToTail("Item");
 				vecItems.AddToTail("Item");
@@ -580,15 +587,24 @@ bool MenuSystem_Plugin::DisplayMenuToPlayer(IMenu *pMenu, CPlayerSlot aSlot, IMe
 
 bool MenuSystem_Plugin::CloseMenu(IMenu *pMenu)
 {
-	DestroyMenuEntities(pMenu);
-	CloseMenuHandler(pMenu);
+	auto *pMemBlock = m_MenuAllocator.FindMemBlock(pMenu);
 
-	return m_MenuAllocator.Free(pMenu);
+	if(!pMemBlock)
+	{
+		return false;
+	}
+
+	CMenu *pInternalMenu = m_MenuAllocator.GetInstanceByMemBlock(pMemBlock);
+
+	CloseInternalMenu(pInternalMenu, IMenuHandler::MenuEnd_Close);
+	m_MenuAllocator.ReleaseByMemBlock(pMemBlock);
+
+	return false;
 }
 
 CMenu *MenuSystem_Plugin::CreateInternalMenu(IMenuProfile *pProfile, IMenuHandler *pHandler)
 {
-	auto *pNewMenu = m_MenuAllocator.Alloc(static_cast<CMenu::CPointWorldText_Helper *>(this), &GetGameDataStorage().GetBaseEntity(), pProfile, this, &m_aControls);
+	auto *pNewMenu = m_MenuAllocator.CreateInstance(static_cast<CMenu::CPointWorldText_Helper *>(this), &GetGameDataStorage().GetBaseEntity(), pProfile, this, &m_aControls);
 
 	m_mapMenuHandlers.InsertOrReplace(pNewMenu, pHandler);
 
@@ -654,9 +670,9 @@ IMenuHandler *MenuSystem_Plugin::FindMenuHandler(IMenu *pMenu)
 	return iFound == m_mapMenuHandlers.InvalidIndex() ? nullptr : m_mapMenuHandlers[iFound];
 }
 
-int MenuSystem_Plugin::DestroyMenuEntities(IMenu *pMenu)
+int MenuSystem_Plugin::DestroyInternalMenuEntities(CMenu *pInternalMenu)
 {
-	for(auto *pMenuEntity : pMenu->GetActiveEntities())
+	for(auto *pMenuEntity : pInternalMenu->GetActiveEntities())
 	{
 		m_pEntityManagerProviderAgent->PushDestroyQueue(pMenuEntity);
 	}
@@ -676,6 +692,44 @@ bool MenuSystem_Plugin::CloseMenuHandler(IMenu *pMenu)
 	delete pHandler;
 
 	return true;
+}
+
+void MenuSystem_Plugin::CloseInternalMenu(CMenu *pInternalMenu, IMenuHandler::EndReason_t eReason)
+{
+	pInternalMenu->Close(eReason);
+	DestroyInternalMenuEntities(pInternalMenu);
+
+	IMenu *pMenu = static_cast<IMenu *>(pInternalMenu);
+
+	CloseMenuHandler(pMenu);
+
+	if(eReason == IMenuHandler::MenuEnd_Disconnected)
+	{
+		return;
+	}
+
+	// Clean menu mention from players.
+	for(auto &aPlayer : m_aPlayers)
+	{
+		if(!aPlayer.IsConnected())
+		{
+			continue;
+		}
+
+		auto &vecMenus = aPlayer.GetMenus();
+
+		FOR_EACH_VEC_BACK(vecMenus, i)
+		{
+			const auto &[nPlayerMenuEndTimestamp, pPlayerMenu] = vecMenus.Element(i);
+
+			if(pMenu == pPlayerMenu)
+			{
+				vecMenus.FastRemove(i);
+
+				break;
+			}
+		}
+	}
 }
 
 void MenuSystem_Plugin::OnMenuStart(IMenu *pMenu)
@@ -717,18 +771,14 @@ void MenuSystem_Plugin::OnMenuSelect(IMenu *pMenu, CPlayerSlot aSlot, IMenu::Ite
 
 	if(iItem == IMenu::MENU_ITEM_CONTROL_EXIT_INDEX)
 	{
-		auto *pMemBlock = m_MenuAllocator.Find(pMenu);
+		auto *pMemBlock = m_MenuAllocator.FindMemBlock(pMenu);
 
 		if(pMemBlock)
 		{
-			// vecMenus.FastRemove(i);
+			CMenu *pInternalMenu = m_MenuAllocator.GetInstanceByMemBlock(pMemBlock);
 
-			CMenu *pInternalMenu = m_MenuAllocator.GetInstanceByHandle(pMemBlock->GetHandle());
-
-			pInternalMenu->Close(IMenuHandler::MenuEnd_Exit);
-			DestroyMenuEntities(pMenu);
-			CloseMenuHandler(pMenu);
-			m_MenuAllocator.Free(pMemBlock);
+			CloseInternalMenu(pInternalMenu, IMenuHandler::MenuEnd_Exit);
+			m_MenuAllocator.ReleaseByMemBlock(pMemBlock);
 		}
 	}
 
@@ -980,7 +1030,7 @@ GS_EVENT_MEMBER(MenuSystem_Plugin, GameFrameBoundary)
 				continue;
 			}
 
-			auto *pMemBlock = m_MenuAllocator.Find(pMenu);
+			auto *pMemBlock = m_MenuAllocator.FindMemBlock(pMenu);
 
 			if(!pMemBlock)
 			{
@@ -989,12 +1039,10 @@ GS_EVENT_MEMBER(MenuSystem_Plugin, GameFrameBoundary)
 
 			vecMenus.FastRemove(i);
 
-			CMenu *pInternalMenu = m_MenuAllocator.GetInstanceByHandle(pMemBlock->GetHandle());
+			CMenu *pInternalMenu = m_MenuAllocator.GetInstanceByMemBlock(pMemBlock);
 
-			pInternalMenu->Close(IMenuHandler::MenuEnd_Timeout);
-			DestroyMenuEntities(pMenu);
-			CloseMenuHandler(pMenu);
-			m_MenuAllocator.Free(pMemBlock);
+			CloseInternalMenu(pInternalMenu, IMenuHandler::MenuEnd_Timeout);
+			m_MenuAllocator.ReleaseByMemBlock(pMemBlock);
 		}
 	}
 }
@@ -2515,16 +2563,20 @@ void MenuSystem_Plugin::OnMenuSelectCommand(const CCommandContext &context, cons
 		return;
 	}
 
-	for(const auto &[nEndTimestamp, pMenu] : aPlayer.GetMenus())
+	auto &vecMenus = aPlayer.GetMenus();
+
+	FOR_EACH_VEC_BACK(vecMenus, i)
 	{
+		const auto &[nEndTimestamp, pMenu] = vecMenus.Element(i);
+
 		CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
 
 		if(pInternalMenu)
 		{
 			pInternalMenu->OnSelect(aSlot, iSelectItem);
-		}
 
-		break;
+			break;
+		}
 	}
 }
 
@@ -3039,6 +3091,19 @@ void MenuSystem_Plugin::OnDisconectClient(CServerSideClientBase *pClient, ENetwo
 	auto aSlot = pClient->GetPlayerSlot();
 
 	auto &aPlayer = GetPlayerData(aSlot);
+
+	for(const auto &[nEndTimestamp, pMenu] : aPlayer.GetMenus())
+	{
+		auto *pMemBlock = m_MenuAllocator.FindMemBlock(pMenu);
+
+		if(pMemBlock)
+		{
+			CMenu *pInternalMenu = m_MenuAllocator.GetInstanceByMemBlock(pMemBlock);
+
+			CloseInternalMenu(pInternalMenu, IMenuHandler::MenuEnd_Disconnected);
+			m_MenuAllocator.ReleaseByMemBlock(pMemBlock);
+		}
+	}
 
 	aPlayer.OnDisconnected(pPlayer, eReason);
 }

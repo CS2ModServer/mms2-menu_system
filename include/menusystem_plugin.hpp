@@ -157,15 +157,32 @@ public: // IMenuSystem
 		bool RemoveLanguageListener(IPlayerLanguageListener *pListener) override;
 
 	public: // ISample::IPlayerLanguage
-		const ILanguage *GetLanguage() const override;
-		void SetLanguage(const ILanguage *pData) override;
+		const ILanguage *GetLanguage() const override
+		{
+			return m_pLanguage;
+		}
+
+		void SetLanguage(const ILanguage *pData) override
+		{
+			m_pLanguage = pData;
+		}
 
 	public: // ISample::IPlayerBase
-		bool IsConnected() override;
-		CServerSideClient *GetServerSideClient() override;
+		bool IsConnected() override
+		{
+			return m_pServerSideClient != nullptr;
+		}
+
+		CServerSideClient *GetServerSideClient() override
+		{
+			return m_pServerSideClient;
+		}
 
 	public: // IMenuSystem::IPlayer
-		CUtlVector<MenuData_t> &GetMenus() override;
+		CUtlVector<MenuData_t> &GetMenus() override
+		{
+			return m_vecMenus;
+		}
 
 	public:
 		virtual void OnConnected(CServerSideClient *pClient);
@@ -246,7 +263,8 @@ public: // IMenuSystem
 	CMenu *CreateInternalMenu(IMenuProfile *pProfile, IMenuHandler *pHandler = nullptr);
 	bool DisplayInternalMenuToPlayer(CMenu *pInternalMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iStartItem = MENU_FIRST_ITEM_INDEX, int nManyTimes = MENU_TIME_FOREVER);
 	IMenuHandler *FindMenuHandler(IMenu *pMenu);
-	int DestroyMenuEntities(IMenu *pMenu);
+	int DestroyInternalMenuEntities(CMenu *pInternalMenu);
+	void CloseInternalMenu(CMenu *pInternalMenu, IMenuHandler::EndReason_t eReason);
 	bool CloseMenuHandler(IMenu *pMenu);
 
 public: // IMenuHandler
@@ -442,7 +460,7 @@ private: // Fields.
 	IMenu::Item_t m_aExitControlItem;
 	CMenuData_t::ControlItems_t m_aControls;
 
-	CMenuAllocator<sizeof(CMenu) * ABSOLUTE_PLAYER_LIMIT> m_MenuAllocator;
+	CMenuAllocator<sizeof(CMenu)> m_MenuAllocator;
 	CUtlMap<const IMenu *, IMenuHandler *> m_mapMenuHandlers;
 }; // MenuSystem_Plugin
 

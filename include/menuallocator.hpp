@@ -104,7 +104,12 @@ public:
 		return reinterpret_cast<CInstance_t *>(reinterpret_cast<uintp>(m_MemBlockAllocator.GetBlock(hMemBlock)) + nThisOffset);
 	}
 
-	MemBlock_t *FindLastFree()
+	inline CInstance_t *GetInstanceByMemBlock(MemBlock_t *pMemBlock, int nThisOffset = 0)
+	{
+		return GetInstanceByHandle(pMemBlock->GetHandle());
+	}
+
+	MemBlock_t *FindLastFreeMemBlock()
 	{
 		MemBlockHandle_t hBlock = MEMBLOCKHANDLE_INVALID;
 
@@ -121,7 +126,7 @@ public:
 		return nullptr;
 	}
 
-	MemBlock_t *Find(Interface_t *pMenu)
+	MemBlock_t *FindMemBlock(Interface_t *pMenu)
 	{
 		FOR_EACH_VEC_BACK(m_vecMemBlocks, i)
 		{
@@ -137,9 +142,9 @@ public:
 	}
 
 public:
-	CInstance_t *Alloc(const CMenu::CPointWorldText_Helper *pCtorSchemaHelper, const CMenu::CGameData_BaseEntity *pCtorGameData, IMenuProfile *pCtorProfile, IMenuHandler *pCtorHandler = nullptr, CMenuData_t::ControlItems_t *pCtorControls = nullptr)
+	CInstance_t *CreateInstance(const CMenu::CPointWorldText_Helper *pCtorSchemaHelper, const CMenu::CGameData_BaseEntity *pCtorGameData, IMenuProfile *pCtorProfile, IMenuHandler *pCtorHandler = nullptr, CMenuData_t::ControlItems_t *pCtorControls = nullptr)
 	{
-		MemBlock_t *pMemBlock = FindLastFree();
+		MemBlock_t *pMemBlock = FindLastFreeMemBlock();
 
 		MemBlockHandle_t hMemBlock {};
 
@@ -162,7 +167,7 @@ public:
 
 	CInstance_t *FindAndUpperCast(Interface_t *pMenu)
 	{
-		MemBlock_t *pFoundBlock = Find(pMenu);
+		MemBlock_t *pFoundBlock = FindMemBlock(pMenu);
 
 		if(pFoundBlock)
 		{
@@ -172,21 +177,21 @@ public:
 		return nullptr;
 	}
 
-	void Free(MemBlock_t *pBlock)
+	void ReleaseByMemBlock(MemBlock_t *pMemBlock)
 	{
-		CInstance_t *pInstance = GetInstanceByHandle(pBlock->GetHandle());
+		CInstance_t *pInstance = GetInstanceByHandle(pMemBlock->GetHandle());
 
 		Destruct(pInstance);
-		pBlock->MarkFree();
+		pMemBlock->MarkFree();
 	}
 
-	bool Free(Interface_t *pMenu)
+	bool ReleaseByInterface(Interface_t *pMenu)
 	{
-		MemBlock_t *pFoundBlock = Find(pMenu);
+		MemBlock_t *pFoundBlock = FindMemBlock(pMenu);
 
 		if(pFoundBlock)
 		{
-			Free(pFoundBlock);
+			ReleaseByMemBlock(pFoundBlock);
 
 			return true;
 		}

@@ -127,7 +127,7 @@ T entity_upper_cast(CLASS aEntity)
 {
 	if constexpr (std::is_pointer_v<std::remove_reference_t<T>>)
 	{
-		return reinterpret_cast<T>(aEntity);
+		return reinterpret_cast<T>(aEntity); // Replace to dynamic_cast<> when exact hierarchy classes are declared.
 	}
 
 	return static_cast<T>(aEntity);

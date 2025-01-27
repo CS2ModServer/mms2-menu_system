@@ -50,31 +50,6 @@ bool MenuSystem_Plugin::CPlayer::RemoveLanguageListener(IPlayerLanguageListener 
 	return m_vecLanguageCallbacks.FindAndRemove(pListener);
 }
 
-const IMenuSystem::ILanguage *MenuSystem_Plugin::CPlayer::GetLanguage() const
-{
-	return m_pLanguage;
-}
-
-void MenuSystem_Plugin::CPlayer::SetLanguage(const ILanguage *pData)
-{
-	m_pLanguage = pData;
-}
-
-bool MenuSystem_Plugin::CPlayer::IsConnected()
-{
-	return m_pServerSideClient != nullptr;
-}
-
-CServerSideClient *MenuSystem_Plugin::CPlayer::GetServerSideClient()
-{
-	return m_pServerSideClient;
-}
-
-CUtlVector<IMenuSystem::IPlayer::MenuData_t> &MenuSystem_Plugin::CPlayer::GetMenus()
-{
-	return m_vecMenus;
-}
-
 void MenuSystem_Plugin::CPlayer::OnConnected(CServerSideClient *pClient)
 {
 	m_pServerSideClient = pClient;

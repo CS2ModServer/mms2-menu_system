@@ -46,8 +46,9 @@ public: // The definitions.
 	/**
 	 * @brief Enumeration of reasons why a menu may end.
 	 */
-	enum EndReason_t : uint8
+	enum EndReason_t : int8
 	{
+		MenuEnd_Close = -1,             ///< Closed by a plugin.
 		MenuEnd_Selected = 0,           ///< Menu item was selected.
 		MenuEnd_Disconnected = 1,       ///< Client dropped from the server.
 		MenuEnd_Interrupted = 2,        ///< Client was interrupted by another menu.
