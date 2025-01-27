@@ -86,7 +86,8 @@
 #	define MENUSYSTEM_GAME_LANGUAGES_FILES "configs" CORRECT_PATH_SEPARATOR_S "languages.*"
 #	define MENUSYSTEM_BASE_PATHID "GAME"
 
-#	define MENUSYSTEM_CLIENT_CVAR_NAME_LANGUAGE "cl_language"
+#	define MENUSYSTEM_CLIENT_LANGUAGE_CVAR_NAME "cl_language"
+#	define MENUSYSTEM_SERVER_DISABLE_RADAR_CVAR_NAME "sv_disable_radar"
 
 class INetworkMessageInternal;
 
@@ -419,6 +420,15 @@ public: // SourceHooks.
 	void OnDisconectClientHook(ENetworkDisconnectionReason eReason);
 
 public: // Utils.
+	struct CVar_t // Pair.
+	{
+		CVar_t() = delete;
+
+		const char *pszName;
+		const char *pszValue;
+	};
+
+	void SendSetConVarMessage(IRecipientFilter *pFilter, CUtlVector<CVar_t> &vecCvars);
 	void SendCvarValueQuery(IRecipientFilter *pFilter, const char *pszName, int iCookie);
 	void SendChatMessage(IRecipientFilter *pFilter, int iEntityIndex, bool bIsChat, const char *pszChatMessageFormat, const char *pszParam1 = "", const char *pszParam2 = "", const char *pszParam3 = "", const char *pszParam4 = "");
 	void SendTextMessage(IRecipientFilter *pFilter, int iDestination, size_t nParamCount, const char *pszParam, ...);
@@ -458,6 +468,7 @@ private: // Fields.
 	// Run-time things.
 	IEntityManager::IProviderAgent::ISpawnGroupInstance *m_pMySpawnGroupInstance = nullptr;
 
+	INetworkMessageInternal *m_pSetConVarMessage = NULL;
 	INetworkMessageInternal *m_pGetCvarValueMessage = NULL;
 	INetworkMessageInternal *m_pSayText2Message = NULL;
 	INetworkMessageInternal *m_pTextMsgMessage = NULL;

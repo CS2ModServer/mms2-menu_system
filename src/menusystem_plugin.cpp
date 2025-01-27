@@ -47,8 +47,10 @@
 #include <shareddefs.h>
 #include <tier0/commonmacros.h>
 #include <tier0/utlstringtoken.h>
+#include <tier1/convar.h>
 #include <mathlib/mathlib.h>
 
+#include <networkbasetypes.pb.h>
 #include <usermessages.pb.h>
 // #include <cstrike15_usermessages.pb.h>
 
@@ -252,7 +254,7 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 				Logger::Warning("Not found a your argument phrase\n");
 			}
 
-			// Create & display menu.
+			// Create & display menu example.
 			{
 				auto *pProfile = Menu::CProfileSystem::GetInternal();
 
@@ -786,6 +788,16 @@ bool MenuSystem_Plugin::DisplayInternalMenuToPlayer(CMenu *pInternalMenu, CPlaye
 		AttachMenuInstanceToCSPlayer(pInternalMenu, entity_upper_cast<CCSPlayerPawn *>(pPlayerPawn));
 	}
 
+	// Disable a radar.
+	{
+		CSingleRecipientFilter aFilter(aSlot);
+
+		CUtlVector<CVar_t> vecCVars(1);
+
+		vecCVars.AddToTail({MENUSYSTEM_SERVER_DISABLE_RADAR_CVAR_NAME, "1"});
+		SendSetConVarMessage(&aFilter, vecCVars);
+	}
+
 	aPlayer.GetMenus().AddToHead({nManyTimes ? Plat_GetTime() + nManyTimes : 0, static_cast<IMenu *>(pInternalMenu)});
 
 	return pInternalMenu->InternalDisplayAt(aSlot, iStartItem);
@@ -938,6 +950,45 @@ void MenuSystem_Plugin::OnMenuDestroy(IMenu *pMenu)
 	if(Logger::IsChannelEnabled(LV_DETAILED))
 	{
 		Logger::DetailedFormat("%s(pMenu = %p)\n", __FUNCTION__, pMenu);
+	}
+
+	// Enable a radar back.
+	ConVarRef<int8> aSVDisableRadar(MENUSYSTEM_SERVER_DISABLE_RADAR_CVAR_NAME);
+
+	if(!aSVDisableRadar.GetValue())
+	{
+		bool bSendDisableRadar = true;
+
+		CRecipientFilter aFilter;
+
+		// Find menu interface in players.
+		for(auto &aPlayer : m_aPlayers)
+		{
+			if(!aPlayer.IsConnected())
+			{
+				continue;
+			}
+
+			auto &vecMenus = aPlayer.GetMenus();
+
+			if(vecMenus.Count() > 1) // Pass mutlimenu.
+			{
+				continue;
+			}
+
+			if(pMenu == vecMenus[0].m_pInstance)
+			{
+				aFilter.AddRecipient(aPlayer.GetServerSideClient()->GetPlayerSlot());
+			}
+		}
+
+		if(aFilter.GetRecipientCount()) // If found added recipient players.
+		{
+			CUtlVector<CVar_t> vecCVars(1);
+
+			vecCVars.AddToTail({MENUSYSTEM_SERVER_DISABLE_RADAR_CVAR_NAME, "0"});
+			SendSetConVarMessage(&aFilter, vecCVars);
+		}
 	}
 
 	auto *pHandler = FindMenuHandler(pMenu);
@@ -2283,6 +2334,10 @@ bool MenuSystem_Plugin::RegisterNetMessages(char *error, size_t maxlen)
 	} aMessageInitializers[] =
 	{
 		{
+			"CNETMsg_SetConVar",
+			&m_pSetConVarMessage,
+		},
+		{
 			"CSVCMsg_GetCvarValue",
 			&m_pGetCvarValueMessage,
 		},
@@ -2881,6 +2936,45 @@ void MenuSystem_Plugin::OnDisconectClientHook(ENetworkDisconnectionReason eReaso
 	RETURN_META(MRES_IGNORED);
 }
 
+void MenuSystem_Plugin::SendSetConVarMessage(IRecipientFilter *pFilter, CUtlVector<CVar_t> &vecCvars)
+{
+	auto *pSetConVarMessage = m_pSetConVarMessage;
+
+	Assert(pSetConVarMessage);
+
+	if(Logger::IsChannelEnabled(LV_DETAILED))
+	{
+		const auto &aConcat = g_aEmbedConcat;
+
+		CBufferStringN<1024> sBuffer;
+
+		aConcat.AppendHeadToBuffer(sBuffer, pSetConVarMessage->GetUnscopedName());
+
+		for(const auto &[pszName, pszValue] : vecCvars)
+		{
+			aConcat.AppendKeyStringValueStringToBuffer(sBuffer, pszName, pszValue);
+		}
+
+		Logger::Detailed(sBuffer);
+	}
+
+	auto *pMessage = pSetConVarMessage->AllocateMessage()->ToPB<CNETMsg_SetConVar>();
+
+	auto *pMessageCVars = pMessage->mutable_convars();
+
+	for(const auto &[pszName, pszValue] : vecCvars)
+	{
+		auto *pConVar = pMessageCVars->add_cvars();
+
+		pConVar->set_name(pszName);
+		pConVar->set_value(pszValue);
+	}
+
+	g_pGameEventSystem->PostEventAbstract(-1, false, pFilter, pSetConVarMessage, pMessage, 0);
+
+	delete pMessage;
+}
+
 void MenuSystem_Plugin::SendCvarValueQuery(IRecipientFilter *pFilter, const char *pszName, int iCookie)
 {
 	auto *pGetCvarValueMessage = m_pGetCvarValueMessage;
@@ -3159,7 +3253,7 @@ void MenuSystem_Plugin::OnConnectClient(CNetworkGameServerBase *pNetServer, CSer
 
 		CSingleRecipientFilter aFilter(aSlot);
 
-		const char *pszCvarName = MENUSYSTEM_CLIENT_CVAR_NAME_LANGUAGE;
+		const char *pszCvarName = MENUSYSTEM_CLIENT_LANGUAGE_CVAR_NAME;
 
 		int iCookie {};
 
