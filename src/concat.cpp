@@ -192,6 +192,17 @@ const char *CConcatLineString::AppendKeyStringValueStringToBuffer(CBufferString 
 	return sMessage.AppendConcat(vecConcat.size(), vecConcat.data(), NULL);
 }
 
+const char *CConcatLineString::AppendKeyStringValuePointerToBuffer(CBufferString &sMessage, const char *pszKey, const void *pValue) const
+{
+	char sPointer[19];
+
+	V_snprintf(sPointer, sizeof(sPointer), "%p", pValue);
+
+	const auto vecConcat = Base::GetKeyStringValueConcat(pszKey, sPointer);
+
+	return sMessage.AppendConcat(vecConcat.size(), vecConcat.data(), NULL);
+}
+
 const char *CConcatLineString::AppendEndsToBuffer(CBufferString &sMessage) const
 {
 	const auto vecConcat = std::vector {GetEnds()};

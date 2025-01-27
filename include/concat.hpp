@@ -112,6 +112,11 @@ protected:
 		return vecResult;
 	}
 
+	inline std::vector<T> GetKeyStringValueConcat(const T &aKey, const T &aValue) const
+	{
+		return {Base_t::m_aStartWith, "\"", aKey, "\"", Base_t::m_aBetween, aValue, Base_t::m_aEnds};
+	}
+
 	inline std::vector<T> GetKeyValueStringConcat(const T &aKey, const T &aValue) const
 	{
 		return {Base_t::m_aStartWith, aKey, Base_t::m_aBetween, "\"", aValue, "\"", Base_t::m_aEnds};
@@ -197,6 +202,7 @@ public:
 	const char *AppendPointerToBuffer(CBufferString &sMessage, const char *pszKey, const void *pValue) const;
 	const char *AppendStringToBuffer(CBufferString &sMessage, const char *pszKey, const char *pszValue) const;
 	const char *AppendKeyStringValueStringToBuffer(CBufferString &sMessage, const char *pszKey, const char *pszValue) const;
+	const char *AppendKeyStringValuePointerToBuffer(CBufferString &sMessage, const char *pszKey, const void *pValue) const;
 	const char *AppendEndsToBuffer(CBufferString &sMessage) const;
 	const char *AppendEndsAndStartsToBuffer(CBufferString &sMessage) const;
 
