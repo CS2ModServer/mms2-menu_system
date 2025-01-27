@@ -19,51 +19,47 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CSPLAYER_VIEWMODELSERVICES_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CSPLAYER_VIEWMODELSERVICES_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CSPLAYERPAWN_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CSPLAYERPAWN_HPP_
 
 #	pragma once
 
+#	include <menu/schema/csplayerpawnbase.hpp>
 #	include <menu/schema.hpp>
 
-#	include <ehandle.h>
+#	define CCSPLAYERPAWN_CLASS_NAME "CCSPlayerPawn"
 
-#	define CCSPLAYER_VIEWMODELSERVICES_CLASS_NAME "CCSPlayer_ViewModelServices"
-
-class QAngle;
-class Vector;
-class CBaseViewModel;
 class CCSPlayer_ViewModelServices;
+
+class CCSPlayerPawn : public CCSPlayerPawnBase
+{
+};
 
 namespace Menu
 {
 	namespace Schema
 	{
-		class CCSPlayer_ViewModelServices_Helper
+		class CCSPlayerPawn_Helper : virtual public CCSPlayerPawnBase_Helper
 		{
 		public:
-			CCSPlayer_ViewModelServices_Helper(CSystem *pSchemaSystemHelper);
+			using Base = CCSPlayerPawnBase_Helper;
+
+			CCSPlayerPawn_Helper(CSystem *pSchemaSystemHelper);
 
 		public:
 			void Clear();
 
 		public:
-			SCHEMA_COMPONENT_ARRAY_ACCESSOR_METHOD(GetViewModelAccessor, CCSPlayer_ViewModelServices, CHandle<CBaseViewModel>, m_aOffsets.m_aViewModel.nValue, m_aOffsets.m_aViewModel.nArraySize);
-
-		private:
-			CSystem::CClass *m_pClass;
-			CSystem::CClass::Fields::ListenerCallbacksCollector m_aClassFieldsClassbacks;
-
-			struct
+			auto &GetViewModelServicesAccessor(CCSPlayerPawn *pCSPlayerPawn)
 			{
-				struct
-				{
-					int nValue = INVALID_SCHEMA_FIELD_OFFSET;
-					int nArraySize = INVALID_SCHEMA_FIELD_ARRAY_SIZE;
-				} m_aViewModel;
-			} m_aOffsets;
-		}; // Menu::Schema::CCSPlayer_ViewModelServices_Helper
+				return Base::GetViewModelServicesAccessor(pCSPlayerPawn).Cast<CCSPlayer_ViewModelServices *>();
+			}
+
+		// private:
+		// 	CSystem::CClass *m_pClass;
+		// 	CSystem::CClass::Fields::ListenerCallbacksCollector m_aClassFieldsClassbacks;
+		}; // Menu::Schema::CCSPlayerPawn_Helper
 	}; // Menu::Schema
 }; // Menu
 
-#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CSPLAYER_VIEWMODELSERVICES_HPP_
+#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CSPLAYERPAWN_HPP_

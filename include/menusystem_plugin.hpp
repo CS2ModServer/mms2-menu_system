@@ -39,12 +39,16 @@
 #	include "menu/schema/basemodelentity.hpp"
 #	include "menu/schema/baseplayercontroller.hpp"
 #	include "menu/schema/baseplayerpawn.hpp"
+#	include "menu/schema/csplayerpawn.hpp"
 #	include "menu/schema/baseviewmodel.hpp"
 #	include "menu/schema/bodycomponent.hpp"
+#	include "menu/schema/csobserverpawn.hpp"
 #	include "menu/schema/csplayer_viewmodelservices.hpp"
 #	include "menu/schema/csplayerbase_cameraservices.hpp"
+#	include "menu/schema/csplayerpawn.hpp"
 #	include "menu/schema/csplayerpawnbase.hpp"
 #	include "menu/schema/gamescenenode.hpp"
+#	include "menu/schema/player_observerservices.hpp"
 #	include "menu/schema/pointworldtext.hpp"
 #	include "concat.hpp"
 
@@ -52,6 +56,7 @@
 #	include <translations.hpp>
 
 #	include <ISmmPlugin.h>
+#	include <sourcehook/sourcehook.h>
 
 #	include <bitvec.h>
 #	include <const.h>
@@ -91,7 +96,7 @@ namespace Menu
 };
 
 class MenuSystem_Plugin final : public ISmmPlugin, public IMetamodListener, public IMenuSystem, public IMenuHandler, public CBaseGameSystem, public IEntityManager::IProviderAgent::ISpawnGroupNotifications, // Interfaces.
-                                virtual public Menu::Schema::CSystem, virtual public Menu::Schema::CBaseEntity_Helper, virtual public Menu::Schema::CBaseModelEntity_Helper, virtual public Menu::Schema::CBasePlayerController_Helper, virtual public Menu::Schema::CBaseViewModel_Helper, virtual public Menu::Schema::CBodyComponent_Helper, virtual public Menu::Schema::CCSPlayer_ViewModelServices_Helper, virtual public Menu::Schema::CCSPlayerBase_CameraServices_Helper, virtual public Menu::Schema::CCSPlayerPawnBase_Helper, virtual public Menu::Schema::CGameSceneNode_Helper, virtual public Menu::Schema::CPointWorldText_Helper, // Schema helpers.
+                                virtual public Menu::Schema::CSystem, virtual public Menu::Schema::CBaseEntity_Helper, virtual public Menu::Schema::CBaseModelEntity_Helper, virtual public Menu::Schema::CBasePlayerController_Helper, virtual public Menu::Schema::CBasePlayerPawn_Helper, virtual public Menu::Schema::CBaseViewModel_Helper, virtual public Menu::Schema::CBodyComponent_Helper, virtual public Menu::Schema::CCSPlayerPawnBase_Helper, virtual public Menu::Schema::CCSObserverPawn_Helper, virtual public Menu::Schema::CCSPlayer_ViewModelServices_Helper, virtual public Menu::Schema::CCSPlayerBase_CameraServices_Helper, virtual public Menu::Schema::CCSPlayerPawn_Helper, virtual public Menu::Schema::CGameSceneNode_Helper, virtual public Menu::Schema::CPlayer_ObserverServices_Helper, virtual public Menu::Schema::CPointWorldText_Helper, // Schema helpers.
                                 virtual public Logger, public Translations, public Menu::CPathResolver, public Menu::CProvider, // Components.
                                 public Menu::CGameEventManager2System, public Menu::CChatSystem, public Menu::CProfileSystem // Subsystems.
 {
@@ -168,7 +173,7 @@ public: // IMenuSystem
 		}
 
 	public: // ISample::IPlayerBase
-		bool IsConnected() override
+		bool IsConnected() const override
 		{
 			return m_pServerSideClient != nullptr;
 		}
@@ -254,6 +259,7 @@ public: // IMenuSystem
 	IPlayerBase *GetPlayerBase(const CPlayerSlot &aSlot) override;
 	IPlayer *GetPlayer(const CPlayerSlot &aSlot) override;
 	CPlayer &GetPlayerData(const CPlayerSlot &aSlot);
+	int FindItemIndexFromClientIndex(int iClient); // Returns -1 if not found.
 
 	IMenuProfileSystem *GetProfiles() override;
 	IMenu *CreateMenu(IMenuProfile *pProfile, IMenuHandler *pHandler = nullptr) override;
@@ -306,7 +312,7 @@ public: // Path resolver.
 private:
 	std::string m_sBaseGameDirectory = MENUSYSTEM_GAME_BASE_DIR;
 
-public: // Utils.
+public: // GameData.
 	bool InitProvider(char *error = nullptr, size_t maxlen = 0);
 	bool LoadProvider(char *error = nullptr, size_t maxlen = 0);
 	bool UnloadProvider(char *error = nullptr, size_t maxlen = 0);
@@ -352,7 +358,8 @@ public: // Entity Manager.
 	// Menu movement.
 	void TeleportMenuInstanceToCSPlayer(CMenu *pInternalMenu, CCSPlayerPawnBase *pTarget);
 	void AttachMenuInstanceToEntity(CMenu *pInternalMenu, CBaseEntity *pTarget);
-	bool AttachMenuInstanceToCSPlayer(CMenu *pInternalMenu, CCSPlayerPawnBase *pTarget);
+	bool AttachMenuInstanceToCSPlayer(CMenu *pInternalMenu, CCSPlayerPawn *pTarget);
+	bool AttachMenuInstanceToObserver(CMenu *pInternalMenu, CCSPlayerPawnBase *pTarget); // Attached to observer, otherwise to just entity.
 
 	// Setting up the entities.
 	bool SettingMenuEntity(CEntityInstance *pEntity);
@@ -407,6 +414,7 @@ public: // SourceHooks.
 	void OnStartupServerHook(const GameSessionConfiguration_t &config, ISource2WorldSession *pWorldSession, const char *);
 	void OnDispatchConCommandHook(ConCommandHandle hCommand, const CCommandContext &aContext, const CCommand &aArgs);
 	CServerSideClientBase *OnConnectClientHook(const char *pszName, ns_address *pAddr, void *pNetInfo, C2S_CONNECT_Message *pConnectMsg, const char *pszChallenge, const byte *pAuthTicket, int nAuthTicketLength, bool bIsLowViolence);
+	bool OnExecuteStringCommandPreHook(const CNETMsg_StringCmd_t &aMessage);
 	bool OnProcessRespondCvarValueHook(const CCLCMsg_RespondCvarValue_t &aMessage);
 	void OnDisconectClientHook(ENetworkDisconnectionReason eReason);
 
@@ -419,6 +427,7 @@ public: // Utils.
 protected: // Handlers.
 	void OnStartupServer(CNetworkGameServerBase *pNetServer, const GameSessionConfiguration_t &config, ISource2WorldSession *pWorldSession);
 	void OnConnectClient(CNetworkGameServerBase *pNetServer, CServerSideClientBase *pClient, const char *pszName, ns_address *pAddr, void *pNetInfo, C2S_CONNECT_Message *pConnectMsg, const char *pszChallenge, const byte *pAuthTicket, int nAuthTicketLength, bool bIsLowViolence);
+	META_RES OnExecuteStringCommandPre(CServerSideClientBase *pClient, const CNETMsg_StringCmd_t &aMessage);
 	bool OnProcessRespondCvarValue(CServerSideClientBase *pClient, const CCLCMsg_RespondCvarValue_t &aMessage);
 	void OnDisconectClient(CServerSideClientBase *pClient, ENetworkDisconnectionReason eReason);
 

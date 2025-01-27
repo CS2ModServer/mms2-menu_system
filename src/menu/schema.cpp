@@ -45,8 +45,8 @@
 #endif // __cpp_constinit
 
 #define SCHEMA_HASH_TYPE CUtlStringToken
-#define SCHEMA_HASH_MAKE MakeStringToken
 #define SCHEMA_HASH(x) SCHEMA_HASH_TYPE(x)
+#define SCHEMA_MAKE_HASH MakeStringToken
 
 #define SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(messagesVar, concatVar) \
 	auto *messagesVar = GetMessages(); \
@@ -370,7 +370,7 @@ void Menu::Schema::CSystem::CDetailsConcatMetadataEntry::AppendMembers()
 	{
 		const char *pszName = m_pData->m_pszName;
 
-		SCHEMA_HASH_TYPE nNameHash = SCHEMA_HASH_MAKE(pszName);
+		SCHEMA_HASH_TYPE nNameHash = SCHEMA_MAKE_HASH(pszName);
 
 		const char szConcatKey[] = "Storage";
 

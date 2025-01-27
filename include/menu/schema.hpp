@@ -53,6 +53,7 @@
 #	define SCHEMA_METHOD_ACCESSOR(methodName, classType, fieldAccessor, fieldType, fieldOffsetVar) \
 	SCHEMA_FORCEINLINE fieldAccessor<fieldType> methodName(classType *pInstance) const \
 	{ \
+		Assert(pInstance); \
 		Assert(fieldOffsetVar != INVALID_SCHEMA_FIELD_OFFSET); \
 	\
 		return {pInstance, static_cast<uintp>(fieldOffsetVar)}; \
@@ -61,6 +62,7 @@
 #	define SCHEMA_METHOD_ACCESSOR2(methodName, classType, fieldAccessor, fieldType, fieldOffsetVar) \
 	SCHEMA_FORCEINLINE fieldAccessor<classType, fieldType> methodName(classType *pComponent) const \
 	{ \
+		Assert(pComponent); \
 		Assert(fieldOffsetVar != INVALID_SCHEMA_FIELD_OFFSET); \
 	\
 		return {pComponent, static_cast<uintp>(fieldOffsetVar)}; \
@@ -69,6 +71,7 @@
 #	define SCHEMA_METHOD_ARRAY_ACCESSOR(methodName, classType, fieldAccessor, fieldType, fieldOffsetVar, fieldSizeVar) \
 	SCHEMA_FORCEINLINE fieldAccessor<fieldType> methodName(classType *pInstance) const \
 	{ \
+		Assert(pInstance); \
 		Assert(fieldOffsetVar != INVALID_SCHEMA_FIELD_OFFSET); \
 		Assert(fieldSizeVar != INVALID_SCHEMA_FIELD_ARRAY_SIZE); \
 	\
@@ -78,6 +81,7 @@
 #	define SCHEMA_METHOD_ARRAY_ACCESSOR2(methodName, classType, fieldAccessor, fieldType, fieldOffsetVar, fieldSizeVar) \
 	SCHEMA_FORCEINLINE fieldAccessor<classType, fieldType> methodName(classType *pComponent) const \
 	{ \
+		Assert(pComponent); \
 		Assert(fieldOffsetVar != INVALID_SCHEMA_FIELD_OFFSET); \
 		Assert(fieldSizeVar != INVALID_SCHEMA_FIELD_ARRAY_SIZE); \
 	\
@@ -387,41 +391,47 @@ namespace Menu
 				{
 				}
 
-			public:
-				FORCEINLINE operator F()
+				template<class FC>
+				const auto &Cast() const
 				{
-					return GetRef();
-				}
-
-				FORCEINLINE F &operator=(const F &aData)
-				{
-					return GetRef() = aData;
-				}
-
-				FORCEINLINE F *operator->()
-				{
-					return GetPointer();
+					return *reinterpret_cast<const CField<T, FC> *>(this);
 				}
 
 			protected:
-				FORCEINLINE T *GetTarget()
+				FORCEINLINE T *GetTarget() const
 				{
 					return m_pTarget;
 				}
 
-				FORCEINLINE uintp GetOffset()
+				FORCEINLINE uintp GetOffset() const
 				{
 					return m_nOffset;
 				}
 
-				FORCEINLINE F *GetPointer(uintp nExtraOffset = 0)
+				FORCEINLINE F *GetPointer(uintp nExtraOffset = 0) const
 				{
 					return reinterpret_cast<F *>(reinterpret_cast<uintp>(GetTarget()) + GetOffset() + nExtraOffset);
 				}
 
-				FORCEINLINE F &GetRef(uintp nExtraOffset = 0)
+				FORCEINLINE F &GetRef(uintp nExtraOffset = 0) const
 				{
 					return *GetPointer(nExtraOffset);
+				}
+
+			public:
+				FORCEINLINE operator F() const
+				{
+					return GetRef();
+				}
+
+				FORCEINLINE F &operator=(const F &aData) const
+				{
+					return GetRef() = aData;
+				}
+
+				FORCEINLINE F *operator->() const
+				{
+					return GetPointer();
 				}
 
 			private:
@@ -442,20 +452,26 @@ namespace Menu
 				{
 				}
 
+				template<class FM>
+				FORCEINLINE auto &Cast() const
+				{
+					return *reinterpret_cast<const CArrayField<T, FM> *>(this);
+				}
+
 			public:
-				FORCEINLINE operator F*()
+				FORCEINLINE operator F*() const
 				{
 					return Base::GetPointer();
 				}
 
-				FORCEINLINE F &operator[](uintp nCell)
+				FORCEINLINE F &operator[](uintp nCell) const
 				{
 					Assert(nCell < m_nSize);
 
 					return Base::GetRef(nCell * sizeof(F));
 				}
 
-				FORCEINLINE uintp GetSize()
+				FORCEINLINE uintp GetSize() const
 				{
 					return m_nSize;
 				}
@@ -477,6 +493,12 @@ namespace Menu
 				using Base::operator=;
 				using Base::operator->;
 
+				template<class FC>
+				FORCEINLINE auto &Cast() const
+				{
+					return *reinterpret_cast<const CInstanceField<FC> *>(this);
+				}
+
 			public:
 				FORCEINLINE void MarkNetworkChanged()
 				{
@@ -497,6 +519,12 @@ namespace Menu
 				using Base::operator=;
 				using Base::operator->;
 				using Base::operator[];
+
+				template<class FC>
+				FORCEINLINE auto &Cast() const
+				{
+					return *reinterpret_cast<const CInstanceArrayField<FC> *>(this);
+				}
 
 			public:
 				FORCEINLINE void MarkNetworkChanged()

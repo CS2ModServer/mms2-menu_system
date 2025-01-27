@@ -19,36 +19,37 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CSPLAYER_VIEWMODELSERVICES_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CSPLAYER_VIEWMODELSERVICES_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_PLAYER_OBSERVERSERVICES_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_PLAYER_OBSERVERSERVICES_HPP_
 
 #	pragma once
 
 #	include <menu/schema.hpp>
 
+#	include <basetypes.h>
 #	include <ehandle.h>
+#	include <shareddefs.h>
 
-#	define CCSPLAYER_VIEWMODELSERVICES_CLASS_NAME "CCSPlayer_ViewModelServices"
+#	define CPLAYER_OBSERVERSERVICES_CLASS_NAME "CPlayer_ObserverServices"
 
-class QAngle;
-class Vector;
-class CBaseViewModel;
-class CCSPlayer_ViewModelServices;
+class CBaseEntity;
+class CPlayer_ObserverServices;
 
 namespace Menu
 {
 	namespace Schema
 	{
-		class CCSPlayer_ViewModelServices_Helper
+		class CPlayer_ObserverServices_Helper
 		{
 		public:
-			CCSPlayer_ViewModelServices_Helper(CSystem *pSchemaSystemHelper);
+			CPlayer_ObserverServices_Helper(CSystem *pSchemaSystemHelper);
 
 		public:
 			void Clear();
 
 		public:
-			SCHEMA_COMPONENT_ARRAY_ACCESSOR_METHOD(GetViewModelAccessor, CCSPlayer_ViewModelServices, CHandle<CBaseViewModel>, m_aOffsets.m_aViewModel.nValue, m_aOffsets.m_aViewModel.nArraySize);
+			SCHEMA_COMPONENT_ACCESSOR_METHOD(GetObserverModeAccessor, CPlayer_ObserverServices, uint8, m_aOffsets.m_nObserverMode); // OBS_MODE_* enumuration.
+			SCHEMA_COMPONENT_ACCESSOR_METHOD(GetObserverTargetAccessor, CPlayer_ObserverServices, CHandle<CBaseEntity>, m_aOffsets.m_nObserverTarget);
 
 		private:
 			CSystem::CClass *m_pClass;
@@ -56,14 +57,11 @@ namespace Menu
 
 			struct
 			{
-				struct
-				{
-					int nValue = INVALID_SCHEMA_FIELD_OFFSET;
-					int nArraySize = INVALID_SCHEMA_FIELD_ARRAY_SIZE;
-				} m_aViewModel;
+				int m_nObserverMode = INVALID_SCHEMA_FIELD_OFFSET;
+				int m_nObserverTarget = INVALID_SCHEMA_FIELD_OFFSET;
 			} m_aOffsets;
-		}; // Menu::Schema::CCSPlayer_ViewModelServices_Helper
+		}; // Menu::Schema::CPlayer_ObserverServices_Helper
 	}; // Menu::Schema
 }; // Menu
 
-#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CSPLAYER_VIEWMODELSERVICES_HPP_
+#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_PLAYER_OBSERVERSERVICES_HPP_

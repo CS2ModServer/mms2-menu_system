@@ -216,6 +216,7 @@ extern const std::array<const CConcatLineString, 8> g_arrEmbedsConcat;
 // Bcompatibility.
 #define g_aEmbedConcat g_arrEmbedsConcat[0]
 #define g_aEmbed2Concat g_arrEmbedsConcat[1] // Next nesting.
+#define g_aEmbed3Concat g_arrEmbedsConcat[2] // Next nesting after the double.
 
 // Menu thing.
 extern const CConcatLineString g_aMenuConcat;

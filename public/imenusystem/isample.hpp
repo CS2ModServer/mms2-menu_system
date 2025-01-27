@@ -161,7 +161,7 @@ public: // Player ones.
 		 * 
 		 * @return              A vector of menu entities.
 		 */
-		virtual bool IsConnected() = 0;
+		virtual bool IsConnected() const = 0;
 
 		/**
 		 * @brief Gets a server side client of the player.
