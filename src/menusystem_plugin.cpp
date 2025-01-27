@@ -3291,8 +3291,6 @@ META_RES MenuSystem_Plugin::OnExecuteStringCommandPre(CServerSideClientBase *pCl
 					if(pInternalMenu)
 					{
 						AttachMenuInstanceToEntity(pInternalMenu, pCSPlayerPawn);
-
-						return MRES_SUPERCEDE;
 					}
 				}
 
@@ -3319,8 +3317,6 @@ META_RES MenuSystem_Plugin::OnExecuteStringCommandPre(CServerSideClientBase *pCl
 				if(pInternalMenu)
 				{
 					AttachMenuInstanceToCSPlayer(pInternalMenu, pCCSPlayerObserverTargetPawn);
-
-					return MRES_SUPERCEDE;
 				}
 			}
 
