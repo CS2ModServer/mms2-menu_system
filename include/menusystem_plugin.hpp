@@ -393,10 +393,14 @@ public: // Event actions.
 	bool HookGameEvents(char *error = nullptr, size_t maxlen = 0);
 	bool UnhookGameEvents(char *error = nullptr, size_t maxlen = 0);
 
-private: // Commands.
+private:
+	// Commands of reload components.
 	CON_COMMAND_MEMBER_F(This, "mm_" META_PLUGIN_PREFIX "_reload_schema", OnReloadSchemaCommand, "Reload schema fields of classes", FCVAR_LINKED_CONCOMMAND);
 	CON_COMMAND_MEMBER_F(This, "mm_" META_PLUGIN_PREFIX "_reload_gamedata", OnReloadGameDataCommand, "Reload gamedata configs", FCVAR_LINKED_CONCOMMAND);
 	CON_COMMAND_MEMBER_F(This, "mm_" META_PLUGIN_PREFIX "_reload_profiles", OnReloadProfilesCommand, "Reload menu profiles", FCVAR_LINKED_CONCOMMAND);
+	CON_COMMAND_MEMBER_F(This, "mm_" META_PLUGIN_PREFIX "_reload_translations", OnReloadTranslationsCommand, "Reload translations", FCVAR_LINKED_CONCOMMAND);
+
+	// Players interaction.
 	CON_COMMAND_MEMBER_F(This, "menuselect", OnMenuSelectCommand, "", FCVAR_LINKED_CONCOMMAND | FCVAR_CLIENT_CAN_EXECUTE);
 
 public: // SourceHooks.

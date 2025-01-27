@@ -2538,6 +2538,16 @@ void MenuSystem_Plugin::OnReloadProfilesCommand(const CCommandContext &context, 
 	}
 }
 
+void MenuSystem_Plugin::OnReloadTranslationsCommand(const CCommandContext &context, const CCommand &args)
+{
+	char error[256];
+
+	if(!ParseTranslations(error, sizeof(error)))
+	{
+		Logger::WarningFormat("%s\n", error);
+	}
+}
+
 void MenuSystem_Plugin::OnMenuSelectCommand(const CCommandContext &context, const CCommand &args)
 {
 	int iSelectItem = args.ArgC() > 1 ? V_atoi(args.Arg(1)) : -1;
