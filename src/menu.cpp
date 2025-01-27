@@ -137,6 +137,13 @@ void CMenu::Emit(const CUtlVector<CEntityInstance *> &vecEntites)
 	}
 }
 
+inline uint8 CMenu::GetMaxItemsPerPageWithoutControls()
+{
+	auto eControlFlags = m_aData.m_eControlFlags;
+
+	return sm_nMaxItemsPerPage - (!!(eControlFlags & MENU_ITEM_CONTROL_FLAG_BACK) + !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_BACK) + !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_EXIT));
+}
+
 CMenu::CPageBuilder *CMenu::Render(CPlayerSlot aSlot, ItemPosition_t iStartItem)
 {
 	int iClient = aSlot.GetClientIndex();
@@ -153,7 +160,7 @@ CMenu::CPageBuilder *CMenu::Render(CPlayerSlot aSlot, ItemPosition_t iStartItem)
 
 		if(pPage)
 		{
-			pPage->Render(static_cast<IMenu *>(this), m_aData, aSlot, iStartItem);
+			pPage->Render(static_cast<IMenu *>(this), m_aData, aSlot, iStartItem, GetMaxItemsPerPageWithoutControls());
 			mapCachedPages.Insert(iStartItem, pPage);
 		}
 	}
@@ -190,10 +197,18 @@ bool CMenu::OnSelect(CPlayerSlot aSlot, int iSlectedItem)
 		return false;
 	}
 
-	const bool bIsNullableItem = !iSlectedItem, 
-	           bIsAboveItem = iSlectedItem > sm_nMaxItemsPerPage;
+	const uint8 nMaxItemsPerPage = GetMaxItemsPerPageWithoutControls();
 
-	const bool bIsControl = bIsNullableItem || bIsAboveItem;
+	const bool bIsNullableItem = !iSlectedItem, 
+	           bIsAboveItem = iSlectedItem > nMaxItemsPerPage;
+
+	auto eControlFlags = m_aData.m_eControlFlags;
+
+	const bool bHasBackButton = !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_BACK), 
+	           bHasNextButton = !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_NEXT), 
+	           bHasExitButton = !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_EXIT);
+
+	const uint8 nControlsSum = bHasBackButton + bHasNextButton + bHasExitButton;
 
 	ItemPosition_t iTargetItem {};
 
@@ -205,20 +220,20 @@ bool CMenu::OnSelect(CPlayerSlot aSlot, int iSlectedItem)
 	}
 	else if(bIsAboveItem)
 	{
-		iTargetItem = static_cast<ItemControls_t>(-static_cast<ItemPosition_t>(iSlectedItem - sm_nMaxItemsPerPage));
+		iTargetItem = static_cast<ItemControls_t>(-static_cast<ItemPosition_t>(iSlectedItem - nMaxItemsPerPage));
 	}
 	else
 	{
 		iTargetItem = iStartItem + iSlectedItem;
 	}
 
-	if(bIsControl)
+	if(bIsNullableItem || bIsAboveItem) // Is control
 	{
 		switch(iTargetItem)
 		{
 			case MENU_ITEM_CONTROL_BACK_INDEX:
 			{
-				ItemPosition_t iPrevItems = iStartItem - sm_nMaxItemsPerPage;
+				ItemPosition_t iPrevItems = iStartItem - nMaxItemsPerPage;
 
 				if(iPrevItems >= 0)
 				{
@@ -230,7 +245,7 @@ bool CMenu::OnSelect(CPlayerSlot aSlot, int iSlectedItem)
 
 			case MENU_ITEM_CONTROL_NEXT_INDEX:
 			{
-				ItemPosition_t iNextItems = iStartItem + sm_nMaxItemsPerPage;
+				ItemPosition_t iNextItems = iStartItem + nMaxItemsPerPage;
 
 				if(iNextItems < m_aData.m_vecItems.Count())
 				{
@@ -394,7 +409,7 @@ CMenu::CPageBuilder::CPageBuilder(int nTextSize)
 	Assert(nTextSize >= MENU_MAX_TEXT_LENGTH);
 }
 
-void CMenu::CPageBuilder::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, ItemPosition_t iStartPosition)
+void CMenu::CPageBuilder::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, ItemPosition_t iStartPosition, uint8 nMaxItems)
 {
 	const auto &aConcat = g_aMenuConcat;
 
@@ -427,20 +442,20 @@ void CMenu::CPageBuilder::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot a
 	{
 		const auto &vecItems = aData.m_vecItems;
 
-		auto eControlFlags = aData.m_eControlFlags;
+		const auto eControlFlags = aData.m_eControlFlags;
 
-		bool bHasBackButton = !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_BACK), 
-		     bHasNextButton = !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_NEXT), 
-		     bHasExitButton = !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_EXIT);
+		const bool bHasBackButton = !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_BACK), 
+		           bHasNextButton = !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_NEXT), 
+		           bHasExitButton = !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_EXIT);
 
-		uint8 nControlsSum = bHasBackButton + bHasNextButton + bHasExitButton;
+		const uint8 nControlsSum = bHasBackButton + bHasNextButton + bHasExitButton;
 
 		int nLeftItems = vecItems.Count() - iStartPosition;
 
-		bool bItemsOverflow = nLeftItems >= sm_nMaxItemsPerPage, // If are elements after.
-		     bItemsHasLeft = iStartPosition >= sm_nMaxItemsPerPage; // If are elements behind.
+		const bool bItemsOverflow = nLeftItems >= nMaxItems, // If are elements after.
+		           bItemsHasLeft = iStartPosition >= nMaxItems; // If are elements behind.
 
-		const ItemPosition_t nItemsOnPage = bItemsOverflow ? (iStartPosition + sm_nMaxItemsPerPage) : vecItems.Count();
+		const ItemPosition_t nItemsOnPage = bItemsOverflow ? (iStartPosition + nMaxItems) : vecItems.Count();
 
 		char szItemNumber[2] = ""; // Displayed item number.
 

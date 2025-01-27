@@ -148,7 +148,7 @@ public: // IMenu
 		CPageBuilder() = delete;
 		CPageBuilder(int nTextSize = MENU_MAX_TEXT_LENGTH);
 
-		void Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, ItemPosition_t iStartPosition); // Render a page.
+		void Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, ItemPosition_t iStartPosition, uint8 nMaxItems); // Render a page.
 
 		virtual const char *GetBackgroundText() const
 		{
@@ -185,10 +185,12 @@ public: // IMenu
 		CBufferStringText m_sActiveText;
 	};
 
+	static constexpr uint8 sm_nMaxItemsPerPage = MENU_DEFAULT_ITEMS_COUNT_PER_PAGE;
+	uint8 GetMaxItemsPerPageWithoutControls();
+
 	CPageBuilder *Render(CPlayerSlot aSlot, ItemPosition_t iStartItem = MENU_FIRST_ITEM_INDEX);
 	bool InternalDisplayAt(CPlayerSlot aSlot, ItemPosition_t iStartItem = MENU_FIRST_ITEM_INDEX, bool bSetTextNow = false) override;
 
-	static constexpr uint8 sm_nMaxItemsPerPage = MENU_DEFAULT_ITEMS_COUNT_PER_PAGE - 3;
 	virtual bool OnSelect(CPlayerSlot aSlot, int iSelectedItem);
 
 public: // Internal methods.
