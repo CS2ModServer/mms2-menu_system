@@ -214,18 +214,22 @@ bool CMenu::OnSelect(CPlayerSlot aSlot, int iSlectedItem)
 
 	ItemPosition_t iStartItem = m_arrCurrentPositions[aSlot];
 
+	ItemPositionOnPage_t iItemOnPage = static_cast<ItemPosition_t>(iSlectedItem - nMaxItemsPerPage);
+
 	if(bIsNullableItem)
 	{
 		iTargetItem = MENU_ITEM_CONTROL_EXIT_INDEX;
 	}
 	else if(bIsAboveItem)
 	{
-		iTargetItem = static_cast<ItemControls_t>(-static_cast<ItemPosition_t>(iSlectedItem - nMaxItemsPerPage));
+		iTargetItem = static_cast<ItemControls_t>(-iItemOnPage);
 	}
 	else
 	{
 		iTargetItem = iStartItem + iSlectedItem;
 	}
+
+	auto &vecItems = m_aData.m_vecItems;
 
 	if(bIsNullableItem || bIsAboveItem) // Is control
 	{
@@ -247,13 +251,25 @@ bool CMenu::OnSelect(CPlayerSlot aSlot, int iSlectedItem)
 			{
 				ItemPosition_t iNextItems = iStartItem + nMaxItemsPerPage;
 
-				if(iNextItems < m_aData.m_vecItems.Count())
+				if(iNextItems < vecItems.Count())
 				{
 					InternalDisplayAt(aSlot, iNextItems, true);
 				}
 
 				break;
 			}
+		}
+	}
+
+	if(0 < iTargetItem && iTargetItem < vecItems.Count())
+	{
+		auto &aItem = vecItems[iTargetItem];
+
+		auto *pItemHandler = aItem.m_pHandler;
+
+		if(pItemHandler)
+		{
+			pItemHandler->OnMenuSelectItem(static_cast<IMenu *>(this), aSlot, iTargetItem, iItemOnPage, aItem.m_pData);
 		}
 	}
 
