@@ -75,6 +75,12 @@
 			"forward": 8.0,
 			"up": -2.0,
 			"left": 1.5
+		},
+
+		"matrix_offset-previous":
+		{
+			"forward": 2.0,
+			"right": 1.0
 		}
 	},
 

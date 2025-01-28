@@ -171,13 +171,15 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 
 					CCSPlayerPawn *pCCSPlayerObserverTargetPawn = entity_upper_cast<CCSPlayerPawn *>(pCSObserverTarget);
 
-					for(const auto &[_, pMenu] : vecMenus)
+					FOR_EACH_VEC(vecMenus, i)
 					{
+						const auto &[_, pMenu] = vecMenus[i];
+
 						CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
 
 						if(pInternalMenu)
 						{
-							AttachMenuInstanceToCSPlayer(pInternalMenu, pCCSPlayerObserverTargetPawn);
+							AttachMenuInstanceToCSPlayer(i, pInternalMenu, pCCSPlayerObserverTargetPawn);
 						}
 					}
 
@@ -200,13 +202,15 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 			{
 				auto *pCSPlayerPawn = entity_upper_cast<CCSPlayerPawn *>(pPlayerPawn);
 
-				for(const auto &[_, pMenu] : vecMenus)
+				FOR_EACH_VEC(vecMenus, i)
 				{
+					const auto &[_, pMenu] = vecMenus[i];
+
 					CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
 
 					if(pInternalMenu)
 					{
-						AttachMenuInstanceToCSPlayer(pInternalMenu, pCSPlayerPawn);
+						AttachMenuInstanceToCSPlayer(i, pInternalMenu, pCSPlayerPawn);
 					}
 				}
 			}
@@ -267,18 +271,18 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 				vecItems.AddToTail("First Item");
 				vecItems.AddToTail("Second Item");
 				vecItems.AddToTail("Item");
-				vecItems.AddToTail("Item");
-				vecItems.AddToTail("Item");
-				vecItems.AddToTail("Item");
-				vecItems.AddToTail("Item");
-				vecItems.AddToTail("Item");
-				vecItems.AddToTail("Item");
-				vecItems.AddToTail("Item");
-				vecItems.AddToTail("Item");
-				vecItems.AddToTail("Item");
-				vecItems.AddToTail("Item");
-				vecItems.AddToTail("Item");
-				vecItems.AddToTail("Item");
+				vecItems.AddToTail("Item - 2");
+				vecItems.AddToTail("Item - 3");
+				vecItems.AddToTail("Item - 4");
+				vecItems.AddToTail("Item - 5");
+				vecItems.AddToTail("Item - 6");
+				vecItems.AddToTail("Item - 7");
+				vecItems.AddToTail("Item - 8");
+				vecItems.AddToTail("Item - 9");
+				vecItems.AddToTail("Item - 10");
+				vecItems.AddToTail("Item - 11");
+				vecItems.AddToTail("Item - 12");
+				vecItems.AddToTail("Item - 13");
 				vecItems.AddToTail("Last Item");
 
 				return DisplayInternalMenuToPlayer(pInternalMenu, aSlot);
@@ -775,19 +779,6 @@ bool MenuSystem_Plugin::DisplayInternalMenuToPlayer(CMenu *pInternalMenu, CPlaye
 		return false;
 	}
 
-	SpawnMenuByEntityPosition(pInternalMenu, aSlot, pPlayerPawn);
-
-	uint8 iTeam = CBaseEntity_Helper::GetTeamNumAccessor(pPlayerController);
-
-	if(iTeam <= TEAM_SPECTATOR)
-	{
-		AttachMenuInstanceToObserver(pInternalMenu, entity_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn));
-	}
-	else
-	{
-		AttachMenuInstanceToCSPlayer(pInternalMenu, entity_upper_cast<CCSPlayerPawn *>(pPlayerPawn));
-	}
-
 	// Disable a radar.
 	{
 		CSingleRecipientFilter aFilter(aSlot);
@@ -798,7 +789,46 @@ bool MenuSystem_Plugin::DisplayInternalMenuToPlayer(CMenu *pInternalMenu, CPlaye
 		SendSetConVarMessage(&aFilter, vecCVars);
 	}
 
-	aPlayer.GetMenus().AddToHead({nManyTimes ? Plat_GetTime() + nManyTimes : 0, static_cast<IMenu *>(pInternalMenu)});
+	SpawnMenuByEntityPosition(0, pInternalMenu, aSlot, pPlayerPawn);
+
+	auto &vecMenus = aPlayer.GetMenus();
+
+	vecMenus.AddToHead({nManyTimes ? Plat_GetTime() + nManyTimes : 0, static_cast<IMenu *>(pInternalMenu)}); // To participate in the next cycle.
+
+	uint8 iTeam = CBaseEntity_Helper::GetTeamNumAccessor(pPlayerController);
+
+	if(iTeam <= TEAM_SPECTATOR)
+	{
+		auto *pCSPlayerPawn = entity_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
+
+		FOR_EACH_VEC(vecMenus, i)
+		{
+			const auto &[_, pMenu] = vecMenus.Element(i);
+
+			CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
+
+			if(pInternalMenu)
+			{
+				AttachMenuInstanceToObserver(i, pInternalMenu, pCSPlayerPawn);
+			}
+		}
+	}
+	else
+	{
+		auto *pCSPlayerPawn = entity_upper_cast<CCSPlayerPawn *>(pPlayerPawn);
+
+		FOR_EACH_VEC(vecMenus, i)
+		{
+			const auto &[_, pMenu] = vecMenus.Element(i);
+
+			CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
+
+			if(pInternalMenu)
+			{
+				AttachMenuInstanceToCSPlayer(i, pInternalMenu, pCSPlayerPawn);
+			}
+		}
+	}
 
 	return pInternalMenu->InternalDisplayAt(aSlot, iStartItem);
 }
@@ -858,13 +888,13 @@ void MenuSystem_Plugin::CloseInternalMenu(CMenu *pInternalMenu, IMenuHandler::En
 
 		auto &vecMenus = aPlayer.GetMenus();
 
-		FOR_EACH_VEC(vecMenus, i)
+		FOR_EACH_VEC_BACK(vecMenus, i)
 		{
 			const auto &[_, pPlayerMenu] = vecMenus.Element(i);
 
 			if(pMenu == pPlayerMenu)
 			{
-				vecMenus.FastRemove(i);
+				vecMenus.Remove(i);
 
 				break;
 			}
@@ -909,24 +939,16 @@ void MenuSystem_Plugin::OnMenuSelect(IMenu *pMenu, CPlayerSlot aSlot, IMenu::Ite
 		Logger::DetailedFormat("%s(pMenu = %p, iClient = %d, iItem = %d)\n", __FUNCTION__, pMenu, aSlot.GetClientIndex(), iItem);
 	}
 
-	if(iItem == IMenu::MENU_ITEM_CONTROL_EXIT_INDEX)
-	{
-		auto *pMemBlock = m_MenuAllocator.FindMemBlock(pMenu);
-
-		if(pMemBlock)
-		{
-			CMenu *pInternalMenu = m_MenuAllocator.GetInstanceByMemBlock(pMemBlock);
-
-			CloseInternalMenu(pInternalMenu, IMenuHandler::MenuEnd_Exit);
-			m_MenuAllocator.ReleaseByMemBlock(pMemBlock);
-		}
-	}
-
 	auto *pHandler = FindMenuHandler(pMenu);
 
 	if(pHandler)
 	{
 		pHandler->OnMenuSelect(pMenu, aSlot, iItem);
+	}
+
+	if(iItem == IMenu::MENU_ITEM_CONTROL_EXIT_INDEX)
+	{
+		OnMenuExitButton(pMenu, aSlot, iItem);
 	}
 }
 
@@ -943,6 +965,88 @@ void MenuSystem_Plugin::OnMenuEnd(IMenu *pMenu, EndReason_t eReason)
 	{
 		pHandler->OnMenuEnd(pMenu, eReason);
 	}
+}
+
+bool MenuSystem_Plugin::OnMenuExitButton(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iItem)
+{
+	auto *pMenuMemBlock = m_MenuAllocator.FindMemBlock(pMenu);
+
+	if(!pMenuMemBlock)
+	{
+		return false;
+	}
+
+	CMenu *pInternalMenu = m_MenuAllocator.GetInstanceByMemBlock(pMenuMemBlock);
+
+	CloseInternalMenu(pInternalMenu, IMenuHandler::MenuEnd_Exit);
+	m_MenuAllocator.ReleaseByMemBlock(pMenuMemBlock);
+
+	auto &aPlayer = GetPlayerData(aSlot);
+
+	int iClient = aSlot.GetClientIndex();
+
+	if(!aPlayer.IsConnected())
+	{
+		return false;
+	}
+
+	auto &vecAnotherMenus = aPlayer.GetMenus();
+
+	if(!vecAnotherMenus.Count())
+	{
+		return true;
+	}
+
+	auto *pPlayerController = entity_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient)));
+
+	if(!pPlayerController)
+	{
+		return false;
+	}
+
+	CBasePlayerPawn *pPlayerPawn = CBasePlayerController_Helper::GetPawnAccessor(pPlayerController)->Get();
+
+	if(!pPlayerPawn)
+	{
+		return false;
+	}
+
+	uint8 iTeam = CBaseEntity_Helper::GetTeamNumAccessor(pPlayerController);
+
+	if(iTeam <= TEAM_SPECTATOR)
+	{
+		auto *pCSPlayerPawn = entity_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
+
+		FOR_EACH_VEC(vecAnotherMenus, i)
+		{
+			const auto &[_, pMenu] = vecAnotherMenus.Element(i);
+
+			CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
+
+			if(pInternalMenu)
+			{
+				AttachMenuInstanceToObserver(i, pInternalMenu, pCSPlayerPawn);
+			}
+		}
+	}
+	else
+	{
+		auto *pCSPlayerPawn = entity_upper_cast<CCSPlayerPawn *>(pPlayerPawn);
+
+		FOR_EACH_VEC(vecAnotherMenus, i)
+		{
+			const auto &[_, pMenu] = vecAnotherMenus.Element(i);
+
+			CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
+
+			if(pInternalMenu)
+			{
+				AttachMenuInstanceToCSPlayer(i, pInternalMenu, pCSPlayerPawn);
+			}
+		}
+	}
+
+	return true;
 }
 
 void MenuSystem_Plugin::OnMenuDestroy(IMenu *pMenu)
@@ -1181,13 +1285,15 @@ GS_EVENT_MEMBER(MenuSystem_Plugin, ServerPreEntityThink)
 			continue;
 		}
 
-		for(const auto &[_, pMenu] : vecMenus)
+		FOR_EACH_VEC(vecMenus, i)
 		{
+			const auto &[_, pMenu] = vecMenus[i];
+
 			CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
 
 			if(pInternalMenu)
 			{
-				TeleportMenuInstanceToCSPlayer(pInternalMenu, pCSPlayerPawn);
+				TeleportMenuInstanceToCSPlayer(i, pInternalMenu, pCSPlayerPawn);
 			}
 		}
 	}
@@ -1765,43 +1871,58 @@ Vector MenuSystem_Plugin::GetEntityPosition(CBaseEntity *pEntity, QAngle *pRotat
 	return CGameSceneNode_Helper::GetAbsOriginAccessor(pEntitySceneNode);
 }
 
-void MenuSystem_Plugin::CalculateMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
+void MenuSystem_Plugin::CalculateMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, int i, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
-	const auto *pMatrixOffset = pProfile->m_pMatrixOffset;
-
-	Menu::CProfile::MatrixOffset_t aMatrixOffset {};
+	auto *pMatrixOffset = pProfile->GetMatrixOffset();
 
 	if(pMatrixOffset)
 	{
-		aMatrixOffset = *pMatrixOffset;
-	}
+		auto aMatrixOffset = *pMatrixOffset;
 
-	vecResult = AddToFrontByRotation2(vecOrigin, angRotation, aMatrixOffset.m_flForward, aMatrixOffset.m_flLeft, aMatrixOffset.m_flRight, aMatrixOffset.m_flUp);
+		vecResult = AddToFrontByRotation2(vecOrigin, angRotation, aMatrixOffset.m_flForward, aMatrixOffset.m_flLeft, aMatrixOffset.m_flRight, aMatrixOffset.m_flUp);
+	}
 
 	const auto flBackgroundAway = pProfile->GetBackgroundAwayUnits();
 
 	vecBackgroundResult = AddToFrontByRotation2(vecResult, angRotation, flBackgroundAway, flBackgroundAway);
 
+	if(i) // If a previous one.
+	{
+		auto *pPrevios_MatrixOffset = pProfile->GetPreviosMatrixOffset();
+
+		if(pPrevios_MatrixOffset)
+		{
+			auto aPrevios_MatrixOffset = *pPrevios_MatrixOffset;
+
+			vecResult = AddToFrontByRotation2(vecOrigin, angRotation, aPrevios_MatrixOffset.m_flForward * i, aPrevios_MatrixOffset.m_flLeft * i, aPrevios_MatrixOffset.m_flRight * i, aPrevios_MatrixOffset.m_flUp * i);
+			vecBackgroundResult = AddToFrontByRotation2(vecResult, angRotation, flBackgroundAway, flBackgroundAway);
+		}
+		else
+		{
+			Logger::WarningFormat("Second menu (N%d) can be displayed on top of first", i + 1);
+		}
+	}
+
 	angResult = {0.f, AngleNormalize(angRotation.y - 90.f), AngleNormalize(-angRotation.x + 90.f)};
 }
 
-void MenuSystem_Plugin::CalculateMenuEntitiesPositionByEntity(CBaseEntity *pTarget, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
+void MenuSystem_Plugin::CalculateMenuEntitiesPositionByEntity(CBaseEntity *pTarget, int i, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
 	vecResult = GetEntityPosition(pTarget, &angResult);
-	CalculateMenuEntitiesPosition(vecResult, angResult, pProfile, vecBackgroundResult, vecResult, angResult);
+	CalculateMenuEntitiesPosition(vecResult, angResult, i, pProfile, vecBackgroundResult, vecResult, angResult);
 }
 
-void MenuSystem_Plugin::CalculateMenuEntitiesPositionByViewModel(CBaseViewModel *pTarget, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
+void MenuSystem_Plugin::CalculateMenuEntitiesPositionByViewModel(CBaseViewModel *pTarget, int i, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
 	vecResult = GetEntityPosition(pTarget, &angResult);
-	CalculateMenuEntitiesPosition(vecResult, angResult, pProfile, vecBackgroundResult, vecResult, angResult);
+	CalculateMenuEntitiesPosition(vecResult, angResult, i, pProfile, vecBackgroundResult, vecResult, angResult);
 }
 
-void MenuSystem_Plugin::CalculateMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pTarget, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
+void MenuSystem_Plugin::CalculateMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pTarget, int i, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult)
 {
 	vecResult = GetEntityPosition(pTarget) + CBaseModelEntity_Helper::GetViewOffsetAccessor(pTarget);
 	angResult = CCSPlayerPawnBase_Helper::GetEyeAnglesAccessor(pTarget);
-	CalculateMenuEntitiesPosition(vecResult, angResult, pProfile, vecBackgroundResult, vecResult, angResult);
+	CalculateMenuEntitiesPosition(vecResult, angResult, i, pProfile, vecBackgroundResult, vecResult, angResult);
 }
 
 void MenuSystem_Plugin::SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKeyValues, CUtlVector<CEntityInstance *> *pEntities, IEntityManager::IProviderAgent::IEntityListener *pListener)
@@ -1915,7 +2036,7 @@ void MenuSystem_Plugin::SpawnMenu(CMenu *pInternalMenu, CPlayerSlot aInitiatorSl
 	vecMenuKVs.PurgeAndDeleteElements();
 }
 
-void MenuSystem_Plugin::SpawnMenuByEntityPosition(CMenu *pInternalMenu, CPlayerSlot aInitiatorSlot, CBaseEntity *pTarget)
+void MenuSystem_Plugin::SpawnMenuByEntityPosition(int iMenu, CMenu *pInternalMenu, CPlayerSlot aInitiatorSlot, CBaseEntity *pTarget)
 {
 	Vector vecMenuAbsOriginBackground {},
 	       vecMenuAbsOrigin {};
@@ -1925,7 +2046,7 @@ void MenuSystem_Plugin::SpawnMenuByEntityPosition(CMenu *pInternalMenu, CPlayerS
 	auto *pProfile = Menu::CProfileSystem::GetInternal();
 
 	Assert(pProfile);
-	CalculateMenuEntitiesPositionByEntity(pTarget, pProfile, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
+	CalculateMenuEntitiesPositionByEntity(pTarget, iMenu, pProfile, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 	SpawnMenu(pInternalMenu, aInitiatorSlot, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 }
 
@@ -1976,7 +2097,7 @@ CBaseViewModel *MenuSystem_Plugin::SpawnViewModelEntity(const Vector &vecOrigin,
 	return entity_upper_cast<CBaseViewModel *>(vecEntities[0]);
 }
 
-void MenuSystem_Plugin::TeleportMenuInstanceToCSPlayer(CMenu *pInternalMenu, CCSPlayerPawnBase *pTarget)
+void MenuSystem_Plugin::TeleportMenuInstanceToCSPlayer(int i, CMenu *pInternalMenu, CCSPlayerPawnBase *pTarget)
 {
 	auto &aBaseEntity = GetGameDataStorage().GetBaseEntity();
 
@@ -1988,7 +2109,7 @@ void MenuSystem_Plugin::TeleportMenuInstanceToCSPlayer(CMenu *pInternalMenu, CCS
 	auto *pProfile = Menu::CProfileSystem::GetInternal();
 
 	Assert(pProfile);
-	CalculateMenuEntitiesPositionByCSPlayer(pTarget, pProfile, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
+	CalculateMenuEntitiesPositionByCSPlayer(pTarget, i, pProfile, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 
 	const auto &vecEntities = pInternalMenu->GetActiveEntities();
 
@@ -2014,7 +2135,7 @@ void MenuSystem_Plugin::AttachMenuInstanceToEntity(CMenu *pInternalMenu, CBaseEn
 	}
 }
 
-bool MenuSystem_Plugin::AttachMenuInstanceToCSPlayer(CMenu *pInternalMenu, CCSPlayerPawn *pTarget)
+bool MenuSystem_Plugin::AttachMenuInstanceToCSPlayer(int i, CMenu *pInternalMenu, CCSPlayerPawn *pTarget)
 {
 	auto &aBaseEntity = GetGameDataStorage().GetBaseEntity();
 
@@ -2048,7 +2169,7 @@ bool MenuSystem_Plugin::AttachMenuInstanceToCSPlayer(CMenu *pInternalMenu, CCSPl
 	auto *pProfile = Menu::CProfileSystem::GetInternal();
 
 	Assert(pProfile);
-	CalculateMenuEntitiesPositionByEntity(pTarget, pProfile, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
+	CalculateMenuEntitiesPositionByEntity(pTarget, i, pProfile, vecMenuAbsOriginBackground, vecMenuAbsOrigin, angMenuRotation);
 
 	if(Logger::IsChannelEnabled(LS_DETAILED))
 	{
@@ -2093,7 +2214,7 @@ bool MenuSystem_Plugin::AttachMenuInstanceToCSPlayer(CMenu *pInternalMenu, CCSPl
 	return true;
 }
 
-bool MenuSystem_Plugin::AttachMenuInstanceToObserver(CMenu *pInternalMenu, CCSPlayerPawnBase *pTarget)
+bool MenuSystem_Plugin::AttachMenuInstanceToObserver(int i, CMenu *pInternalMenu, CCSPlayerPawnBase *pTarget)
 {
 	auto *pTargetPlayerPawn = entity_upper_cast<CCSPlayerPawnBase *>(pTarget);
 
@@ -2111,7 +2232,7 @@ bool MenuSystem_Plugin::AttachMenuInstanceToObserver(CMenu *pInternalMenu, CCSPl
 
 			if(pCSObserverTarget)
 			{
-				AttachMenuInstanceToCSPlayer(pInternalMenu, entity_upper_cast<CCSPlayerPawn *>(pCSObserverTarget));
+				AttachMenuInstanceToCSPlayer(i, pInternalMenu, entity_upper_cast<CCSPlayerPawn *>(pCSObserverTarget));
 
 				return true;
 			}
@@ -2793,7 +2914,7 @@ void MenuSystem_Plugin::OnMenuSelectCommand(const CCommandContext &context, cons
 
 	auto &vecMenus = aPlayer.GetMenus();
 
-	FOR_EACH_VEC_BACK(vecMenus, i)
+	FOR_EACH_VEC(vecMenus, i)
 	{
 		const auto &[_, pMenu] = vecMenus.Element(i);
 
@@ -3404,13 +3525,15 @@ META_RES MenuSystem_Plugin::OnExecuteStringCommandPre(CServerSideClientBase *pCl
 
 			CCSPlayerPawn *pCCSPlayerObserverTargetPawn = entity_upper_cast<CCSPlayerPawn *>(pCSObserverTarget);
 
-			for(const auto &[_, pMenu] : vecMenus)
+			FOR_EACH_VEC(vecMenus, i)
 			{
+				const auto &[_, pMenu] = vecMenus[i];
+
 				CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
 
 				if(pInternalMenu)
 				{
-					AttachMenuInstanceToCSPlayer(pInternalMenu, pCCSPlayerObserverTargetPawn);
+					AttachMenuInstanceToCSPlayer(i, pInternalMenu, pCCSPlayerObserverTargetPawn);
 				}
 			}
 

@@ -283,6 +283,8 @@ public: // IMenuHandler
 	void OnMenuDrawTitle(IMenu *pMenu, CPlayerSlot aSlot, IMenu::Title_t &aTitle) override;
 	void OnMenuDisplayItem(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iItem, IMenu::Item_t &aData) override;
 
+	bool OnMenuExitButton(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iItem);
+
 public: // CBaseGameSystem
 	bool Init() override;
 	void PostInit() override;
@@ -345,22 +347,22 @@ public: // Entity Manager.
 
 	// Get & calculate positions.
 	Vector GetEntityPosition(CBaseEntity *pTarget, QAngle *pRotation = nullptr);
-	void CalculateMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
-	void CalculateMenuEntitiesPositionByEntity(CBaseEntity *pTarget, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
-	void CalculateMenuEntitiesPositionByViewModel(CBaseViewModel *pTarget, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
-	void CalculateMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pTarget, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
+	void CalculateMenuEntitiesPosition(const Vector &vecOrigin, const QAngle &angRotation, int i, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
+	void CalculateMenuEntitiesPositionByEntity(CBaseEntity *pTarget, int i, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
+	void CalculateMenuEntitiesPositionByViewModel(CBaseViewModel *pTarget, int i, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
+	void CalculateMenuEntitiesPositionByCSPlayer(CCSPlayerPawnBase *pTarget, int i, const Menu::CProfile *pProfile, Vector &vecBackgroundResult, Vector &vecResult, QAngle &angResult);
 
 	// Spawn entities.
 	void SpawnEntities(const CUtlVector<CEntityKeyValues *> &vecKeyValues, CUtlVector<CEntityInstance *> *pEntities = nullptr, IEntityManager::IProviderAgent::IEntityListener *pListener = nullptr);
 	void SpawnMenu(CMenu *pMenu, CPlayerSlot aInitiatorSlot, const Vector &vecBackgroundOrigin, const Vector &vecOrigin, const QAngle &angRotation);
-	void SpawnMenuByEntityPosition(CMenu *pMenu, CPlayerSlot aInitiatorSlot, CBaseEntity *pTarget);
+	void SpawnMenuByEntityPosition(int iMenu, CMenu *pMenu, CPlayerSlot aInitiatorSlot, CBaseEntity *pTarget);
 	CBaseViewModel *SpawnViewModelEntity(const Vector &vecOrigin, const QAngle &angRotation, CBaseEntity *pOwner, const int nSlot);
 
 	// Menu movement.
-	void TeleportMenuInstanceToCSPlayer(CMenu *pInternalMenu, CCSPlayerPawnBase *pTarget);
+	void TeleportMenuInstanceToCSPlayer(int i, CMenu *pInternalMenu, CCSPlayerPawnBase *pTarget);
 	void AttachMenuInstanceToEntity(CMenu *pInternalMenu, CBaseEntity *pTarget);
-	bool AttachMenuInstanceToCSPlayer(CMenu *pInternalMenu, CCSPlayerPawn *pTarget);
-	bool AttachMenuInstanceToObserver(CMenu *pInternalMenu, CCSPlayerPawnBase *pTarget); // Attached to observer, otherwise to just entity.
+	bool AttachMenuInstanceToCSPlayer(int i, CMenu *pInternalMenu, CCSPlayerPawn *pTarget);
+	bool AttachMenuInstanceToObserver(int i, CMenu *pInternalMenu, CCSPlayerPawnBase *pTarget); // Attached to observer, otherwise to just entity.
 
 	// Setting up the entities.
 	bool SettingMenuEntity(CEntityInstance *pEntity);

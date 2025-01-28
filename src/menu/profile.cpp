@@ -36,6 +36,11 @@ Menu::CProfile::CProfile::~CProfile()
 		delete m_pMatrixOffset;
 	}
 
+	if(m_pMatrixOffset_Previos)
+	{
+		delete m_pMatrixOffset_Previos;
+	}
+
 	if(m_pInactiveColor)
 	{
 		delete m_pInactiveColor;
@@ -68,6 +73,7 @@ bool Menu::CProfile::Load(CProfileSystem *pSystem, KeyValues3 *pData, ProfileLoa
 	m_pItems = LoadAllocatedItems(pData->FindMember("items"), vecMessages);
 	m_sItemsVerificationClientConVarName = pData->GetMemberString("items_verification_client_convar_name");
 	m_pMatrixOffset = LoadAllocatedMatrixOffset(pData->FindMember("matrix_offset"), vecMessages);
+	m_pMatrixOffset_Previos = LoadAllocatedMatrixOffset(pData->FindMember("matrix_offset-previous"), vecMessages);
 	m_pInactiveColor = (pMember = pData->FindMember("inactive_color")) ? new Color(pMember->GetColor()) : nullptr;
 	m_pActiveColor = (pMember = pData->FindMember("active_color")) ? new Color(pMember->GetColor()) : nullptr;
 	m_flBackgroundAwayUnits = pData->GetMemberFloat("background_away_units");
@@ -281,6 +287,7 @@ void Menu::CProfile::RemoveStaticMembers(KeyValues3 *pData)
 	pData->RemoveMember("items");
 	pData->RemoveMember("items_verification_client_convar_name");
 	pData->RemoveMember("matrix_offset");
+	pData->RemoveMember("matrix_offset-previous");
 	pData->RemoveMember("inactive_color");
 	pData->RemoveMember("active_color");
 	pData->RemoveMember("background_away_units");
@@ -373,6 +380,24 @@ const IMenuProfile::MatrixOffset_t *Menu::CProfile::GetMatrixOffset() const
 		for(const auto &pInherited : m_aMetadata.GetBaseline()) 
 		{
 			if(pResult = pInherited->GetMatrixOffset()) 
+			{
+				break;
+			}
+		}
+	}
+
+	return pResult;
+}
+
+const IMenuProfile::MatrixOffset_t *Menu::CProfile::GetPreviosMatrixOffset() const
+{
+	const auto *pResult = m_pMatrixOffset_Previos;
+
+	if(!pResult)
+	{
+		for(const auto &pInherited : m_aMetadata.GetBaseline()) 
+		{
+			if(pResult = pInherited->GetPreviosMatrixOffset()) 
 			{
 				break;
 			}

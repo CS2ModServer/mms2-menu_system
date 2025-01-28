@@ -95,6 +95,13 @@ public: // Abstract methods.
 	virtual const MatrixOffset_t *GetMatrixOffset() const = 0;
 
 	/**
+	 * @brief Gets the matrix offset of a previos instance.
+	 * 
+	 * @return Returns a pointer to matrix offset.
+	 */
+	virtual const MatrixOffset_t *GetPreviosMatrixOffset() const = 0;
+
+	/**
 	 * @brief Gets the inactive color.
 	 * 
 	 * @return Returns a pointer to inactive color.
