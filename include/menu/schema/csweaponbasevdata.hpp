@@ -19,20 +19,40 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEPLAYERPAWN_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEPLAYERPAWN_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CSWEAPONBASEVDATA_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CSWEAPONBASEVDATA_HPP_
 
 #	pragma once
 
-#	include <menu/schema/basemodelentity.hpp>
+#	include <menu/schema/baseplayerweaponvdata.hpp>
 #	include <menu/schema.hpp>
 
-#	define CBASEPLAYERPAWN_CLASS_NAME "CBasePlayerPawn"
+#	define CCSWEAPONBASEVDATA_CLASS_NAME "CCSWeaponBaseVData"
 
-class CPlayer_WeaponServices;
-class CPlayer_ObserverServices;
+enum gear_slot_t : int32
+{
+	GEAR_SLOT_INVALID = -1,
 
-class CBasePlayerPawn : public CBaseModelEntity  // / public CBaseCombatCharacter < public CBaseFlex < public CBaseAnimGraph < public CBaseModelEntity
+	GEAR_SLOT_RIFLE = 0,
+	GEAR_SLOT_PISTOL = 1,
+	GEAR_SLOT_KNIFE = 2,
+	GEAR_SLOT_GRENADES = 3,
+	GEAR_SLOT_C4 = 4,
+	GEAR_SLOT_RESERVED_SLOT6 = 5,
+	GEAR_SLOT_RESERVED_SLOT7 = 6,
+	GEAR_SLOT_RESERVED_SLOT8 = 7,
+	GEAR_SLOT_RESERVED_SLOT9 = 8,
+	GEAR_SLOT_RESERVED_SLOT10 = 9,
+	GEAR_SLOT_RESERVED_SLOT11 = 10,
+	GEAR_SLOT_BOOSTS = 12,
+	GEAR_SLOT_UTILITY = 13,
+	GEAR_SLOT_COUNT,
+
+	GEAR_SLOT_FIRST = 0,
+	GEAR_SLOT_LAST = GEAR_SLOT_COUNT - 1,
+};
+
+class CCSWeaponBaseVData : public CBasePlayerWeaponVData
 {
 public:
 	// ...
@@ -42,17 +62,16 @@ namespace Menu
 {
 	namespace Schema
 	{
-		class CBasePlayerPawn_Helper : virtual public CBaseModelEntity_Helper
+		class CCSWeaponBaseVData_Helper : virtual public CBasePlayerWeaponVData_Helper
 		{
 		public:
-			CBasePlayerPawn_Helper(CSystem *pSchemaSystemHelper);
+			CCSWeaponBaseVData_Helper(CSystem *pSchemaSystemHelper);
 
 		public:
 			void Clear();
 
 		public:
-			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetWeaponServicesAccessor, CBasePlayerPawn, CPlayer_WeaponServices *, m_aOffsets.m_nWeaponServices);
-			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetObserverServicesAccessor, CBasePlayerPawn, CPlayer_ObserverServices *, m_aOffsets.m_nObserverServices);
+			SCHEMA_COMPONENT_ACCESSOR_METHOD(GetGearSlotAccessor, CCSWeaponBaseVData, gear_slot_t, m_aOffsets.m_nGearSlot);
 
 		private:
 			CSystem::CClass *m_pClass;
@@ -60,11 +79,10 @@ namespace Menu
 
 			struct
 			{
-				int m_nWeaponServices = INVALID_SCHEMA_FIELD_OFFSET;
-				int m_nObserverServices = INVALID_SCHEMA_FIELD_OFFSET;
+				int m_nGearSlot = INVALID_SCHEMA_FIELD_OFFSET;
 			} m_aOffsets;
-		}; // Menu::Schema::CCSPlayerPawnBase_Helper
+		}; // Menu::Schema::CCSWeaponBaseVData_Helper
 	}; // Menu::Schema
 }; // Menu
 
-#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEPLAYERPAWN_HPP_
+#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_CSWEAPONBASEVDATA_HPP_

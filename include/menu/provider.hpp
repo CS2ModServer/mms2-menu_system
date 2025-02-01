@@ -30,11 +30,14 @@
 #	include <tier0/dbg.h>
 #	include <tier0/platform.h>
 #	include <tier0/utlscratchmemory.h>
+#	include <tier1/bitbuf.h>
 #	include <tier1/utldelegateimpl.h>
 #	include <tier1/utlmap.h>
 #	include <entity2/entitykeyvalues.h>
 #	include <igamesystemfactory.h>
 #	include <variant.h>
+
+#	include "provider/csgousercmd.hpp"
 
 #	include <gamedata.hpp> // GameData
 
@@ -43,9 +46,11 @@
 #	define MENU_PROVIDER_BASEPLAYERPAWN_FILENAME MENU_PROVIDER_BASE_DIR CORRECT_PATH_SEPARATOR_S "baseplayerpawn.games.*"
 #	define MENU_PROVIDER_GAMESYSTEM_FILENAME MENU_PROVIDER_BASE_DIR CORRECT_PATH_SEPARATOR_S "gamesystem.games.*"
 #	define MENU_PROVIDER_SOURCE2SERVER_FILENAME MENU_PROVIDER_BASE_DIR CORRECT_PATH_SEPARATOR_S "source2server.games.*"
+#	define MENU_PROVIDER_USERCMD_FILENAME MENU_PROVIDER_BASE_DIR CORRECT_PATH_SEPARATOR_S "usercmd.games.*"
 
 class CBaseGameSystemFactory;
 class CGameEventManager;
+class CBasePlayerController;
 
 namespace Menu
 {
@@ -80,6 +85,7 @@ namespace Menu
 			bool LoadBasePlayerPawn(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
 			bool LoadGameSystem(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
 			bool LoadSource2Server(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
+			bool LoadUserCmd(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
 
 		public:
 			class CBaseEntity
@@ -169,6 +175,33 @@ namespace Menu
 				CGameEventManager **m_ppGameEventManager = nullptr;
 			}; // Menu::CProvider::GameStorage::CSource2Server
 
+			class CUserCmd
+			{
+			public:
+				CUserCmd();
+
+			public:
+				bool Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
+				void Reset();
+
+			public:
+				CCSGOUserCmd *Get() const;
+				void Read(CBasePlayerController *pController, CCSGOUserCmd *pMessage) const;
+				void ProcessWithPlayerController(CBasePlayerController *pController, CCSGOUserCmd *cmds, int numcmds, bool paused, float margin) const;
+
+			private:
+				GameData::Config::Addresses::ListenerCallbacksCollector m_aAddressCallbacks;
+				GameData::Config m_aGameConfig;
+
+			private: // Addresses.
+				using ReadWithPlayerController_t = void (CBasePlayerController *, CCSGOUserCmd *);
+				using ProcessWithPlayerController_t = void (CBasePlayerController *, CCSGOUserCmd *, int, bool, float);
+
+				CCSGOUserCmd *m_pCmds = nullptr;
+				ReadWithPlayerController_t *m_pRead = nullptr;
+				ProcessWithPlayerController_t *m_pProcessWithPlayerController = nullptr;
+			}; // Menu::CProvider::GameStorage::CUserCmd
+
 			const CBaseEntity &GetBaseEntity() const
 			{
 				return m_aBaseEntity;
@@ -189,11 +222,17 @@ namespace Menu
 				return m_aSource2Server;
 			}
 
+			const CUserCmd &GetUserCmd() const
+			{
+				return m_aUserCmd;
+			}
+
 		private:
 			CBaseEntity m_aBaseEntity;
 			CBasePlayerPawn m_aBasePlayerPawn;
 			CGameSystem m_aGameSystem;
 			CSource2Server m_aSource2Server;
+			CUserCmd m_aUserCmd;
 		}; // Menu::CProvider::CGameDataStorage
 
 		const CGameDataStorage &GetGameDataStorage() const

@@ -19,20 +19,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEPLAYERPAWN_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEPLAYERPAWN_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEPLAYERWEAPONVDATA_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEPLAYERWEAPONVDATA_HPP_
 
 #	pragma once
 
-#	include <menu/schema/basemodelentity.hpp>
 #	include <menu/schema.hpp>
 
-#	define CBASEPLAYERPAWN_CLASS_NAME "CBasePlayerPawn"
+#	define CBASEPLAYERWEAPONVDATA_CLASS_NAME "CBasePlayerWeaponVData"
 
-class CPlayer_WeaponServices;
-class CPlayer_ObserverServices;
-
-class CBasePlayerPawn : public CBaseModelEntity  // / public CBaseCombatCharacter < public CBaseFlex < public CBaseAnimGraph < public CBaseModelEntity
+class CBasePlayerWeaponVData // : public CEntitySubclassVDataBase
 {
 public:
 	// ...
@@ -42,17 +38,17 @@ namespace Menu
 {
 	namespace Schema
 	{
-		class CBasePlayerPawn_Helper : virtual public CBaseModelEntity_Helper
+		class CBasePlayerWeaponVData_Helper
 		{
 		public:
-			CBasePlayerPawn_Helper(CSystem *pSchemaSystemHelper);
+			CBasePlayerWeaponVData_Helper(CSystem *pSchemaSystemHelper);
 
 		public:
 			void Clear();
 
 		public:
-			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetWeaponServicesAccessor, CBasePlayerPawn, CPlayer_WeaponServices *, m_aOffsets.m_nWeaponServices);
-			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetObserverServicesAccessor, CBasePlayerPawn, CPlayer_ObserverServices *, m_aOffsets.m_nObserverServices);
+			SCHEMA_COMPONENT_ACCESSOR_METHOD(GetSlotAccessor, CBasePlayerWeaponVData, int, m_aOffsets.m_nSlot);
+			SCHEMA_COMPONENT_ACCESSOR_METHOD(GetPositionAccessor, CBasePlayerWeaponVData, int, m_aOffsets.m_nPosition);
 
 		private:
 			CSystem::CClass *m_pClass;
@@ -60,11 +56,11 @@ namespace Menu
 
 			struct
 			{
-				int m_nWeaponServices = INVALID_SCHEMA_FIELD_OFFSET;
-				int m_nObserverServices = INVALID_SCHEMA_FIELD_OFFSET;
+				int m_nSlot = INVALID_SCHEMA_FIELD_OFFSET;
+				int m_nPosition = INVALID_SCHEMA_FIELD_OFFSET;
 			} m_aOffsets;
-		}; // Menu::Schema::CCSPlayerPawnBase_Helper
+		}; // Menu::Schema::CBasePlayerWeaponVData_Helper
 	}; // Menu::Schema
 }; // Menu
 
-#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEPLAYERPAWN_HPP_
+#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEPLAYERWEAPONVDATA_HPP_

@@ -104,7 +104,7 @@ protected:
 
 	inline std::vector<T> GetKeyValueConcat(const T &aKey, const std::vector<T> &vecValues) const
 	{
-		std::vector<T> vecResult = {Base_t::m_aStartWith, aKey, Base_t::m_aBefore};
+		std::vector<T> vecResult = {Base_t::m_aStartWith, aKey, Base_t::m_aBetween};
 
 		vecResult.insert(vecResult.cend(), vecValues.cbegin(), vecValues.cend());
 		vecResult.push_back(Base_t::m_aEnds);
@@ -189,6 +189,7 @@ public:
 	const char *AppendToBuffer(CBufferString &sMessage, const char *pszKey, bool bValue) const;
 	const char *AppendToBuffer(CBufferString &sMessage, const char *pszKey, int nValue) const;
 	const char *AppendToBuffer(CBufferString &sMessage, const char *pszKey, uint nValue) const;
+	const char *AppendToBuffer(CBufferString &sMessage, const char *pszKey, uint64 nValue) const;
 	const char *AppendToBuffer(CBufferString &sMessage, const char *pszKey, float flValue) const;
 	const char *AppendToBuffer(CBufferString &sMessage, const char *pszKey, const Vector &vecValue) const;
 	const char *AppendToBuffer(CBufferString &sMessage, const char *pszKey, const QAngle &angValue) const;

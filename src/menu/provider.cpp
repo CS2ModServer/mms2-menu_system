@@ -147,6 +147,10 @@ bool Menu::CProvider::CGameDataStorage::Load(IGameData *pRoot, const char *pszBa
 		{
 			MENU_PROVIDER_SOURCE2SERVER_FILENAME,
 			&CGameDataStorage::LoadSource2Server
+		},
+		{
+			MENU_PROVIDER_USERCMD_FILENAME,
+			&CGameDataStorage::LoadUserCmd
 		}
 	};
 
@@ -224,4 +228,9 @@ bool Menu::CProvider::CGameDataStorage::LoadGameSystem(IGameData *pRoot, KeyValu
 bool Menu::CProvider::CGameDataStorage::LoadSource2Server(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
 {
 	return m_aSource2Server.Load(pRoot, pGameConfig, vecMessages);
+}
+
+bool Menu::CProvider::CGameDataStorage::LoadUserCmd(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
+{
+	return m_aUserCmd.Load(pRoot, pGameConfig, vecMessages);
 }

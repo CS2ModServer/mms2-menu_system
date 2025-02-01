@@ -54,6 +54,8 @@
 #include <usermessages.pb.h>
 // #include <cstrike15_usermessages.pb.h>
 
+#include <usercmd.pb.h>
+
 // <cstrike15/cs_shareddefs.h> BEGIN
 // CS Team IDs.
 #define TEAM_TERRORIST			2
@@ -71,6 +73,7 @@ SH_DECL_HOOK3_void(INetworkServerService, StartupServer, SH_NOATTRIB, 0, const G
 SH_DECL_HOOK8(CNetworkGameServerBase, ConnectClient, SH_NOATTRIB, 0, CServerSideClientBase *, const char *, ns_address *, void *, C2S_CONNECT_Message *, const char *, const byte *, int, bool);
 SH_DECL_HOOK1(CServerSideClientBase, ExecuteStringCommand, SH_NOATTRIB, 0, bool, const CNETMsg_StringCmd_t &);
 SH_DECL_HOOK1(CServerSideClientBase, ProcessRespondCvarValue, SH_NOATTRIB, 0, bool, const CCLCMsg_RespondCvarValue_t &);
+SH_DECL_HOOK1(CServerSideClientBase, ProcessMove, SH_NOATTRIB, 0, bool, const CCLCMsg_Move_t &);
 SH_DECL_HOOK1_void(CServerSideClientBase, PerformDisconnection, SH_NOATTRIB, 0, ENetworkDisconnectionReason);
 
 static MenuSystem_Plugin s_aMenuPlugin;
@@ -79,26 +82,33 @@ MenuSystem_Plugin *g_pMenuPlugin = &s_aMenuPlugin;
 PLUGIN_EXPOSE(MenuSystem_Plugin, s_aMenuPlugin);
 
 MenuSystem_Plugin::MenuSystem_Plugin()
- :  CBaseEntity_Helper(this),
-    CBaseModelEntity_Helper(this),
-    CBasePlayerController_Helper(this),
-    CBasePlayerPawn_Helper(this),
-    CBaseViewModel_Helper(this),
-    CBodyComponent_Helper(this),
-    CCSPlayerPawnBase_Helper(this),
-    CCSObserverPawn_Helper(this),
-    CCSPlayer_ViewModelServices_Helper(this),
-    CCSPlayerBase_CameraServices_Helper(this),
-    CCSPlayerPawn_Helper(this),
-    CGameSceneNode_Helper(this),
-    CPlayer_ObserverServices_Helper(this),
-    CPointWorldText_Helper(this),
+ :  CBaseEntity_Helper(schema_system_cast(this)), 
+    CBaseModelEntity_Helper(schema_system_cast(this)), 
+    CBasePlayerController_Helper(schema_system_cast(this)), 
+    CBasePlayerPawn_Helper(schema_system_cast(this)), 
+    CBasePlayerWeapon_Helper(schema_system_cast(this)), 
+    CBasePlayerWeaponVData_Helper(schema_system_cast(this)), 
+    CBaseViewModel_Helper(schema_system_cast(this)), 
+    CBodyComponent_Helper(schema_system_cast(this)), 
+    CCSPlayerPawnBase_Helper(schema_system_cast(this)), 
+    CCSWeaponBaseVData_Helper(schema_system_cast(this)), 
+    CCSObserverPawn_Helper(schema_system_cast(this)), 
+    CCSPlayer_ViewModelServices_Helper(schema_system_cast(this)), 
+    CCSPlayerBase_CameraServices_Helper(schema_system_cast(this)), 
+    CCSPlayerPawn_Helper(schema_system_cast(this)), 
+    CGameSceneNode_Helper(schema_system_cast(this)), 
+    CPlayer_ObserverServices_Helper(schema_system_cast(this)), 
+    CPlayer_WeaponServices_Helper(schema_system_cast(this)), 
+    CPointWorldText_Helper(schema_system_cast(this)), 
 
     Logger(GetName(), [](LoggingChannelID_t nTagChannelID)
     {
     	LoggingSystem_AddTagToChannel(nTagChannelID, s_aMenuPlugin.GetLogTag());
     }, 0, LV_DETAILED, MENUSYSTEM_LOGGINING_COLOR),
     CPathResolver(this),
+
+    m_aEnableClientCommandDetailsConVar("mm_" META_PLUGIN_PREFIX "_enable_client_command_details", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable client command detial messages", false, true, false, true, true), 
+    m_aEnablePlayerRunCmdDetailsConVar("mm_" META_PLUGIN_PREFIX "_enable_player_runcmd_details", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable player usercmds detial messages", false, true, false, true, true),
 
     m_mapConVarCookies(DefLessFunc(const CUtlSymbolLarge)),
     m_mapLanguages(DefLessFunc(const CUtlSymbolLarge)),
@@ -130,7 +140,7 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 				return false;
 			}
 
-			auto *pPlayerPawn = entity_upper_cast<CBasePlayerPawn *>(pEvent->GetPlayerPawn("userid"));
+			auto *pPlayerPawn = instance_upper_cast<CBasePlayerPawn *>(pEvent->GetPlayerPawn("userid"));
 
 			if(!pPlayerPawn)
 			{
@@ -147,7 +157,7 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 
 			if(iNewTeam <= TEAM_SPECTATOR)
 			{
-				auto *pTargetPlayerPawn = entity_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
+				auto *pTargetPlayerPawn = instance_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
 
 				CPlayer_ObserverServices *pObserverServices = CCSPlayerPawnBase_Helper::GetObserverServicesAccessor(pTargetPlayerPawn);
 
@@ -169,7 +179,7 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 						return false;
 					}
 
-					CCSPlayerPawn *pCCSPlayerObserverTargetPawn = entity_upper_cast<CCSPlayerPawn *>(pCSObserverTarget);
+					CCSPlayerPawn *pCCSPlayerObserverTargetPawn = instance_upper_cast<CCSPlayerPawn *>(pCSObserverTarget);
 
 					FOR_EACH_VEC(vecMenus, i)
 					{
@@ -200,7 +210,7 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 			}
 			else
 			{
-				auto *pCSPlayerPawn = entity_upper_cast<CCSPlayerPawn *>(pPlayerPawn);
+				auto *pCSPlayerPawn = instance_upper_cast<CCSPlayerPawn *>(pPlayerPawn);
 
 				FOR_EACH_VEC(vecMenus, i)
 				{
@@ -662,7 +672,7 @@ int MenuSystem_Plugin::FindItemIndexFromClientIndex(int iClient)
 
 		auto aPlayerSlot = pClient->GetPlayerSlot();
 
-		auto *pPlayerController = entity_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(aPlayerSlot.GetClientIndex())));
+		auto *pPlayerController = instance_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(aPlayerSlot.GetClientIndex())));
 
 		if(!pPlayerController)
 		{
@@ -687,17 +697,66 @@ int MenuSystem_Plugin::FindItemIndexFromClientIndex(int iClient)
 
 	if(it != vecCTClients.cend())
 	{
-		return 1 + std::distance(vecCTClients.cbegin(), it);
+		return std::distance(vecCTClients.cbegin(), it) + 1;
 	}
 
 	it = std::find(vecTClients.cbegin(), vecTClients.cend(), iClient);
 
 	if(it != vecTClients.cend())
 	{
-		return 1 + vecCTClients.size() + std::distance(vecTClients.cbegin(), it);
+		return std::distance(vecTClients.cbegin(), it) + vecCTClients.size() + 1;
 	}
 
 	return -1; // Not found.
+}
+
+int MenuSystem_Plugin::FindItemIndexFromMyWeapons(int iClient, int iEntity)
+{
+	auto *pPlayerController = instance_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient)));
+
+	if(!pPlayerController)
+	{
+		return -1;
+	}
+
+	CHandle<CBasePlayerPawn> hPlayerPawn = CBasePlayerController_Helper::GetPawnAccessor(pPlayerController);
+
+	if(!hPlayerPawn.IsValid())
+	{
+		return -1;
+	}
+
+	CBasePlayerPawn *pPlayerPawn = hPlayerPawn.Get();
+
+	CPlayer_WeaponServices *pPlayerWeaponServices = CBasePlayerPawn_Helper::GetWeaponServicesAccessor(pPlayerPawn);
+
+	if(!pPlayerWeaponServices)
+	{
+		return -1;
+	}
+
+	CNetworkUtlVectorBase<CHandle<CBasePlayerWeapon>> vecMyWeapons = CPlayer_WeaponServices_Helper::GetMyWeaponsAccessor(pPlayerWeaponServices);
+
+	for(const auto &hPlayerWeapon : vecMyWeapons)
+	{
+		int iWeaponIndex = hPlayerWeapon.GetEntryIndex();
+
+		if(iWeaponIndex == -1 || iWeaponIndex != iEntity)
+		{
+			continue;
+		}
+
+		CBasePlayerWeaponVData *pPlayerWeaponVData = CBasePlayerWeapon_Helper::GetEntitySubclassVDataAccessor(hPlayerWeapon.Get());
+
+		if(!pPlayerWeaponVData)
+		{
+			continue;
+		}
+
+		return CCSWeaponBaseVData_Helper::GetGearSlotAccessor(component_upper_cast<CCSWeaponBaseVData *>(pPlayerWeaponVData)) + 1;
+	}
+
+	return -1;
 }
 
 IMenuProfileSystem *MenuSystem_Plugin::GetProfiles()
@@ -761,7 +820,7 @@ bool MenuSystem_Plugin::DisplayInternalMenuToPlayer(CMenu *pInternalMenu, CPlaye
 		return false;
 	}
 
-	auto *pPlayerController = entity_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient)));
+	auto *pPlayerController = instance_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient)));
 
 	if(!pPlayerController)
 	{
@@ -799,7 +858,7 @@ bool MenuSystem_Plugin::DisplayInternalMenuToPlayer(CMenu *pInternalMenu, CPlaye
 
 	if(iTeam <= TEAM_SPECTATOR)
 	{
-		auto *pCSPlayerPawn = entity_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
+		auto *pCSPlayerPawn = instance_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
 
 		FOR_EACH_VEC(vecMenus, i)
 		{
@@ -815,7 +874,7 @@ bool MenuSystem_Plugin::DisplayInternalMenuToPlayer(CMenu *pInternalMenu, CPlaye
 	}
 	else
 	{
-		auto *pCSPlayerPawn = entity_upper_cast<CCSPlayerPawn *>(pPlayerPawn);
+		auto *pCSPlayerPawn = instance_upper_cast<CCSPlayerPawn *>(pPlayerPawn);
 
 		FOR_EACH_VEC(vecMenus, i)
 		{
@@ -997,7 +1056,7 @@ bool MenuSystem_Plugin::OnMenuExitButton(IMenu *pMenu, CPlayerSlot aSlot, IMenu:
 		return true;
 	}
 
-	auto *pPlayerController = entity_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient)));
+	auto *pPlayerController = instance_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient)));
 
 	if(!pPlayerController)
 	{
@@ -1015,7 +1074,7 @@ bool MenuSystem_Plugin::OnMenuExitButton(IMenu *pMenu, CPlayerSlot aSlot, IMenu:
 
 	if(iTeam <= TEAM_SPECTATOR)
 	{
-		auto *pCSPlayerPawn = entity_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
+		auto *pCSPlayerPawn = instance_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
 
 		FOR_EACH_VEC(vecAnotherMenus, i)
 		{
@@ -1031,7 +1090,7 @@ bool MenuSystem_Plugin::OnMenuExitButton(IMenu *pMenu, CPlayerSlot aSlot, IMenu:
 	}
 	else
 	{
-		auto *pCSPlayerPawn = entity_upper_cast<CCSPlayerPawn *>(pPlayerPawn);
+		auto *pCSPlayerPawn = instance_upper_cast<CCSPlayerPawn *>(pPlayerPawn);
 
 		FOR_EACH_VEC(vecAnotherMenus, i)
 		{
@@ -1255,7 +1314,7 @@ GS_EVENT_MEMBER(MenuSystem_Plugin, ServerPreEntityThink)
 
 		auto *pServerSideClient = aPlayer.GetServerSideClient();
 
-		auto *pPlayerController = entity_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(pServerSideClient->GetPlayerSlot().GetClientIndex())));
+		auto *pPlayerController = instance_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(pServerSideClient->GetPlayerSlot().GetClientIndex())));
 
 		if(!pPlayerController)
 		{
@@ -1269,7 +1328,7 @@ GS_EVENT_MEMBER(MenuSystem_Plugin, ServerPreEntityThink)
 			continue;
 		}
 
-		auto *pCSPlayerPawn = entity_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
+		auto *pCSPlayerPawn = instance_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
 
 		CPlayer_ObserverServices *pObserverServices = CCSPlayerPawnBase_Helper::GetObserverServicesAccessor(pCSPlayerPawn);
 
@@ -2020,7 +2079,7 @@ void MenuSystem_Plugin::SpawnMenu(CMenu *pInternalMenu, CPlayerSlot aInitiatorSl
 				m_pPlugin->Logger::MessageFormat("Setting up \"%s\" menu entity\n", pEntity->GetClassname());
 			}
 
-			m_pPlugin->SettingMenuEntity(entity_upper_cast<CBaseEntity *>(pEntity));
+			m_pPlugin->SettingMenuEntity(instance_upper_cast<CBaseEntity *>(pEntity));
 		}
 
 	private:
@@ -2081,7 +2140,7 @@ CBaseViewModel *MenuSystem_Plugin::SpawnViewModelEntity(const Vector &vecOrigin,
 				m_pPlugin->Logger::MessageFormat("Setting up \"%s\" view model entity\n", pEntity->GetClassname());
 			}
 
-			m_pPlugin->SettingExtraPlayerViewModelEntity(entity_upper_cast<CBaseViewModel *>(pEntity), m_pOwner, m_nSlot);
+			m_pPlugin->SettingExtraPlayerViewModelEntity(instance_upper_cast<CBaseViewModel *>(pEntity), m_pOwner, m_nSlot);
 		}
 
 	private:
@@ -2094,7 +2153,7 @@ CBaseViewModel *MenuSystem_Plugin::SpawnViewModelEntity(const Vector &vecOrigin,
 	vecKeyValues.AddToTail(pViewModelKV);
 	SpawnEntities(vecKeyValues, &vecEntities, &aViewModelEntitySetup);
 
-	return entity_upper_cast<CBaseViewModel *>(vecEntities[0]);
+	return instance_upper_cast<CBaseViewModel *>(vecEntities[0]);
 }
 
 void MenuSystem_Plugin::TeleportMenuInstanceToCSPlayer(int i, CMenu *pInternalMenu, CCSPlayerPawnBase *pTarget)
@@ -2216,7 +2275,7 @@ bool MenuSystem_Plugin::AttachMenuInstanceToCSPlayer(int i, CMenu *pInternalMenu
 
 bool MenuSystem_Plugin::AttachMenuInstanceToObserver(int i, CMenu *pInternalMenu, CCSPlayerPawnBase *pTarget)
 {
-	auto *pTargetPlayerPawn = entity_upper_cast<CCSPlayerPawnBase *>(pTarget);
+	auto *pTargetPlayerPawn = instance_upper_cast<CCSPlayerPawnBase *>(pTarget);
 
 	CPlayer_ObserverServices *pObserverServices = CCSPlayerPawnBase_Helper::GetObserverServicesAccessor(pTargetPlayerPawn);
 
@@ -2232,7 +2291,7 @@ bool MenuSystem_Plugin::AttachMenuInstanceToObserver(int i, CMenu *pInternalMenu
 
 			if(pCSObserverTarget)
 			{
-				AttachMenuInstanceToCSPlayer(i, pInternalMenu, entity_upper_cast<CCSPlayerPawn *>(pCSObserverTarget));
+				AttachMenuInstanceToCSPlayer(i, pInternalMenu, instance_upper_cast<CCSPlayerPawn *>(pCSObserverTarget));
 
 				return true;
 			}
@@ -2247,7 +2306,7 @@ bool MenuSystem_Plugin::AttachMenuInstanceToObserver(int i, CMenu *pInternalMenu
 bool MenuSystem_Plugin::SettingMenuEntity(CEntityInstance *pEntity)
 {
 	{
-		auto aEFlagsAccessor = CBaseEntity_Helper::GetEFlagsAccessor(entity_upper_cast<CBaseEntity *>(pEntity));
+		auto aEFlagsAccessor = CBaseEntity_Helper::GetEFlagsAccessor(instance_upper_cast<CBaseEntity *>(pEntity));
 
 		aEFlagsAccessor = EF_MENU;
 		aEFlagsAccessor.MarkNetworkChanged();
@@ -2500,7 +2559,10 @@ bool MenuSystem_Plugin::RegisterNetMessages(char *error, size_t maxlen)
 
 bool MenuSystem_Plugin::UnregisterNetMessages(char *error, size_t maxlen)
 {
+	m_pSetConVarMessage = NULL;
+	m_pGetCvarValueMessage = NULL;
 	m_pSayText2Message = NULL;
+	m_pTextMsgMessage = NULL;
 
 	return true;
 }
@@ -3050,6 +3112,13 @@ bool MenuSystem_Plugin::OnProcessRespondCvarValueHook(const CCLCMsg_RespondCvarV
 	RETURN_META_VALUE(MRES_IGNORED, OnProcessRespondCvarValue(META_IFACEPTR(CServerSideClientBase), aMessage));
 }
 
+bool MenuSystem_Plugin::OnProcessMoveHook(const CCLCMsg_Move_t &aMessage)
+{
+	META_RES eResult = OnProcessMovePre(META_IFACEPTR(CServerSideClientBase), aMessage);
+
+	RETURN_META_VALUE(eResult, eResult >= MRES_HANDLED);
+}
+
 void MenuSystem_Plugin::OnDisconectClientHook(ENetworkDisconnectionReason eReason)
 {
 	OnDisconectClient(META_IFACEPTR(CServerSideClientBase), eReason);
@@ -3355,6 +3424,7 @@ void MenuSystem_Plugin::OnConnectClient(CNetworkGameServerBase *pNetServer, CSer
 
 		SH_ADD_HOOK_MEMFUNC(CServerSideClientBase, ExecuteStringCommand, pClient, this, &MenuSystem_Plugin::OnExecuteStringCommandPreHook, false);
 		SH_ADD_HOOK_MEMFUNC(CServerSideClientBase, ProcessRespondCvarValue, pClient, this, &MenuSystem_Plugin::OnProcessRespondCvarValueHook, false);
+		SH_ADD_HOOK_MEMFUNC(CServerSideClientBase, ProcessMove, pClient, this, &MenuSystem_Plugin::OnProcessMoveHook, false);
 	}
 	else
 	{
@@ -3407,8 +3477,7 @@ META_RES MenuSystem_Plugin::OnExecuteStringCommandPre(CServerSideClientBase *pCl
 {
 	const char *pszFullCommand = aMessage.command().c_str();
 
-	// // Output kicks a player with frequent commands.
-	if(Logger::IsChannelEnabled(LV_DEFAULT))
+	if(m_aEnableClientCommandDetailsConVar.GetValue() && Logger::IsChannelEnabled(LV_DEFAULT))
 	{
 		const auto &aConcat = g_aEmbedConcat;
 
@@ -3470,7 +3539,7 @@ META_RES MenuSystem_Plugin::OnExecuteStringCommandPre(CServerSideClientBase *pCl
 			SH_GLOB_SHPTR->DoRecall();
 			(pClient->*(&CServerSideClient::ExecuteStringCommand))(aMessage);
 
-			auto *pPlayerController = entity_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(aPlayerSlot.GetClientIndex())));
+			auto *pPlayerController = instance_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(aPlayerSlot.GetClientIndex())));
 
 			if(!pPlayerController)
 			{
@@ -3484,7 +3553,7 @@ META_RES MenuSystem_Plugin::OnExecuteStringCommandPre(CServerSideClientBase *pCl
 				return MRES_SUPERCEDE;
 			}
 
-			auto *pCSPlayerPawn = entity_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
+			auto *pCSPlayerPawn = instance_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
 
 			CPlayer_ObserverServices *pObserverServices = CCSPlayerPawnBase_Helper::GetObserverServicesAccessor(pCSPlayerPawn);
 
@@ -3512,7 +3581,7 @@ META_RES MenuSystem_Plugin::OnExecuteStringCommandPre(CServerSideClientBase *pCl
 				return MRES_SUPERCEDE;
 			}
 
-			// auto *pCSObserverPawn = entity_upper_cast<CCSObserverPawn *>(pPlayerPawn);
+			// auto *pCSObserverPawn = instance_upper_cast<CCSObserverPawn *>(pPlayerPawn);
 
 			CHandle<CBaseEntity> hObserverTarget = CPlayer_ObserverServices_Helper::GetObserverTargetAccessor(pObserverServices);
 
@@ -3523,7 +3592,7 @@ META_RES MenuSystem_Plugin::OnExecuteStringCommandPre(CServerSideClientBase *pCl
 				return MRES_SUPERCEDE;
 			}
 
-			CCSPlayerPawn *pCCSPlayerObserverTargetPawn = entity_upper_cast<CCSPlayerPawn *>(pCSObserverTarget);
+			CCSPlayerPawn *pCCSPlayerObserverTargetPawn = instance_upper_cast<CCSPlayerPawn *>(pCSObserverTarget);
 
 			FOR_EACH_VEC(vecMenus, i)
 			{
@@ -3550,12 +3619,10 @@ META_RES MenuSystem_Plugin::OnExecuteStringCommandPre(CServerSideClientBase *pCl
 					int iClient = V_atoi(vecArgs[1]), 
 					    iFoundItem = FindItemIndexFromClientIndex(iClient);
 
-					if(iFoundItem > 9)
+					if(iFoundItem != -1)
 					{
-						iFoundItem -= 10;
+						pInternalMenu->OnSelect(aPlayerSlot, iFoundItem % 10);
 					}
-
-					pInternalMenu->OnSelect(aPlayerSlot, iFoundItem);
 
 					return MRES_SUPERCEDE;
 				}
@@ -3563,6 +3630,85 @@ META_RES MenuSystem_Plugin::OnExecuteStringCommandPre(CServerSideClientBase *pCl
 
 			return MRES_HANDLED;
 		}
+	}
+
+	return MRES_IGNORED;
+}
+
+META_RES MenuSystem_Plugin::OnProcessMovePre(CServerSideClientBase *pClient, const CCLCMsg_Move_t &aMessage)
+{
+	static bool s_bSkipFirstCall = true;
+
+	if(s_bSkipFirstCall) // To construct root "cmds" (NEEDED).
+	{
+		s_bSkipFirstCall = false;
+
+		return MRES_IGNORED;
+	}
+
+	auto &aUserCmdGameData = GetGameDataStorage().GetUserCmd();
+
+	bf_write sDeltaPacket((void *)&aMessage.data()[0], aMessage.data().size());
+
+	int iLastCommandNumber = aMessage.last_command_number();
+
+	static uintp s_mMaxCmds = 8;
+
+	CCSGOUserCmd *pRootCmd = aUserCmdGameData.Get(), 
+	             *pIterCmd = pRootCmd, 
+	             *pPrevCmd = NULL;
+
+	Assert(pRootCmd);
+
+	auto *pEndCmd = pIterCmd + s_mMaxCmds;
+
+	void *pMarginController = NULL;
+
+	int nCmds = 0;
+
+	float flMargin = aMessage.GetMargin();
+
+	do
+	{
+		if(!pIterCmd->DeltaDecode(sDeltaPacket, pPrevCmd, pMarginController, flMargin)) // Decode delta data to.
+		{
+			break;
+		}
+
+		nCmds++;
+
+		pPrevCmd = pIterCmd;
+	}
+	while(pIterCmd = pIterCmd->m_pNext);
+
+	pIterCmd = pRootCmd;
+
+	auto *pPlayerController = instance_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(pClient->GetPlayerSlot().GetClientIndex())));
+
+	int numCmds = (iLastCommandNumber + 1) - nCmds;
+
+	if(numCmds <= 0)
+	{
+		Logger::WarningFormat("[%s] sent move msg with invalid last_command_number %d commands.\n", pClient->GetClientName(), numCmds);
+
+		return MRES_SUPERCEDE;
+	}
+
+	uint nHaveChanges = 0;
+
+	do
+	{
+		pIterCmd->m_cmdNum = numCmds++;
+		aUserCmdGameData.Read(pPlayerController, pIterCmd); // Not sensitive to "pPlayerController" value / Unpacks PB
+		nHaveChanges += ProcessUserCmd(pClient, pIterCmd);
+	}
+	while(pIterCmd = pIterCmd->m_pNext);
+
+	if(nHaveChanges)
+	{
+		aUserCmdGameData.ProcessWithPlayerController(pPlayerController, pRootCmd, nCmds, false, flMargin); // Handle PBs.
+
+		return MRES_SUPERCEDE;
 	}
 
 	return MRES_IGNORED;
@@ -3636,6 +3782,7 @@ void MenuSystem_Plugin::OnDisconectClient(CServerSideClientBase *pClient, ENetwo
 		return;
 	}
 
+	SH_REMOVE_HOOK_MEMFUNC(CServerSideClientBase, ProcessMove, pClient, this, &MenuSystem_Plugin::OnProcessMoveHook, false);
 	SH_REMOVE_HOOK_MEMFUNC(CServerSideClientBase, ProcessRespondCvarValue, pClient, this, &MenuSystem_Plugin::OnProcessRespondCvarValueHook, false);
 	SH_REMOVE_HOOK_MEMFUNC(CServerSideClientBase, ExecuteStringCommand, pClient, this, &MenuSystem_Plugin::OnExecuteStringCommandPreHook, false);
 
@@ -3659,6 +3806,129 @@ void MenuSystem_Plugin::OnDisconectClient(CServerSideClientBase *pClient, ENetwo
 	}
 
 	aPlayer.OnDisconnected(pPlayer, eReason);
+}
+
+bool MenuSystem_Plugin::ProcessUserCmd(CServerSideClientBase *pClient, CCSGOUserCmd *pMessage)
+{
+	const auto *pBaseUserCmd = pMessage->has_base() ? &pMessage->base() : nullptr;
+
+	if(m_aEnablePlayerRunCmdDetailsConVar.GetValue() && Logger::IsChannelEnabled(LV_DETAILED))
+	{
+		const auto &aConcat = g_aEmbedConcat, 
+		           &aConcat2 = g_aEmbed2Concat, 
+		           &aConcat3 = g_aEmbed3Concat;
+
+		CBufferStringN<1024> sBuffer;
+
+		aConcat.AppendHeadToBuffer(sBuffer, pMessage->GetTypeName().c_str());
+		aConcat.AppendPointerToBuffer(sBuffer, "Base", pBaseUserCmd);
+
+		if(pBaseUserCmd)
+		{
+			aConcat2.AppendToBuffer(sBuffer, "Legacy Command Number", pBaseUserCmd->legacy_command_number());
+			aConcat2.AppendToBuffer(sBuffer, "Client tick", pBaseUserCmd->client_tick());
+
+			if(pBaseUserCmd->has_buttons_pb())
+			{
+				aConcat2.AppendToBuffer(sBuffer, "Buttons PB");
+
+				const auto &aButtonsPB = pBaseUserCmd->buttons_pb();
+
+				aConcat3.AppendToBuffer(sBuffer, "State", (uint64)aButtonsPB.buttonstate1());
+				aConcat3.AppendToBuffer(sBuffer, "Changed", (uint64)aButtonsPB.buttonstate2());
+				aConcat3.AppendToBuffer(sBuffer, "Of scroll", (uint64)aButtonsPB.buttonstate3());
+			}
+
+			if(pBaseUserCmd->has_viewangles())
+			{
+				const auto &aViewAnglesPB = pBaseUserCmd->viewangles();
+
+				aConcat2.AppendToBuffer(sBuffer, "View angles", QAngle(aViewAnglesPB.x(), aViewAnglesPB.y(), aViewAnglesPB.z()));
+			}
+
+			aConcat2.AppendToBuffer(sBuffer, "Forward move", pBaseUserCmd->forwardmove());
+			aConcat2.AppendToBuffer(sBuffer, "Left move", pBaseUserCmd->leftmove());
+			aConcat2.AppendToBuffer(sBuffer, "Up move", pBaseUserCmd->upmove());
+			aConcat2.AppendToBuffer(sBuffer, "Impulse", pBaseUserCmd->impulse());
+			aConcat2.AppendToBuffer(sBuffer, "Weapon select", pBaseUserCmd->weaponselect());
+			aConcat2.AppendToBuffer(sBuffer, "Random seed", pBaseUserCmd->random_seed());
+			aConcat2.AppendToBuffer(sBuffer, "Mouse X", pBaseUserCmd->mousedx());
+			aConcat2.AppendToBuffer(sBuffer, "Mouse Y", pBaseUserCmd->mousedy());
+			aConcat2.AppendHandleToBuffer(sBuffer, "Pawn entity handle", pBaseUserCmd->pawn_entity_handle());
+
+			const auto &aSubtickMoves = pBaseUserCmd->subtick_moves();
+			
+			if(aSubtickMoves.size())
+			{
+				aConcat2.AppendToBuffer(sBuffer, "Subtick moves");
+			}
+
+			// Subtick data.
+			for(const auto &aSubtickMove : aSubtickMoves)
+			{
+				aConcat3.AppendToBuffer(sBuffer, "Button", (uint64)aSubtickMove.button());
+				aConcat3.AppendToBuffer(sBuffer, "Pressed", aSubtickMove.pressed());
+				aConcat3.AppendToBuffer(sBuffer, "When", aSubtickMove.when());
+				aConcat3.AppendToBuffer(sBuffer, "Analog forward delta", aSubtickMove.analog_forward_delta());
+				aConcat3.AppendToBuffer(sBuffer, "Analog left delta", aSubtickMove.analog_left_delta());
+			}
+
+			const auto &aMoveCRC = pBaseUserCmd->move_crc();
+
+			aConcat2.AppendBytesToBuffer(sBuffer, "Move CRC", (const byte *)aMoveCRC.data(), aMoveCRC.size());
+			aConcat2.AppendToBuffer(sBuffer, "Consumed Server Angle Changes", pBaseUserCmd->consumed_server_angle_changes());
+			aConcat2.AppendToBuffer(sBuffer, "Flags", pBaseUserCmd->cmd_flags());
+		}
+
+		{
+			aConcat.AppendToBuffer(sBuffer, "Start History index attack", pMessage->attack1_start_history_index());
+			aConcat.AppendToBuffer(sBuffer, "Start History index attack (2)", pMessage->attack2_start_history_index());
+			aConcat.AppendToBuffer(sBuffer, "Start History index attack (3)", pMessage->attack3_start_history_index());
+		}
+
+		Logger::Detailed(sBuffer);
+	}
+
+	auto aPlayerSlot = pClient->GetPlayerSlot();
+
+	auto &aPlayer = GetPlayerData(aPlayerSlot);
+
+	auto &vecMenus = aPlayer.GetMenus();
+
+	if(!vecMenus.Count())
+	{
+		return false;
+	}
+
+	if(pBaseUserCmd && pBaseUserCmd->has_weaponselect())
+	{
+		int iClient = aPlayerSlot.GetClientIndex();
+		int iWeaponIndex = pBaseUserCmd->weaponselect();
+
+		int iFoundItem = FindItemIndexFromMyWeapons(iClient, iWeaponIndex);
+
+		if(iFoundItem != -1)
+		{
+			for(const auto &[_, pMenu] : vecMenus)
+			{
+				CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
+
+				if(pInternalMenu)
+				{
+					bool bSelectResult = pInternalMenu->OnSelect(aPlayerSlot, iFoundItem % 10);
+
+					if(bSelectResult)
+					{
+						const_cast<CBaseUserCmdPB *>(pBaseUserCmd)->set_weaponselect(0); // Change the base cmd weapon to silent select.
+					}
+
+					return bSelectResult;
+				}
+			}
+		}
+	}
+
+	return false;
 }
 
 CUtlSymbolLarge MenuSystem_Plugin::GetConVarSymbol(const char *pszName)

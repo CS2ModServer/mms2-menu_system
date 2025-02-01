@@ -19,28 +19,23 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <menu/schema/baseentity.hpp>
+#include <menu/schema/player_weaponservices.hpp>
 
 #include <schemasystem/schemasystem.h>
 
-Menu::Schema::CBaseEntity_Helper::CBaseEntity_Helper(CSystem *pSchemaSystemHelper)
+Menu::Schema::CPlayer_WeaponServices_Helper::CPlayer_WeaponServices_Helper(CSystem *pSchemaSystemHelper)
 {
 	auto &aCallbacks = m_aClassFieldsClassbacks;
 
-	m_pClass = pSchemaSystemHelper->GetClass(CBASEENTITY_CLASS_NAME);
+	m_pClass = pSchemaSystemHelper->GetClass(CPLAYER_WEAPON_SERVICES_CLASS_NAME);
 	Assert(m_pClass);
 
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_CBodyComponent"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nBodyComponent));
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_nSubclassID"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nSubclassID));
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_iTeamNum"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nTeamNum));
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_hOwnerEntity"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nOwnerEntity));
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_fEffects"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nEffects));
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_iEFlags"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nEFlags));
+	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_hMyWeapons"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nMyWeapons));
 
 	m_pClass->GetFields().AddListener(&aCallbacks);
 }
 
-void Menu::Schema::CBaseEntity_Helper::Clear()
+void Menu::Schema::CPlayer_WeaponServices_Helper::Clear()
 {
 	m_aOffsets = {};
 }

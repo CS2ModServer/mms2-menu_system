@@ -34,11 +34,14 @@
 #	include "menu/pathresolver.hpp"
 #	include "menu/profilesystem.hpp"
 #	include "menu/provider.hpp"
+#	include "menu/provider/csgousercmd.hpp"
 #	include "menu/schema.hpp"
 #	include "menu/schema/baseentity.hpp"
 #	include "menu/schema/basemodelentity.hpp"
 #	include "menu/schema/baseplayercontroller.hpp"
 #	include "menu/schema/baseplayerpawn.hpp"
+#	include "menu/schema/baseplayerweapon.hpp"
+#	include "menu/schema/baseplayerweaponvdata.hpp"
 #	include "menu/schema/csplayerpawn.hpp"
 #	include "menu/schema/baseviewmodel.hpp"
 #	include "menu/schema/bodycomponent.hpp"
@@ -47,8 +50,10 @@
 #	include "menu/schema/csplayerbase_cameraservices.hpp"
 #	include "menu/schema/csplayerpawn.hpp"
 #	include "menu/schema/csplayerpawnbase.hpp"
+#	include "menu/schema/csweaponbasevdata.hpp"
 #	include "menu/schema/gamescenenode.hpp"
 #	include "menu/schema/player_observerservices.hpp"
+#	include "menu/schema/player_weaponservices.hpp"
 #	include "menu/schema/pointworldtext.hpp"
 #	include "concat.hpp"
 
@@ -90,6 +95,7 @@
 #	define MENUSYSTEM_SERVER_DISABLE_RADAR_CVAR_NAME "sv_disable_radar"
 
 class INetworkMessageInternal;
+class CBaseUserCmdPB;
 
 namespace Menu
 {
@@ -97,7 +103,7 @@ namespace Menu
 };
 
 class MenuSystem_Plugin final : public ISmmPlugin, public IMetamodListener, public IMenuSystem, public IMenuHandler, public CBaseGameSystem, public IEntityManager::IProviderAgent::ISpawnGroupNotifications, // Interfaces.
-                                virtual public Menu::Schema::CSystem, virtual public Menu::Schema::CBaseEntity_Helper, virtual public Menu::Schema::CBaseModelEntity_Helper, virtual public Menu::Schema::CBasePlayerController_Helper, virtual public Menu::Schema::CBasePlayerPawn_Helper, virtual public Menu::Schema::CBaseViewModel_Helper, virtual public Menu::Schema::CBodyComponent_Helper, virtual public Menu::Schema::CCSPlayerPawnBase_Helper, virtual public Menu::Schema::CCSObserverPawn_Helper, virtual public Menu::Schema::CCSPlayer_ViewModelServices_Helper, virtual public Menu::Schema::CCSPlayerBase_CameraServices_Helper, virtual public Menu::Schema::CCSPlayerPawn_Helper, virtual public Menu::Schema::CGameSceneNode_Helper, virtual public Menu::Schema::CPlayer_ObserverServices_Helper, virtual public Menu::Schema::CPointWorldText_Helper, // Schema helpers.
+                                virtual public Menu::Schema::CSystem, virtual public Menu::Schema::CBaseEntity_Helper, virtual public Menu::Schema::CBaseModelEntity_Helper, virtual public Menu::Schema::CBasePlayerController_Helper, virtual public Menu::Schema::CBasePlayerPawn_Helper, virtual public Menu::Schema::CBasePlayerWeapon_Helper, virtual public Menu::Schema::CBasePlayerWeaponVData_Helper, virtual public Menu::Schema::CBaseViewModel_Helper, virtual public Menu::Schema::CBodyComponent_Helper, virtual public Menu::Schema::CCSPlayerPawnBase_Helper, virtual public Menu::Schema::CCSWeaponBaseVData_Helper, virtual public Menu::Schema::CCSObserverPawn_Helper, virtual public Menu::Schema::CCSPlayer_ViewModelServices_Helper, virtual public Menu::Schema::CCSPlayerBase_CameraServices_Helper, virtual public Menu::Schema::CCSPlayerPawn_Helper, virtual public Menu::Schema::CGameSceneNode_Helper, virtual public Menu::Schema::CPlayer_ObserverServices_Helper, virtual public Menu::Schema::CPlayer_WeaponServices_Helper, virtual public Menu::Schema::CPointWorldText_Helper, // Schema helpers.
                                 virtual public Logger, public Translations, public Menu::CPathResolver, public Menu::CProvider, // Components.
                                 public Menu::CGameEventManager2System, public Menu::CChatSystem, public Menu::CProfileSystem // Subsystems.
 {
@@ -260,7 +266,10 @@ public: // IMenuSystem
 	IPlayerBase *GetPlayerBase(const CPlayerSlot &aSlot) override;
 	IPlayer *GetPlayer(const CPlayerSlot &aSlot) override;
 	CPlayer &GetPlayerData(const CPlayerSlot &aSlot);
-	int FindItemIndexFromClientIndex(int iClient); // Returns -1 if not found.
+
+	// Returns -1 if not found.
+	int FindItemIndexFromClientIndex(int iClient);
+	int FindItemIndexFromMyWeapons(int iClient, int iEntity);
 
 	IMenuProfileSystem *GetProfiles() override;
 	IMenu *CreateMenu(IMenuProfile *pProfile, IMenuHandler *pHandler = nullptr) override;
@@ -413,12 +422,17 @@ private:
 	// Players interaction.
 	CON_COMMAND_MEMBER_F(This, "menuselect", OnMenuSelectCommand, "", FCVAR_LINKED_CONCOMMAND | FCVAR_CLIENT_CAN_EXECUTE);
 
+private: // ConVars. See the constructor
+	ConVar<bool> m_aEnableClientCommandDetailsConVar;
+	ConVar<bool> m_aEnablePlayerRunCmdDetailsConVar;
+
 public: // SourceHooks.
 	void OnStartupServerHook(const GameSessionConfiguration_t &config, ISource2WorldSession *pWorldSession, const char *);
 	void OnDispatchConCommandHook(ConCommandHandle hCommand, const CCommandContext &aContext, const CCommand &aArgs);
 	CServerSideClientBase *OnConnectClientHook(const char *pszName, ns_address *pAddr, void *pNetInfo, C2S_CONNECT_Message *pConnectMsg, const char *pszChallenge, const byte *pAuthTicket, int nAuthTicketLength, bool bIsLowViolence);
 	bool OnExecuteStringCommandPreHook(const CNETMsg_StringCmd_t &aMessage);
 	bool OnProcessRespondCvarValueHook(const CCLCMsg_RespondCvarValue_t &aMessage);
+	bool OnProcessMoveHook(const CCLCMsg_Move_t &aMessage);
 	void OnDisconectClientHook(ENetworkDisconnectionReason eReason);
 
 public: // Utils.
@@ -440,8 +454,12 @@ protected: // Handlers.
 	void OnStartupServer(CNetworkGameServerBase *pNetServer, const GameSessionConfiguration_t &config, ISource2WorldSession *pWorldSession);
 	void OnConnectClient(CNetworkGameServerBase *pNetServer, CServerSideClientBase *pClient, const char *pszName, ns_address *pAddr, void *pNetInfo, C2S_CONNECT_Message *pConnectMsg, const char *pszChallenge, const byte *pAuthTicket, int nAuthTicketLength, bool bIsLowViolence);
 	META_RES OnExecuteStringCommandPre(CServerSideClientBase *pClient, const CNETMsg_StringCmd_t &aMessage);
+	META_RES OnProcessMovePre(CServerSideClientBase *pClient, const CCLCMsg_Move_t &aMessage);
 	bool OnProcessRespondCvarValue(CServerSideClientBase *pClient, const CCLCMsg_RespondCvarValue_t &aMessage);
 	void OnDisconectClient(CServerSideClientBase *pClient, ENetworkDisconnectionReason eReason);
+
+public: // Processors.
+	bool ProcessUserCmd(CServerSideClientBase *pClient, CCSGOUserCmd *pMessage); // Returns "true" if changes are made.
 
 protected: // ConVar symbols.
 	CUtlSymbolLarge GetConVarSymbol(const char *pszName);

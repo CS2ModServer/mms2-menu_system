@@ -80,6 +80,15 @@ const char *CConcatLineString::AppendToBuffer(CBufferString &sMessage, const cha
 	return AppendToBuffer(sMessage, pszKey, sValue);
 }
 
+const char *CConcatLineString::AppendToBuffer(CBufferString &sMessage, const char *pszKey, uint64 nValue) const
+{
+	char sValue[21];
+
+	V_snprintf(sValue, sizeof(sValue), "%llu", nValue);
+
+	return AppendToBuffer(sMessage, pszKey, sValue);
+}
+
 const char *CConcatLineString::AppendToBuffer(CBufferString &sMessage, const char *pszKey, float flValue) const
 {
 	char sValue[24];

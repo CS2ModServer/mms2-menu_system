@@ -19,26 +19,25 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <menu/schema/baseplayerpawn.hpp>
+#include <menu/schema/baseplayerweapon.hpp>
 
 #include <schemasystem/schemasystem.h>
 
-Menu::Schema::CBasePlayerPawn_Helper::CBasePlayerPawn_Helper(CSystem *pSchemaSystemHelper)
+Menu::Schema::CBasePlayerWeapon_Helper::CBasePlayerWeapon_Helper(CSystem *pSchemaSystemHelper)
  :  CBaseEntity_Helper(pSchemaSystemHelper), 
     CBaseModelEntity_Helper(pSchemaSystemHelper)
 {
-	auto &aCallbacks = m_aClassFieldsClassbacks;
+	// auto &aCallbacks = m_aClassFieldsClassbacks;
 
-	m_pClass = pSchemaSystemHelper->GetClass(CBASEPLAYERPAWN_CLASS_NAME);
-	Assert(m_pClass);
+	// m_pClass = pSchemaSystemHelper->GetClass(CBASEPLAYERWEAPON_CLASS_NAME);
+	// Assert(m_pClass);
 
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_pWeaponServices"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nWeaponServices));
-	aCallbacks.Insert(m_pClass->GetFieldSymbol("m_pObserverServices"), SCHEMA_CLASS_FIELD_SHARED_LAMBDA_CAPTURE(m_aOffsets.m_nObserverServices));
+	// // ...
 
-	m_pClass->GetFields().AddListener(&aCallbacks);
+	// m_pClass->GetFields().AddListener(&aCallbacks);
 }
 
-void Menu::Schema::CBasePlayerPawn_Helper::Clear()
-{
-	m_aOffsets = {};
-}
+// void Menu::Schema::CBasePlayerWeapon_Helper::Clear()
+// {
+// 	m_aOffsets = {};
+// }

@@ -49,6 +49,9 @@ set(SOURCESDK_PROTOS
 	# gcsdk_gcmessages
 	# cstrike15_gcmessages
 	# cstrike15_usermessages
+
+	usercmd
+	cs_usercmd
 )
 
 function(set_or_external_dir VAR_NAME DEFAULT_DIR)
@@ -86,6 +89,7 @@ set(SOURCE_MENU_PROVIDER_FILES
 	${SOURCE_MENU_PROVIDER_GAMEDATA_DIR}/baseplayerpawn.cpp
 	${SOURCE_MENU_PROVIDER_GAMEDATA_DIR}/gamesystem.cpp
 	${SOURCE_MENU_PROVIDER_GAMEDATA_DIR}/source2server.cpp
+	${SOURCE_MENU_PROVIDER_GAMEDATA_DIR}/usercmd.cpp
 )
 
 set(SOURCE_MENU_SCHEMA_FILES
@@ -96,12 +100,16 @@ set(SOURCE_MENU_SCHEMA_FILES
 	${SOURCE_MENU_SCHEMA_DIR}/bodycomponent.cpp
 	${SOURCE_MENU_SCHEMA_DIR}/csobserverpawn.cpp
 	${SOURCE_MENU_SCHEMA_DIR}/baseplayerpawn.cpp
+	${SOURCE_MENU_SCHEMA_DIR}/baseplayerweapon.cpp
+	${SOURCE_MENU_SCHEMA_DIR}/baseplayerweaponvdata.cpp
 	${SOURCE_MENU_SCHEMA_DIR}/csplayer_viewmodelservices.cpp
 	${SOURCE_MENU_SCHEMA_DIR}/csplayerbase_cameraservices.cpp
 	${SOURCE_MENU_SCHEMA_DIR}/csplayerpawn.cpp
 	${SOURCE_MENU_SCHEMA_DIR}/csplayerpawnbase.cpp
+	${SOURCE_MENU_SCHEMA_DIR}/csweaponbasevdata.cpp
 	${SOURCE_MENU_SCHEMA_DIR}/gamescenenode.cpp
 	${SOURCE_MENU_SCHEMA_DIR}/player_observerservices.cpp
+	${SOURCE_MENU_SCHEMA_DIR}/player_weaponservices.cpp
 	${SOURCE_MENU_SCHEMA_DIR}/pointworldtext.cpp
 )
 

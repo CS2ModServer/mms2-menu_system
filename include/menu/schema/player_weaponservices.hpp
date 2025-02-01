@@ -19,40 +19,35 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEPLAYERPAWN_HPP_
-#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEPLAYERPAWN_HPP_
+#ifndef _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_PLAYER_WEAPONSERVICES_HPP_
+#	define _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_PLAYER_WEAPONSERVICES_HPP_
 
 #	pragma once
 
-#	include <menu/schema/basemodelentity.hpp>
 #	include <menu/schema.hpp>
 
-#	define CBASEPLAYERPAWN_CLASS_NAME "CBasePlayerPawn"
+#	include <ehandle.h>
+#	include <tier1/utlvector.h>
 
+#	define CPLAYER_WEAPON_SERVICES_CLASS_NAME "CPlayer_WeaponServices"
+
+class CBasePlayerWeapon;
 class CPlayer_WeaponServices;
-class CPlayer_ObserverServices;
-
-class CBasePlayerPawn : public CBaseModelEntity  // / public CBaseCombatCharacter < public CBaseFlex < public CBaseAnimGraph < public CBaseModelEntity
-{
-public:
-	// ...
-};
 
 namespace Menu
 {
 	namespace Schema
 	{
-		class CBasePlayerPawn_Helper : virtual public CBaseModelEntity_Helper
+		class CPlayer_WeaponServices_Helper
 		{
 		public:
-			CBasePlayerPawn_Helper(CSystem *pSchemaSystemHelper);
+			CPlayer_WeaponServices_Helper(CSystem *pSchemaSystemHelper);
 
 		public:
 			void Clear();
 
 		public:
-			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetWeaponServicesAccessor, CBasePlayerPawn, CPlayer_WeaponServices *, m_aOffsets.m_nWeaponServices);
-			SCHEMA_INSTANCE_ACCESSOR_METHOD(GetObserverServicesAccessor, CBasePlayerPawn, CPlayer_ObserverServices *, m_aOffsets.m_nObserverServices);
+			SCHEMA_COMPONENT_ACCESSOR_METHOD(GetMyWeaponsAccessor, CPlayer_WeaponServices, CNetworkUtlVectorBase<CHandle< CBasePlayerWeapon>>, m_aOffsets.m_nMyWeapons);
 
 		private:
 			CSystem::CClass *m_pClass;
@@ -60,11 +55,10 @@ namespace Menu
 
 			struct
 			{
-				int m_nWeaponServices = INVALID_SCHEMA_FIELD_OFFSET;
-				int m_nObserverServices = INVALID_SCHEMA_FIELD_OFFSET;
+				int m_nMyWeapons;
 			} m_aOffsets;
-		}; // Menu::Schema::CCSPlayerPawnBase_Helper
+		}; // Menu::Schema::CPlayer_WeaponServices_Helper
 	}; // Menu::Schema
 }; // Menu
 
-#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_BASEPLAYERPAWN_HPP_
+#endif // _INCLUDE_METAMOD_SOURCE_MENU_SCHEMA_PLAYER_WEAPONSERVICES_HPP_

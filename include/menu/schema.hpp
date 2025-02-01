@@ -50,49 +50,54 @@
 #		define SCHEMA_FORCEINLINE FORCEINLINE
 #	endif
 
-#	define SCHEMA_METHOD_ACCESSOR(methodName, classType, fieldAccessor, fieldType, fieldOffsetVar) \
+#	define SCHEMA_METHOD_ACCESSOR(methodName, classType, fieldAccessor, fieldType, fieldOffsetVar, additionalOffset) \
 	SCHEMA_FORCEINLINE fieldAccessor<fieldType> methodName(classType *pInstance) const \
 	{ \
 		Assert(pInstance); \
 		Assert(fieldOffsetVar != INVALID_SCHEMA_FIELD_OFFSET); \
 	\
-		return {pInstance, static_cast<uintp>(fieldOffsetVar)}; \
+		return {pInstance, static_cast<uintp>(fieldOffsetVar) + additionalOffset}; \
 	}
 
-#	define SCHEMA_METHOD_ACCESSOR2(methodName, classType, fieldAccessor, fieldType, fieldOffsetVar) \
+#	define SCHEMA_METHOD_ACCESSOR2(methodName, classType, fieldAccessor, fieldType, fieldOffsetVar, additionalOffset) \
 	SCHEMA_FORCEINLINE fieldAccessor<classType, fieldType> methodName(classType *pComponent) const \
 	{ \
 		Assert(pComponent); \
 		Assert(fieldOffsetVar != INVALID_SCHEMA_FIELD_OFFSET); \
 	\
-		return {pComponent, static_cast<uintp>(fieldOffsetVar)}; \
+		return {pComponent, static_cast<uintp>(fieldOffsetVar) + additionalOffset}; \
 	}
 
-#	define SCHEMA_METHOD_ARRAY_ACCESSOR(methodName, classType, fieldAccessor, fieldType, fieldOffsetVar, fieldSizeVar) \
+#	define SCHEMA_METHOD_ARRAY_ACCESSOR(methodName, classType, fieldAccessor, fieldType, fieldOffsetVar, additionalOffset, fieldSizeVar) \
 	SCHEMA_FORCEINLINE fieldAccessor<fieldType> methodName(classType *pInstance) const \
 	{ \
 		Assert(pInstance); \
 		Assert(fieldOffsetVar != INVALID_SCHEMA_FIELD_OFFSET); \
 		Assert(fieldSizeVar != INVALID_SCHEMA_FIELD_ARRAY_SIZE); \
 	\
-		return {{pInstance, static_cast<uintp>(fieldOffsetVar)}, static_cast<uintp>(fieldSizeVar)}; \
+		return {{pInstance, static_cast<uintp>(fieldOffsetVar)}, static_cast<uintp>(fieldSizeVar) + additionalOffset}; \
 	}
 
-#	define SCHEMA_METHOD_ARRAY_ACCESSOR2(methodName, classType, fieldAccessor, fieldType, fieldOffsetVar, fieldSizeVar) \
+#	define SCHEMA_METHOD_ARRAY_ACCESSOR2(methodName, classType, fieldAccessor, fieldType, fieldOffsetVar, additionalOffset, fieldSizeVar) \
 	SCHEMA_FORCEINLINE fieldAccessor<classType, fieldType> methodName(classType *pComponent) const \
 	{ \
 		Assert(pComponent); \
 		Assert(fieldOffsetVar != INVALID_SCHEMA_FIELD_OFFSET); \
 		Assert(fieldSizeVar != INVALID_SCHEMA_FIELD_ARRAY_SIZE); \
 	\
-		return {{pComponent, static_cast<uintp>(fieldOffsetVar)}, static_cast<uintp>(fieldSizeVar)}; \
+		return {{pComponent, static_cast<uintp>(fieldOffsetVar) + additionalOffset}, static_cast<uintp>(fieldSizeVar)}; \
 	}
 
-#	define SCHEMA_COMPONENT_ACCESSOR_METHOD(methodName, classType, fieldType, fieldOffsetVar) SCHEMA_METHOD_ACCESSOR2(methodName, classType, Accessor::CField, fieldType, fieldOffsetVar)
-#	define SCHEMA_COMPONENT_ARRAY_ACCESSOR_METHOD(methodName, classType, fieldType, fieldOffsetVar, fieldSizeVar) SCHEMA_METHOD_ARRAY_ACCESSOR2(methodName, classType, Accessor::CArrayField, fieldType, fieldOffsetVar, fieldSizeVar)
+#	define SCHEMA_COMPONENT_ACCESSOR_METHOD2(methodName, classType, fieldType, fieldOffsetVar, additionalOffset) SCHEMA_METHOD_ACCESSOR2(methodName, classType, Accessor::CField, fieldType, fieldOffsetVar, additionalOffset)
+#	define SCHEMA_COMPONENT_ARRAY_ACCESSOR_METHOD2(methodName, classType, fieldType, fieldOffsetVar, additionalOffset, fieldSizeVar) SCHEMA_METHOD_ARRAY_ACCESSOR2(methodName, classType, Accessor::CArrayField, fieldType, fieldOffsetVar, additionalOffset, fieldSizeVar)
+#	define SCHEMA_COMPONENT_ACCESSOR_METHOD(methodName, classType, fieldType, fieldOffsetVar) SCHEMA_COMPONENT_ACCESSOR_METHOD2(methodName, classType, fieldType, fieldOffsetVar, 0)
+#	define SCHEMA_COMPONENT_ARRAY_ACCESSOR_METHOD(methodName, classType, fieldType, fieldOffsetVar, fieldSizeVar) SCHEMA_COMPONENT_ARRAY_ACCESSOR_METHOD2(methodName, classType, fieldType, fieldOffsetVar, 0, fieldSizeVar)
 
-#	define SCHEMA_INSTANCE_ACCESSOR_METHOD(methodName, classType, fieldType, fieldOffsetVar) SCHEMA_METHOD_ACCESSOR(methodName, classType, Accessor::CInstanceField, fieldType, fieldOffsetVar)
-#	define SCHEMA_INSTANCE_ARRAY_ACCESSOR_METHOD(methodName, classType, fieldType, fieldOffsetVar, fieldSizeVar) SCHEMA_METHOD_ARRAY_ACCESSOR(methodName, classType, Accessor::CInstanceArrayField, fieldType, fieldOffsetVar, fieldSizeVar)
+#	define SCHEMA_INSTANCE_ACCESSOR_METHOD2(methodName, classType, fieldType, fieldOffsetVar, additionalOffset) SCHEMA_METHOD_ACCESSOR(methodName, classType, Accessor::CInstanceField, fieldType, fieldOffsetVar, additionalOffset)
+#	define SCHEMA_INSTANCE_ARRAY_ACCESSOR_METHOD2(methodName, classType, fieldType, fieldOffsetVar, additionalOffset, fieldSizeVar) SCHEMA_METHOD_ARRAY_ACCESSOR(methodName, classType, Accessor::CInstanceArrayField, fieldType, fieldOffsetVar, additionalOffset, fieldSizeVar)
+#	define SCHEMA_INSTANCE_ACCESSOR_METHOD(methodName, classType, fieldType, fieldOffsetVar) SCHEMA_INSTANCE_ACCESSOR_METHOD2(methodName, classType, fieldType, fieldOffsetVar, 0)
+#	define SCHEMA_INSTANCE_ARRAY_ACCESSOR_METHOD(methodName, classType, fieldType, fieldOffsetVar, fieldSizeVar) SCHEMA_INSTANCE_ARRAY_ACCESSOR_METHOD2(methodName, classType, fieldType, fieldOffsetVar, 0, fieldSizeVar)
+
 
 #	define SCHEMA_CLASS_FIELD_LAMBDA_CAPTURE(fieldOffsetVar) \
 	[&_offset = fieldOffsetVar](const CUtlSymbolLarge &, SchemaClassFieldData_t *pField) \
@@ -126,15 +131,35 @@ struct SchemaClassFieldData_t;
 
 class CConcatLineString;
 
+namespace Menu
+{
+	namespace Schema
+	{
+		class CSystem;
+	}; // Menu::Schema
+}; // Menu
+
+template<class CLASS>
+inline Menu::Schema::CSystem *schema_system_cast(CLASS *pTarget)
+{
+	return static_cast<Menu::Schema::CSystem *>(pTarget);
+}
+
 template<class T, class CLASS>
-T entity_upper_cast(CLASS aEntity)
+inline T component_upper_cast(CLASS aComponent)
+{
+	return static_cast<T>(aComponent);
+}
+
+template<class T, class CLASS>
+inline T instance_upper_cast(CLASS aInstance)
 {
 	if constexpr (std::is_pointer_v<std::remove_reference_t<T>>)
 	{
-		return reinterpret_cast<T>(aEntity); // Replace to dynamic_cast<> when exact hierarchy classes are declared.
+		return reinterpret_cast<T>(aInstance); // Replace to dynamic_cast<> when exact hierarchy classes are declared.
 	}
 
-	return static_cast<T>(aEntity);
+	return static_cast<T>(aInstance);
 }
 
 namespace Menu

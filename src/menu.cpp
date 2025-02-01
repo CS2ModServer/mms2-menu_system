@@ -409,7 +409,7 @@ void CMenu::InternalSetMessage(MenuEntity_t eEntity, const char *pszText)
 
 	auto *pEntity = Element(eEntity);
 
-	auto *pPointWorldTextEntity = entity_upper_cast<CPointWorldText *>(pEntity);
+	auto *pPointWorldTextEntity = instance_upper_cast<CPointWorldText *>(pEntity);
 
 	auto aTextAccessor = m_pSchemaHelper_PointWorldText->GetMessageTextAccessor(pPointWorldTextEntity);
 
