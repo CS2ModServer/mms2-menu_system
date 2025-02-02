@@ -50,7 +50,7 @@ namespace Menu
 			void Clear();
 
 		public:
-			auto &GetViewModelServicesAccessor(CCSPlayerPawn *pCSPlayerPawn)
+			auto GetViewModelServicesAccessor(CCSPlayerPawn *pCSPlayerPawn)
 			{
 				return Base::GetViewModelServicesAccessor(pCSPlayerPawn).Cast<CCSPlayer_ViewModelServices *>();
 			}

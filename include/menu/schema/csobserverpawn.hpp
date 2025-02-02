@@ -52,7 +52,7 @@ namespace Menu
 			void Clear();
 
 		public:
-			auto &GetObserverServicesAccessor(CCSObserverPawn *pCSObserverPawn)
+			auto GetObserverServicesAccessor(CCSObserverPawn *pCSObserverPawn)
 			{
 				return Base::GetObserverServicesAccessor(pCSObserverPawn).Cast<CCSPlayer_ObserverServices *>();
 			}

@@ -48,7 +48,7 @@ namespace Menu
 			CBasePlayerWeapon_Helper(CSystem *pSchemaSystemHelper);
 
 		public:
-			auto &GetEntitySubclassVDataAccessor(CBasePlayerWeapon *pPlayerWeapon)
+			auto GetEntitySubclassVDataAccessor(CBasePlayerWeapon *pPlayerWeapon)
 			{
 				return Base::GetEntitySubclassVDataAccessor(pPlayerWeapon).Cast<CBasePlayerWeaponVData *>();
 			}
