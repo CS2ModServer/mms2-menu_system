@@ -41,7 +41,8 @@ CMenu::CMenu(const CPointWorldText_Helper *pSchemaHelper, const CGameData_BaseEn
     m_pHandler(pHandler), 
 
     m_aData(pControls), 
-    m_arrCurrentPositions(), 
+    m_arrCurrentPositions(Menu::Utils::MakeArrayRepeat<ItemPosition_t, ABSOLUTE_PLAYER_LIMIT>(-1)), 
+    m_arrCachedPageBases(Menu::Utils::MakeArrayRepeat<CPageBase, ABSOLUTE_PLAYER_LIMIT + 1>(MENU_MAX_TEXT_LENGTH)), 
     m_arrCachedPagesMap(Menu::Utils::MakeArrayRepeat<ItemPages_t, ABSOLUTE_PLAYER_LIMIT + 1>(DefLessFunc(const ItemPosition_t)))
 {
 }
@@ -144,19 +145,32 @@ inline uint8 CMenu::GetMaxItemsPerPageWithoutControls()
 	return sm_nMaxItemsPerPage - (!!(eControlFlags & MENU_ITEM_CONTROL_FLAG_BACK) + !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_BACK) + !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_EXIT));
 }
 
-CMenu::CPageBuilder *CMenu::Render(CPlayerSlot aSlot, ItemPosition_t iStartItem)
+CMenu::CPageBase *CMenu::RenderBase(CPlayerSlot aSlot, ItemPosition_t iStartItem)
 {
-	int iClient = aSlot.GetClientIndex();
+	auto *pCachedPage = &m_arrCachedPageBases[aSlot.GetClientIndex()];
 
-	auto &mapCachedPages = m_arrCachedPagesMap[iClient];
+	if(pCachedPage->IsEmpty())
+	{
+		Construct(pCachedPage, m_pSchemaHelper_PointWorldText->GetMessageTextSize());
+		pCachedPage->Render(static_cast<IMenu *>(this), m_aData, aSlot, iStartItem, GetMaxItemsPerPageWithoutControls());
+	}
+
+	m_arrCurrentPositions[aSlot] = iStartItem;
+
+	return pCachedPage;
+}
+
+CMenu::CPage *CMenu::Render(CPlayerSlot aSlot, ItemPosition_t iStartItem)
+{
+	auto &mapCachedPages = m_arrCachedPagesMap[aSlot.GetClientIndex()];
 
 	auto iFoundPage = mapCachedPages.Find(iStartItem);
 
-	CPageBuilder *pPage {};
+	CPage *pPage {};
 
 	if(iFoundPage == mapCachedPages.InvalidIndex())
 	{
-		pPage = new CPageBuilder(m_pSchemaHelper_PointWorldText->GetMessageTextSize());
+		pPage = new CPage(m_pSchemaHelper_PointWorldText->GetMessageTextSize());
 
 		if(pPage)
 		{
@@ -174,15 +188,15 @@ CMenu::CPageBuilder *CMenu::Render(CPlayerSlot aSlot, ItemPosition_t iStartItem)
 	return pPage;
 }
 
-bool CMenu::InternalDisplayAt(CPlayerSlot aSlot, ItemPosition_t iStartItem, bool bSetTextNow)
+bool CMenu::InternalDisplayAt(CPlayerSlot aSlot, ItemPosition_t iStartItem, DisplayFlags_t eFlags)
 {
 	m_bvPlayers.Set(aSlot.Get());
 
-	auto *pPage = Render(aSlot, iStartItem);
+	auto *pPage = eFlags & MENU_DISPLAY_READER_BASE ? RenderBase(aSlot, iStartItem) : Render(aSlot, iStartItem);
 
-	if(bSetTextNow)
+	if(eFlags & MENU_DISPLAY_UPDATE_TEXT_NOW)
 	{
-		InternalSetMessage(MENU_ENTITY_BACKGROUND_INDEX, pPage->GetBackgroundText());
+		InternalSetMessage(MENU_ENTITY_BACKGROUND_INDEX, pPage->GetText());
 		InternalSetMessage(MENU_ENTITY_INACTIVE_INDEX, pPage->GetInactiveText());
 		InternalSetMessage(MENU_ENTITY_ACTIVE_INDEX, pPage->GetActiveText());
 	}
@@ -241,7 +255,7 @@ bool CMenu::OnSelect(CPlayerSlot aSlot, int iSlectedItem)
 
 				if(iPrevItems >= 0)
 				{
-					InternalDisplayAt(aSlot, iPrevItems, true);
+					InternalDisplayAt(aSlot, iPrevItems);
 				}
 
 				break;
@@ -253,7 +267,7 @@ bool CMenu::OnSelect(CPlayerSlot aSlot, int iSlectedItem)
 
 				if(iNextItems < vecItems.Count())
 				{
-					InternalDisplayAt(aSlot, iNextItems, true);
+					InternalDisplayAt(aSlot, iNextItems);
 				}
 
 				break;
@@ -417,15 +431,13 @@ void CMenu::InternalSetMessage(MenuEntity_t eEntity, const char *pszText)
 	aTextAccessor.MarkNetworkChanged();
 }
 
-CMenu::CPageBuilder::CPageBuilder(int nTextSize)
- :  m_sBackgroundText(nTextSize),
-    m_sInactiveText(nTextSize),
-    m_sActiveText(nTextSize)
+CMenu::CPageBase::CPageBase(int nTextSize)
+ :  m_sText(nTextSize)
 {
-	Assert(nTextSize >= MENU_MAX_TEXT_LENGTH);
 }
 
-void CMenu::CPageBuilder::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, ItemPosition_t iStartPosition, uint8 nMaxItems)
+// Render just base text without.
+void CMenu::CPageBase::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, ItemPosition_t iStartPosition, uint8 nMaxItems)
 {
 	const auto &aConcat = g_aMenuConcat;
 
@@ -445,12 +457,9 @@ void CMenu::CPageBuilder::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot a
 		if(!aTitleText.IsEmpty())
 		{
 			const char *pszTitleText = aTitleText.Get();
-			
-			aConcat.AppendToBuffer(m_sBackgroundText, pszTitleText);
-			aConcat.AppendEndsToBuffer(m_sBackgroundText);
-			aConcat.AppendToBuffer(m_sInactiveText, pszTitleText);
-			aConcat.AppendEndsToBuffer(m_sInactiveText);
-			aConcat.AppendEndsAndStartsToBuffer(m_sActiveText);
+
+			aConcat.AppendToBuffer(m_sText, pszTitleText);
+			aConcat.AppendEndsToBuffer(m_sText);
 		}
 	}
 
@@ -498,33 +507,11 @@ void CMenu::CPageBuilder::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot a
 			if(eItemStyle & MENU_ITEM_HASNUMBER)
 			{
 				szItemNumber[0] = '1' + (i - iStartPosition);
-				aConcat.AppendToBuffer(m_sBackgroundText, szItemNumber, pszItemContent);
-
-				if(eItemStyle & MENU_ITEM_ACTIVE)
-				{
-					aConcat.AppendEndsToBuffer(m_sInactiveText);
-					aConcat.AppendToBuffer(m_sActiveText, szItemNumber, pszItemContent);
-				}
-				else
-				{
-					aConcat.AppendToBuffer(m_sInactiveText, szItemNumber, pszItemContent);
-					aConcat.AppendEndsToBuffer(m_sActiveText);
-				}
+				aConcat.AppendToBuffer(m_sText, szItemNumber, pszItemContent);
 			}
 			else
 			{
-				aConcat.AppendToBuffer(m_sBackgroundText, pszItemContent);
-
-				if(eItemStyle & MENU_ITEM_ACTIVE)
-				{
-					aConcat.AppendEndsToBuffer(m_sInactiveText);
-					aConcat.AppendToBuffer(m_sActiveText, pszItemContent);
-				}
-				else
-				{
-					aConcat.AppendToBuffer(m_sInactiveText, pszItemContent);
-					aConcat.AppendEndsToBuffer(m_sActiveText);
-				}
+				aConcat.AppendToBuffer(m_sText, pszItemContent);
 			}
 		}
 
@@ -533,9 +520,7 @@ void CMenu::CPageBuilder::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot a
 
 		if(nControlsSum && pControlItems)
 		{
-			aConcat.AppendEndsToBuffer(m_sBackgroundText);
-			aConcat.AppendEndsToBuffer(m_sInactiveText);
-			aConcat.AppendEndsToBuffer(m_sActiveText);
+			aConcat.AppendEndsToBuffer(m_sText);
 
 			auto aControlItems = *pControlItems;
 
@@ -571,7 +556,7 @@ void CMenu::CPageBuilder::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot a
 				{
 					if(bSkipControlItem)
 					{
-						aConcat.AppendEndsToBuffer(m_sBackgroundText);
+						aConcat.AppendEndsToBuffer(m_sText);
 					}
 					else
 					{
@@ -582,7 +567,183 @@ void CMenu::CPageBuilder::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot a
 							szItemNumber[0] -= 10;
 						}
 
-						aConcat.AppendToBuffer(m_sBackgroundText, szItemNumber, pszItemContent);
+						aConcat.AppendToBuffer(m_sText, szItemNumber, pszItemContent);
+					}
+				}
+				else
+				{
+					aConcat.AppendToBuffer(m_sText, pszItemContent);
+				}
+			}
+		}
+	}
+}
+
+CMenu::CPage::CPage(int nTextSize)
+ :  CPageBase(nTextSize),
+    m_sInactiveText(nTextSize),
+    m_sActiveText(nTextSize)
+{
+}
+
+void CMenu::CPage::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, ItemPosition_t iStartPosition, uint8 nMaxItems)
+{
+	const auto &aConcat = g_aMenuConcat;
+
+	IMenuHandler *pHandler = pMenu->GetHandler();
+
+	// Append a title.
+	{
+		auto aTitle = aData.m_title;
+
+		if(pHandler)
+		{
+			pHandler->OnMenuDrawTitle(static_cast<IMenu *>(pMenu), aSlot, aTitle);
+		}
+
+		const auto &aTitleText = aTitle.m_sText;
+
+		if(!aTitleText.IsEmpty())
+		{
+			const char *pszTitleText = aTitleText.Get();
+
+			aConcat.AppendToBuffer(m_sText, pszTitleText);
+			aConcat.AppendEndsToBuffer(m_sText);
+			aConcat.AppendToBuffer(m_sInactiveText, pszTitleText);
+			aConcat.AppendEndsToBuffer(m_sInactiveText);
+			aConcat.AppendEndsAndStartsToBuffer(m_sActiveText);
+		}
+	}
+
+	// Append items.
+	{
+		const auto &vecItems = aData.m_vecItems;
+
+		const auto eControlFlags = aData.m_eControlFlags;
+
+		const bool bHasBackButton = !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_BACK), 
+		           bHasNextButton = !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_NEXT), 
+		           bHasExitButton = !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_EXIT);
+
+		const uint8 nControlsSum = bHasBackButton + bHasNextButton + bHasExitButton;
+
+		int nLeftItems = vecItems.Count() - iStartPosition;
+
+		const bool bItemsOverflow = nLeftItems >= nMaxItems, 
+		           bItemsHasLeft = iStartPosition >= nMaxItems;
+
+		const ItemPosition_t nItemsOnPage = bItemsOverflow ? (iStartPosition + nMaxItems) : vecItems.Count();
+
+		char szItemNumber[2] = "";
+
+		for(ItemPosition_t i = iStartPosition; i < nItemsOnPage; i++)
+		{
+			auto aItemCopy = vecItems[i];
+
+			if(pHandler)
+			{
+				pHandler->OnMenuDisplayItem(static_cast<IMenu *>(pMenu), aSlot, i, aItemCopy);
+			}
+
+			const auto &sItemContent = aItemCopy.m_sContent;
+
+			if(sItemContent.IsEmpty())
+			{
+				continue;
+			}
+
+			auto eItemStyle = aItemCopy.m_eStyle;
+
+			const char *pszItemContent = sItemContent.Get();
+
+			if(eItemStyle & MENU_ITEM_HASNUMBER)
+			{
+				szItemNumber[0] = '1' + (i - iStartPosition);
+				aConcat.AppendToBuffer(m_sText, szItemNumber, pszItemContent);
+
+				if(eItemStyle & MENU_ITEM_ACTIVE)
+				{
+					aConcat.AppendEndsToBuffer(m_sInactiveText);
+					aConcat.AppendToBuffer(m_sActiveText, szItemNumber, pszItemContent);
+				}
+				else
+				{
+					aConcat.AppendToBuffer(m_sInactiveText, szItemNumber, pszItemContent);
+					aConcat.AppendEndsToBuffer(m_sActiveText);
+				}
+			}
+			else
+			{
+				aConcat.AppendToBuffer(m_sText, pszItemContent);
+
+				if(eItemStyle & MENU_ITEM_ACTIVE)
+				{
+					aConcat.AppendEndsToBuffer(m_sInactiveText);
+					aConcat.AppendToBuffer(m_sActiveText, pszItemContent);
+				}
+				else
+				{
+					aConcat.AppendToBuffer(m_sInactiveText, pszItemContent);
+					aConcat.AppendEndsToBuffer(m_sActiveText);
+				}
+			}
+		}
+
+		// Append control items.
+		auto *pControlItems = aData.m_pControlItems;
+
+		if(nControlsSum && pControlItems)
+		{
+			aConcat.AppendEndsToBuffer(m_sText);
+			aConcat.AppendEndsToBuffer(m_sInactiveText);
+			aConcat.AppendEndsToBuffer(m_sActiveText);
+
+			auto aControlItems = *pControlItems;
+
+			for(const auto &it : aControlItems)
+			{
+				auto i = &it - aControlItems.cbegin();
+
+				ItemControls_t eControlItem = static_cast<ItemControls_t>(-static_cast<ItemPosition_t>(i + 1));
+
+				bool bSkipControlItem = (eControlItem == MENU_ITEM_CONTROL_BACK_INDEX && (!bHasBackButton || !bItemsHasLeft)) || 
+				                        (eControlItem == MENU_ITEM_CONTROL_NEXT_INDEX && (!bHasNextButton || !bItemsOverflow)) || 
+				                        (eControlItem == MENU_ITEM_CONTROL_EXIT_INDEX && (!bHasExitButton));
+
+				auto aItemCopy = it;
+
+				if(pHandler)
+				{
+					pHandler->OnMenuDisplayItem(static_cast<IMenu *>(pMenu), aSlot, eControlItem, aItemCopy);
+				}
+
+				const auto &sItemContent = aItemCopy.m_sContent;
+
+				if(sItemContent.IsEmpty())
+				{
+					continue;
+				}
+
+				auto eItemStyle = aItemCopy.m_eStyle;
+
+				const char *pszItemContent = sItemContent.Get();
+
+				if(eItemStyle & MENU_ITEM_HASNUMBER)
+				{
+					if(bSkipControlItem)
+					{
+						aConcat.AppendEndsToBuffer(m_sText);
+					}
+					else
+					{
+						szItemNumber[0] = '8' + i;
+
+						if(szItemNumber[0] >= ':')
+						{
+							szItemNumber[0] -= 10;
+						}
+
+						aConcat.AppendToBuffer(m_sText, szItemNumber, pszItemContent);
 					}
 
 					if(eItemStyle & MENU_ITEM_ACTIVE)
@@ -614,7 +775,7 @@ void CMenu::CPageBuilder::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot a
 				}
 				else
 				{
-					aConcat.AppendToBuffer(m_sBackgroundText, pszItemContent);
+					aConcat.AppendToBuffer(m_sText, pszItemContent);
 
 					if(eItemStyle & MENU_ITEM_ACTIVE)
 					{

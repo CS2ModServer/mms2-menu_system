@@ -872,40 +872,31 @@ bool MenuSystem_Plugin::DisplayInternalMenuToPlayer(CMenu *pInternalMenu, CPlaye
 
 	auto &vecMenus = aPlayer.GetMenus();
 
-	vecMenus.AddToHead({nManyTimes ? Plat_GetTime() + nManyTimes : 0, static_cast<IMenu *>(pInternalMenu)}); // To participate in the next cycle.
-
 	uint8 iTeam = CBaseEntity_Helper::GetTeamNumAccessor(pPlayerController);
 
-	if(iTeam <= TEAM_SPECTATOR)
+	auto *pCSPlayerPawnBase = instance_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
+
+	vecMenus.AddToHead({nManyTimes ? Plat_GetTime() + nManyTimes : 0, static_cast<IMenu *>(pInternalMenu)}); // To participate in the next cycle.
+
+	// Move instances to the back.
+	FOR_EACH_VEC(vecMenus, i)
 	{
-		auto *pCSPlayerPawn = instance_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
+		const auto &[_, pMenu] = vecMenus.Element(i);
 
-		FOR_EACH_VEC(vecMenus, i)
+		CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
+
+		if(pInternalMenu)
 		{
-			const auto &[_, pMenu] = vecMenus.Element(i);
-
-			CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
-
-			if(pInternalMenu)
+			if(iTeam <= TEAM_SPECTATOR)
 			{
-				AttachMenuInstanceToObserver(i, pInternalMenu, pCSPlayerPawn);
+				AttachMenuInstanceToObserver(i, pInternalMenu, pCSPlayerPawnBase);
 			}
-		}
-	}
-	else
-	{
-		auto *pCSPlayerPawn = instance_upper_cast<CCSPlayerPawn *>(pPlayerPawn);
-
-		FOR_EACH_VEC(vecMenus, i)
-		{
-			const auto &[_, pMenu] = vecMenus.Element(i);
-
-			CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
-
-			if(pInternalMenu)
+			else
 			{
-				AttachMenuInstanceToCSPlayer(i, pInternalMenu, pCSPlayerPawn);
+				AttachMenuInstanceToCSPlayer(i, pInternalMenu, instance_upper_cast<CCSPlayerPawn *>(pCSPlayerPawnBase));
 			}
+
+			pInternalMenu->InternalDisplayAt(aSlot, pInternalMenu->GetCurrentPosition(aSlot), i ? IMenu::MENU_DISPLAY_READER_BASE_UPDATE : IMenu::MENU_DISPLAY_DEFAULT);
 		}
 	}
 
@@ -1092,36 +1083,24 @@ bool MenuSystem_Plugin::OnMenuExitButton(IMenu *pMenu, CPlayerSlot aSlot, IMenu:
 
 	uint8 iTeam = CBaseEntity_Helper::GetTeamNumAccessor(pPlayerController);
 
-	if(iTeam <= TEAM_SPECTATOR)
+	FOR_EACH_VEC(vecAnotherMenus, i)
 	{
-		auto *pCSPlayerPawn = instance_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
+		const auto &[_, pMenu] = vecAnotherMenus.Element(i);
 
-		FOR_EACH_VEC(vecAnotherMenus, i)
+		CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
+
+		if(pInternalMenu)
 		{
-			const auto &[_, pMenu] = vecAnotherMenus.Element(i);
-
-			CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
-
-			if(pInternalMenu)
+			if(iTeam <= TEAM_SPECTATOR)
 			{
-				AttachMenuInstanceToObserver(i, pInternalMenu, pCSPlayerPawn);
+				AttachMenuInstanceToObserver(i, pInternalMenu, instance_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn));
 			}
-		}
-	}
-	else
-	{
-		auto *pCSPlayerPawn = instance_upper_cast<CCSPlayerPawn *>(pPlayerPawn);
-
-		FOR_EACH_VEC(vecAnotherMenus, i)
-		{
-			const auto &[_, pMenu] = vecAnotherMenus.Element(i);
-
-			CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
-
-			if(pInternalMenu)
+			else
 			{
-				AttachMenuInstanceToCSPlayer(i, pInternalMenu, pCSPlayerPawn);
+				AttachMenuInstanceToCSPlayer(i, pInternalMenu, instance_upper_cast<CCSPlayerPawn *>(pPlayerPawn));
 			}
+
+			pInternalMenu->InternalDisplayAt(aSlot, pInternalMenu->GetCurrentPosition(aSlot), i ? IMenu::MENU_DISPLAY_READER_BASE_UPDATE : IMenu::MENU_DISPLAY_DEFAULT);
 		}
 	}
 

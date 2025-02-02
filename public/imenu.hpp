@@ -89,6 +89,15 @@ public: // The definitions.
 		MENU_ITEM_CONTROL_EXIT_INDEX = -3,
 	};
 
+	enum DisplayFlags_t : uint8
+	{
+		MENU_DISPLAY_UPDATE_TEXT_NOW = (1 << 0),
+		MENU_DISPLAY_READER_BASE = (1 << 1),
+
+		MENU_DISPLAY_DEFAULT = MENU_DISPLAY_UPDATE_TEXT_NOW,
+		MENU_DISPLAY_READER_BASE_UPDATE = MENU_DISPLAY_UPDATE_TEXT_NOW | MENU_DISPLAY_READER_BASE
+	};
+
 	/**
 	 * @brief A Item Handler for handling menu item actions.
 	 */
@@ -186,6 +195,15 @@ public: // Public methods.
 	virtual ItemControlFlags_t &GetItemControlsRef() = 0;
 
 	/**
+	 * @brief Gets the current position of the menu cursor for a specific player.
+	 *
+	 * @param aSlot         The player slot.
+	 * 
+	 * @return              The current item position in the menu.
+	 */
+	virtual ItemPosition_t GetCurrentPosition(CPlayerSlot aSlot) const = 0;
+
+	/**
 	 * @brief Displays the menu to a specific player.
 	 * NOTE: This method is internal, use IMenuSystem to display.
 	 * 
@@ -205,12 +223,12 @@ public: // Public methods.
 	 * 
 	 * @param aSlot         The player slot.
 	 * @param iStartItem    The starting item position (default: MENU_FIRST_ITEM_INDEX).
-	 * @param bSetTextNow   Should I set the new text now.
+	 * @param eFlags        Flags to display.
 	 * 
 	 * @return              `true` if the menu was displayed successfully, 
 	 *                      `false` otherwise.
 	 */
-	virtual bool InternalDisplayAt(CPlayerSlot aSlot, ItemPosition_t iStartItem = MENU_FIRST_ITEM_INDEX, bool bSetTextNow = false) = 0;
+	virtual bool InternalDisplayAt(CPlayerSlot aSlot, ItemPosition_t iStartItem = MENU_FIRST_ITEM_INDEX, DisplayFlags_t eFlags = MENU_DISPLAY_DEFAULT) = 0;
 }; // IMenuInstance
 
 #endif // _INCLUDE_METAMOD_SOURCE_IMENU_HPP_
