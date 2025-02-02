@@ -563,10 +563,12 @@ bool MenuSystem_Plugin::Unpause(char *error, size_t maxlen)
 
 void MenuSystem_Plugin::AllPluginsLoaded()
 {
-	/**
-	 * AMNOTE: This is where we'd do stuff that relies on the mod or other plugins 
-	 * being initialized (for example, cvars added and events registered).
-	 */
+	char error[256];
+
+	if(!InitEntityManager(error, sizeof(error)))
+	{
+		Logger::WarningFormat("%s\n", error);
+	}
 }
 
 const char *MenuSystem_Plugin::GetAuthor()        { return META_PLUGIN_AUTHOR; }
@@ -577,6 +579,24 @@ const char *MenuSystem_Plugin::GetLicense()       { return META_PLUGIN_LICENSE; 
 const char *MenuSystem_Plugin::GetVersion()       { return META_PLUGIN_VERSION; }
 const char *MenuSystem_Plugin::GetDate()          { return META_PLUGIN_DATE; }
 const char *MenuSystem_Plugin::GetLogTag()        { return META_PLUGIN_LOG_TAG; }
+
+void MenuSystem_Plugin::OnPluginUnload(PluginId id)
+{
+	if(id == m_iEntityManager)
+	{
+		char error[256];
+
+		if(!UnloadSpawnGroups(error, sizeof(error)))
+		{
+			Logger::WarningFormat("%s\n", error);
+		}
+
+		if(!UnloadEntityManager(error, sizeof(error)))
+		{
+			Logger::WarningFormat("%s\n", error);
+		}
+	}
+}
 
 void *MenuSystem_Plugin::OnMetamodQuery(const char *iface, int *ret)
 {
@@ -1795,7 +1815,7 @@ bool MenuSystem_Plugin::InitEntityManager(char *error, size_t maxlen)
 {
 	// Gets a main entity manager interface.
 	{
-		m_pEntityManager = reinterpret_cast<IEntityManager *>(g_SMAPI->MetaFactory(ENTITY_MANAGER_INTERFACE_NAME, nullptr, nullptr));
+		m_pEntityManager = reinterpret_cast<IEntityManager *>(g_SMAPI->MetaFactory(ENTITY_MANAGER_INTERFACE_NAME, nullptr, &m_iEntityManager));
 
 		if(!m_pEntityManager)
 		{
@@ -1893,6 +1913,9 @@ bool MenuSystem_Plugin::UnloadSpawnGroups(char *error, size_t maxlen)
 	if(m_pEntityManagerProviderAgent && m_pMySpawnGroupInstance)
 	{
 		m_pEntityManagerProviderAgent->ReleaseSpawnGroup(m_pMySpawnGroupInstance);
+
+		m_pEntityManagerProviderAgent = nullptr;
+		m_pMySpawnGroupInstance = nullptr;
 	}
 
 	return true;
@@ -3919,7 +3942,7 @@ bool MenuSystem_Plugin::ProcessUserCmd(CServerSideClientBase *pClient, CCSGOUser
 
 					if(bSelectResult)
 					{
-						const_cast<CBaseUserCmdPB *>(pBaseUserCmd)->set_weaponselect(0); // Change the base cmd weapon to silent select.
+						const_cast<CBaseUserCmdPB *>(pBaseUserCmd)->set_weaponselect(0); // Change the cmd weapon to rehandled select a menu item.
 					}
 
 					return bSelectResult;

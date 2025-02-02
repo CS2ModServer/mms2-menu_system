@@ -129,6 +129,7 @@ public: // ISmmPlugin
 	const char *GetLogTag() override;
 
 public: // IMetamodListener
+	void OnPluginUnload(PluginId id) override;
 	void *OnMetamodQuery(const char *iface, int *ret) override;
 
 public: // IMenuSystem
@@ -481,6 +482,7 @@ private: // Fields.
 	CGameSystemStaticFactory<This> *m_pFactory = NULL;
 
 	// Provide to Entity Manager plugin.
+	PluginId m_iEntityManager;
 	IEntityManager *m_pEntityManager = nullptr;
 	IEntityManager::IProviderAgent *m_pEntityManagerProviderAgent = nullptr;
 	IEntityManager::CSpawnGroupProvider *m_pEntityManagerSpawnGroupProvider = nullptr;
