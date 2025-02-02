@@ -155,40 +155,51 @@ public: // IMenu
 		CBufferStringText(int nTextSize)
 			:  CBufferString(nTextSize, false)
 		{
-			Assert(nTextSize > MENU_MAX_TEXT_LENGTH);
+			Assert(nTextSize <= MENU_MAX_TEXT_LENGTH);
 		}
 
 	private:
 		char m_FixedData[sm_nDataSize];
 	};
 
-	class CPageBase
+	class IPage
 	{
 	public:
-		CPageBase() = delete;
+		virtual bool IsEmpty() const = 0;
+		virtual const char *GetText() const = 0; // Aka background text.
+		virtual const char *GetInactiveText() const = 0;
+		virtual const char *GetActiveText() const = 0;
+
+		virtual void Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, ItemPosition_t iStartPosition, uint8 nMaxItems) = 0; // Render a page.
+	};
+
+	class CPageBase : public IPage
+	{
+	public:
 		CPageBase(int nTextSize = MENU_MAX_TEXT_LENGTH);
 
-		virtual bool IsEmpty() const
+		// IPage
+		bool IsEmpty() const override
 		{
 			return m_sText.Length() == 0;
 		}
 
-		virtual const char *GetText() const
+		const char *GetText() const override
 		{
 			return m_sText.Get();
 		}
 
-		virtual const char *GetInactiveText() const
+		const char *GetInactiveText() const override
 		{
 			return m_sText.Get();
 		}
 
-		virtual const char *GetActiveText() const
+		const char *GetActiveText() const override
 		{
 			return "";
 		}
 
-		virtual void Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, ItemPosition_t iStartPosition, uint8 nMaxItems); // Render a page.
+		void Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, ItemPosition_t iStartPosition, uint8 nMaxItems) override;
 
 	protected:
 		CBufferStringText m_sText;
@@ -202,11 +213,13 @@ public: // IMenu
 
 		CPage(int nTextSize = MENU_MAX_TEXT_LENGTH);
 
+	public: // Page additional methods
 		const char *GetBackgroundText() const
 		{
 			return GetText();
 		}
 
+	public: // IPage
 		const char *GetInactiveText() const override
 		{
 			return m_sInactiveText.Get();
@@ -227,11 +240,10 @@ public: // IMenu
 	static constexpr uint8 sm_nMaxItemsPerPage = MENU_DEFAULT_ITEMS_COUNT_PER_PAGE;
 	uint8 GetMaxItemsPerPageWithoutControls();
 
-	CPageBase *RenderBase(CPlayerSlot aSlot, ItemPosition_t iStartItem = MENU_FIRST_ITEM_INDEX);
-	CPage *Render(CPlayerSlot aSlot, ItemPosition_t iStartItem = MENU_FIRST_ITEM_INDEX);
+	IPage *Render(CPlayerSlot aSlot, ItemPosition_t iStartItem = MENU_FIRST_ITEM_INDEX, bool bBase = false);
 	bool InternalDisplayAt(CPlayerSlot aSlot, ItemPosition_t iStartItem = MENU_FIRST_ITEM_INDEX, DisplayFlags_t eFlags = MENU_DISPLAY_DEFAULT) override;
 
-	virtual bool OnSelect(CPlayerSlot aSlot, int iSelectedItem);
+	virtual bool OnSelect(CPlayerSlot aSlot, int iSelectedItem, DisplayFlags_t eFlags = MENU_DISPLAY_DEFAULT);
 
 public: // Internal methods.
 	CEntityKeyValues *GetAllocatedBackgroundKeyValues(CPlayerSlot aSlot, CKeyValues3Context *pAllocator = nullptr); // Must be deleted.
@@ -259,18 +271,13 @@ protected:
 protected:
 	void InternalSetMessage(MenuEntity_t eEntity, const char *pszText);
 
-	const CPageBase *GetCurrentPageBase(CPlayerSlot aSlot)
+	const IPage *GetCurrentPage(CPlayerSlot aSlot, bool bIsBase = false)
 	{
-		return &m_arrCachedPageBases[aSlot.GetClientIndex()];
-	}
+		auto &mapCachedPages = (bIsBase ? m_arrCachedPageBasesMap : m_arrCachedPagesMap)[aSlot.GetClientIndex()];
 
-	const CPage *GetCurrentPage(CPlayerSlot aSlot)
-	{
-		auto &mapCachedPage = m_arrCachedPagesMap[aSlot.GetClientIndex()];
+		auto iFound = mapCachedPages.Find(GetCurrentPosition(aSlot));
 
-		auto iFound = mapCachedPage.Find(GetCurrentPosition(aSlot));
-
-		return iFound == mapCachedPage.InvalidIndex() ? nullptr : mapCachedPage.Element(iFound);
+		return iFound == mapCachedPages.InvalidIndex() ? nullptr : static_cast<IPage *>(mapCachedPages.Element(iFound));
 	}
 
 private: // IMenuInstance fields.
@@ -284,14 +291,15 @@ private: // IMenu fields.
 	CMenuData_t m_aData;
 
 protected: // Pages fields.
-	using ItemPages_t = CUtlMap<ItemPosition_t, CPage *>; 
+	template<class T>
+	using ItemPages_t = CUtlMap<ItemPosition_t, IPage *>; 
 
 	// By slots.
 	std::array<ItemPosition_t, ABSOLUTE_PLAYER_LIMIT> m_arrCurrentPositions;
 
 	 // By client indexes.
-	std::array<CPageBase, ABSOLUTE_PLAYER_LIMIT + 1> m_arrCachedPageBases;
-	std::array<ItemPages_t, ABSOLUTE_PLAYER_LIMIT + 1> m_arrCachedPagesMap;
+	std::array<ItemPages_t<IPage>, ABSOLUTE_PLAYER_LIMIT + 1> m_arrCachedPageBasesMap;
+	std::array<ItemPages_t<IPage>, ABSOLUTE_PLAYER_LIMIT + 1> m_arrCachedPagesMap;
 
 	CPage *m_pCurrentPage = nullptr;
 }; // Menu

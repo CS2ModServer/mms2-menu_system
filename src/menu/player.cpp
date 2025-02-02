@@ -25,7 +25,13 @@
 
 MenuSystem_Plugin::CPlayer::CPlayer()
  :  m_pServerSideClient(nullptr), 
+
+    // Menu fields.
+    m_bMenuTogglerState(false), 
+    m_nMenuTogglerClientTick(-1), 
+    m_nActiveMenuIndex(-1), 
     m_vecMenus(1), 
+
     m_pLanguage(nullptr), 
     m_aYourArgumentPhrase({nullptr, nullptr})
 {
@@ -109,6 +115,13 @@ bool MenuSystem_Plugin::CPlayer::OnMenuDisplayItem(IMenu *pMenu, CPlayerSlot aSl
 	}
 
 	return bHasPhrase;
+}
+
+bool MenuSystem_Plugin::CPlayer::OnMenuSwitch(CPlayerSlot aSlot)
+{
+	m_nActiveMenuIndex = (m_nActiveMenuIndex + 1) % m_vecMenus.Count();
+
+	return true;
 }
 
 void MenuSystem_Plugin::CPlayer::TranslatePhrases(const Translations *pTranslations, const CLanguage &aServerLanguage, CUtlVector<CUtlString> &vecMessages)

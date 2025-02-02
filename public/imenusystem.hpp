@@ -52,11 +52,22 @@ public:
 	class IPlayer : public IPlayerBase
 	{
 	public:
+		/**
+		 * @brief Structure holding player menu data.
+		 */
 		struct MenuData_t
 		{
-			uint64 m_nEndTimestamp = MENU_TIME_FOREVER;
-			IMenu *m_pInstance = nullptr;
+			uint64 m_nEndTimestamp = MENU_TIME_FOREVER; ///< Timestamp when the menu expires.
+			IMenu *m_pInstance = nullptr;               ///< Pointer to the menu instance.
 		};
+
+		/**
+		 * @brief Gets an active menu index.
+		 * 
+		 * @return              An index of the active menu, 
+		 *                      otherwise `MENU_INVLID_INDEX` if not.
+		 */
+		virtual IMenu::Index_t GetActiveMenuIndex() = 0;
 
 		/**
 		 * @brief Gets menu entities of the player.

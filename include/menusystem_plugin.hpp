@@ -158,7 +158,7 @@ public: // IMenuSystem
 		CUtlString m_sCountryCode;
 	}; // MenuPlugin::CLanguage
 
-	class CPlayer : public IPlayer
+	class CPlayer final : public IPlayer
 	{
 		friend class MenuSystem_Plugin;
 
@@ -192,9 +192,30 @@ public: // IMenuSystem
 		}
 
 	public: // IMenuSystem::IPlayer
+		IMenu::Index_t GetActiveMenuIndex() override
+		{
+			return m_nActiveMenuIndex;
+		}
+
 		CUtlVector<MenuData_t> &GetMenus() override
 		{
 			return m_vecMenus;
+		}
+
+	public:
+		bool &GetMenuTogglerStateRef()
+		{
+			return m_bMenuTogglerState;
+		}
+
+		int &GetMenuTogglerClientTickRef()
+		{
+			return m_nMenuTogglerClientTick;
+		}
+
+		IMenu::Index_t &GetActiveMenuIndexRef()
+		{
+			return m_nActiveMenuIndex;
 		}
 
 	public:
@@ -206,6 +227,7 @@ public: // IMenuSystem
 
 	public: // Menu callbacks.
 		virtual bool OnMenuDisplayItem(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iItem, IMenu::Item_t &aData);
+		virtual bool OnMenuSwitch(CPlayerSlot aSlot);
 
 	public:
 		struct TranslatedPhrase_t
@@ -245,6 +267,9 @@ public: // IMenuSystem
 		CServerSideClient *m_pServerSideClient;
 
 	private: // Menus data.
+		bool m_bMenuTogglerState;
+		int m_nMenuTogglerClientTick;
+		IMenu::Index_t m_nActiveMenuIndex;
 		CUtlVector<MenuData_t> m_vecMenus;
 
 	private:
@@ -278,6 +303,7 @@ public: // IMenuSystem
 	bool CloseMenu(IMenu *pMenu) override;
 
 	CMenu *CreateInternalMenu(IMenuProfile *pProfile, IMenuHandler *pHandler = nullptr);
+	bool UpdatePlayerMenus(CPlayerSlot aSlot);
 	bool DisplayInternalMenuToPlayer(CMenu *pInternalMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iStartItem = MENU_FIRST_ITEM_INDEX, int nManyTimes = MENU_TIME_FOREVER);
 	IMenuHandler *FindMenuHandler(IMenu *pMenu);
 	int DestroyInternalMenuEntities(CMenu *pInternalMenu);
@@ -294,6 +320,7 @@ public: // IMenuHandler
 	void OnMenuDisplayItem(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iItem, IMenu::Item_t &aData) override;
 
 	bool OnMenuExitButton(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iItem);
+	virtual bool OnMenuSwitch(CPlayerSlot aSlot);
 
 public: // CBaseGameSystem
 	bool Init() override;

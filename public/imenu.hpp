@@ -40,6 +40,7 @@
  * @brief Defines an IMenu interface for managing in-game menus.
  */
 
+#	define MENU_INVLID_INDEX static_cast<IMenu::Index_t>(-1)            ///< Invalid menu instance index.
 #	define MENU_FIRST_ITEM_INDEX static_cast<IMenu::ItemPosition_t>(0)  ///< The menu first item index.
 #	define MENU_NO_PAGINATION 0     ///< FUTURE: Menu should not be paginated (10 items max of "default" profile).
 
@@ -49,6 +50,7 @@
 class IMenu : public IMenuInstance
 {
 public: // The definitions.
+	using Index_t = int;
 	using ItemPosition_t = int;
 	using ItemPositionOnPage_t = int8;
 	using Pagination_t = uint8;
@@ -89,6 +91,9 @@ public: // The definitions.
 		MENU_ITEM_CONTROL_EXIT_INDEX = -3,
 	};
 
+	/**
+	 * @brief Enumeration representing the display style flags.
+	 */
 	enum DisplayFlags_t : uint8
 	{
 		MENU_DISPLAY_UPDATE_TEXT_NOW = (1 << 0),

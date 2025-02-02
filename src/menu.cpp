@@ -42,8 +42,8 @@ CMenu::CMenu(const CPointWorldText_Helper *pSchemaHelper, const CGameData_BaseEn
 
     m_aData(pControls), 
     m_arrCurrentPositions(Menu::Utils::MakeArrayRepeat<ItemPosition_t, ABSOLUTE_PLAYER_LIMIT>(-1)), 
-    m_arrCachedPageBases(Menu::Utils::MakeArrayRepeat<CPageBase, ABSOLUTE_PLAYER_LIMIT + 1>(MENU_MAX_TEXT_LENGTH)), 
-    m_arrCachedPagesMap(Menu::Utils::MakeArrayRepeat<ItemPages_t, ABSOLUTE_PLAYER_LIMIT + 1>(DefLessFunc(const ItemPosition_t)))
+    m_arrCachedPageBasesMap(Menu::Utils::MakeArrayRepeat<ItemPages_t<IPage>, ABSOLUTE_PLAYER_LIMIT + 1>(DefLessFunc(const ItemPosition_t))), 
+    m_arrCachedPagesMap(Menu::Utils::MakeArrayRepeat<ItemPages_t<CPage>, ABSOLUTE_PLAYER_LIMIT + 1>(DefLessFunc(const ItemPosition_t)))
 {
 }
 
@@ -87,6 +87,14 @@ void CMenu::Destroy()
 
 void CMenu::Purge()
 {
+	for(auto &mapCachedPageBases : m_arrCachedPageBasesMap)
+	{
+		FOR_EACH_MAP(mapCachedPageBases, i)
+		{
+			delete mapCachedPageBases[i];
+		}
+	}
+
 	for(auto &mapCachedPages : m_arrCachedPagesMap)
 	{
 		FOR_EACH_MAP(mapCachedPages, i)
@@ -145,42 +153,23 @@ inline uint8 CMenu::GetMaxItemsPerPageWithoutControls()
 	return sm_nMaxItemsPerPage - (!!(eControlFlags & MENU_ITEM_CONTROL_FLAG_BACK) + !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_BACK) + !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_EXIT));
 }
 
-CMenu::CPageBase *CMenu::RenderBase(CPlayerSlot aSlot, ItemPosition_t iStartItem)
+CMenu::IPage *CMenu::Render(CPlayerSlot aSlot, ItemPosition_t iStartItem, bool bIsBase)
 {
-	auto *pCachedPage = &m_arrCachedPageBases[aSlot.GetClientIndex()];
-
-	if(pCachedPage->IsEmpty())
-	{
-		Construct(pCachedPage, m_pSchemaHelper_PointWorldText->GetMessageTextSize());
-		pCachedPage->Render(static_cast<IMenu *>(this), m_aData, aSlot, iStartItem, GetMaxItemsPerPageWithoutControls());
-	}
-
-	m_arrCurrentPositions[aSlot] = iStartItem;
-
-	return pCachedPage;
-}
-
-CMenu::CPage *CMenu::Render(CPlayerSlot aSlot, ItemPosition_t iStartItem)
-{
-	auto &mapCachedPages = m_arrCachedPagesMap[aSlot.GetClientIndex()];
+	auto &mapCachedPages = (bIsBase ? m_arrCachedPageBasesMap : m_arrCachedPagesMap)[aSlot.GetClientIndex()];
 
 	auto iFoundPage = mapCachedPages.Find(iStartItem);
 
-	CPage *pPage {};
+	IPage *pPage = iFoundPage == mapCachedPages.InvalidIndex() ? nullptr : mapCachedPages.Element(iFoundPage);
 
-	if(iFoundPage == mapCachedPages.InvalidIndex())
+	if(!pPage)
 	{
-		pPage = new CPage(m_pSchemaHelper_PointWorldText->GetMessageTextSize());
+		const int nMessageTextSize = m_pSchemaHelper_PointWorldText->GetMessageTextSize();
 
-		if(pPage)
-		{
-			pPage->Render(static_cast<IMenu *>(this), m_aData, aSlot, iStartItem, GetMaxItemsPerPageWithoutControls());
-			mapCachedPages.Insert(iStartItem, pPage);
-		}
-	}
-	else
-	{
-		pPage = mapCachedPages.Element(iFoundPage);
+		pPage = static_cast<IPage *>(bIsBase ? new CPageBase(nMessageTextSize) : new CPage(nMessageTextSize));
+
+		Assert(pPage);
+		pPage->Render(static_cast<IMenu *>(this), m_aData, aSlot, iStartItem, GetMaxItemsPerPageWithoutControls());
+		mapCachedPages.Insert(iStartItem, pPage);
 	}
 
 	m_arrCurrentPositions[aSlot] = iStartItem;
@@ -192,7 +181,7 @@ bool CMenu::InternalDisplayAt(CPlayerSlot aSlot, ItemPosition_t iStartItem, Disp
 {
 	m_bvPlayers.Set(aSlot.Get());
 
-	auto *pPage = eFlags & MENU_DISPLAY_READER_BASE ? RenderBase(aSlot, iStartItem) : Render(aSlot, iStartItem);
+	auto *pPage = Render(aSlot, iStartItem, !!(eFlags & MENU_DISPLAY_READER_BASE));
 
 	if(eFlags & MENU_DISPLAY_UPDATE_TEXT_NOW)
 	{
@@ -204,7 +193,7 @@ bool CMenu::InternalDisplayAt(CPlayerSlot aSlot, ItemPosition_t iStartItem, Disp
 	return true;
 }
 
-bool CMenu::OnSelect(CPlayerSlot aSlot, int iSlectedItem)
+bool CMenu::OnSelect(CPlayerSlot aSlot, int iSlectedItem, DisplayFlags_t eFlags)
 {
 	if(iSlectedItem == -1)
 	{
@@ -255,7 +244,7 @@ bool CMenu::OnSelect(CPlayerSlot aSlot, int iSlectedItem)
 
 				if(iPrevItems >= 0)
 				{
-					InternalDisplayAt(aSlot, iPrevItems);
+					InternalDisplayAt(aSlot, iPrevItems, eFlags);
 				}
 
 				break;
@@ -267,7 +256,7 @@ bool CMenu::OnSelect(CPlayerSlot aSlot, int iSlectedItem)
 
 				if(iNextItems < vecItems.Count())
 				{
-					InternalDisplayAt(aSlot, iNextItems);
+					InternalDisplayAt(aSlot, iNextItems, eFlags);
 				}
 
 				break;
@@ -315,7 +304,7 @@ CEntityKeyValues *CMenu::GetAllocatedBackgroundKeyValues(CPlayerSlot aSlot, CKey
 			pMenuKV->SetColor("color", CalculatePassiveColor(*pInactiveColor, *pActiveColor));
 		}
 
-		pMenuKV->SetString("message", GetCurrentPage(aSlot)->GetBackgroundText());
+		pMenuKV->SetString("message", GetCurrentPage(aSlot)->GetText());
 	}
 
 	return pMenuKV;
@@ -580,7 +569,7 @@ void CMenu::CPageBase::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlo
 }
 
 CMenu::CPage::CPage(int nTextSize)
- :  CPageBase(nTextSize),
+ :  Base(nTextSize),
     m_sInactiveText(nTextSize),
     m_sActiveText(nTextSize)
 {

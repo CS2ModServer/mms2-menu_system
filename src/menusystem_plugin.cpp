@@ -827,6 +827,67 @@ CMenu *MenuSystem_Plugin::CreateInternalMenu(IMenuProfile *pProfile, IMenuHandle
 	return pNewMenu;
 }
 
+bool MenuSystem_Plugin::UpdatePlayerMenus(CPlayerSlot aSlot)
+{
+	auto &aPlayer = GetPlayerData(aSlot);
+
+	auto &vecMenus = aPlayer.GetMenus();
+
+	const int nMenuCount = vecMenus.Count();
+
+	if(!nMenuCount)
+	{
+		return false;
+	}
+
+	auto aPlayerSlot = aPlayer.GetServerSideClient()->GetPlayerSlot();
+
+	auto *pPlayerController = instance_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(aPlayerSlot.GetClientIndex())));
+
+	if(!pPlayerController)
+	{
+		return false;
+	}
+
+	CBasePlayerPawn *pPlayerPawn = CBasePlayerController_Helper::GetPawnAccessor(pPlayerController)->Get();
+
+	if(!pPlayerPawn)
+	{
+		return false;
+	}
+
+	const IMenu::Index_t iActiveMenu = aPlayer.GetActiveMenuIndex();
+
+	uint8 iTeam = CBaseEntity_Helper::GetTeamNumAccessor(pPlayerController);
+
+	auto *pCSPlayerPawnBase = instance_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
+
+	for(int i = 0; i < nMenuCount; i++)
+	{
+		const auto &[_, pMenu] = vecMenus.Element(i);
+
+		CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
+
+		if(pInternalMenu)
+		{
+			int iShift = i - iActiveMenu;
+
+			if(iTeam <= TEAM_SPECTATOR)
+			{
+				AttachMenuInstanceToObserver(iShift, pInternalMenu, pCSPlayerPawnBase);
+			}
+			else
+			{
+				AttachMenuInstanceToCSPlayer(iShift, pInternalMenu, instance_upper_cast<CCSPlayerPawn *>(pCSPlayerPawnBase));
+			}
+
+			pInternalMenu->InternalDisplayAt(aPlayerSlot, pInternalMenu->GetCurrentPosition(aPlayerSlot), i == iActiveMenu ? IMenu::MENU_DISPLAY_DEFAULT : IMenu::MENU_DISPLAY_READER_BASE_UPDATE);
+		}
+	}
+
+	return false;
+}
+
 bool MenuSystem_Plugin::DisplayInternalMenuToPlayer(CMenu *pInternalMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iStartItem, int nManyTimes)
 {
 	auto &aPlayer = GetPlayerData(aSlot);
@@ -874,31 +935,21 @@ bool MenuSystem_Plugin::DisplayInternalMenuToPlayer(CMenu *pInternalMenu, CPlaye
 
 	uint8 iTeam = CBaseEntity_Helper::GetTeamNumAccessor(pPlayerController);
 
-	auto *pCSPlayerPawnBase = instance_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
+	IMenu::Index_t &iActiveMenu = aPlayer.GetActiveMenuIndexRef();
 
-	vecMenus.AddToHead({nManyTimes ? Plat_GetTime() + nManyTimes : 0, static_cast<IMenu *>(pInternalMenu)}); // To participate in the next cycle.
+	IPlayer::MenuData_t aMenuData {nManyTimes ? Plat_GetTime() + nManyTimes : 0, static_cast<IMenu *>(pInternalMenu)}; // Move semantics?
 
-	// Move instances to the back.
-	FOR_EACH_VEC(vecMenus, i)
+	if(iActiveMenu == -1)
 	{
-		const auto &[_, pMenu] = vecMenus.Element(i);
-
-		CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
-
-		if(pInternalMenu)
-		{
-			if(iTeam <= TEAM_SPECTATOR)
-			{
-				AttachMenuInstanceToObserver(i, pInternalMenu, pCSPlayerPawnBase);
-			}
-			else
-			{
-				AttachMenuInstanceToCSPlayer(i, pInternalMenu, instance_upper_cast<CCSPlayerPawn *>(pCSPlayerPawnBase));
-			}
-
-			pInternalMenu->InternalDisplayAt(aSlot, pInternalMenu->GetCurrentPosition(aSlot), i ? IMenu::MENU_DISPLAY_READER_BASE_UPDATE : IMenu::MENU_DISPLAY_DEFAULT);
-		}
+		vecMenus.AddToHead(aMenuData);
+		iActiveMenu = 0;
 	}
+	else
+	{
+		vecMenus.InsertBefore(iActiveMenu, aMenuData);
+	}
+
+	UpdatePlayerMenus(aSlot);
 
 	return pInternalMenu->InternalDisplayAt(aSlot, iStartItem);
 }
@@ -956,6 +1007,8 @@ void MenuSystem_Plugin::CloseInternalMenu(CMenu *pInternalMenu, IMenuHandler::En
 			continue;
 		}
 
+		IMenu::Index_t &iActiveMenu = aPlayer.GetActiveMenuIndexRef();
+
 		auto &vecMenus = aPlayer.GetMenus();
 
 		FOR_EACH_VEC_BACK(vecMenus, i)
@@ -964,10 +1017,25 @@ void MenuSystem_Plugin::CloseInternalMenu(CMenu *pInternalMenu, IMenuHandler::En
 
 			if(pMenu == pPlayerMenu)
 			{
+				if(i == iActiveMenu)
+				{
+					iActiveMenu--;
+				}
+
 				vecMenus.Remove(i);
 
 				break;
 			}
+		}
+
+		if(vecMenus.Count())
+		{
+			if(iActiveMenu == MENU_INVLID_INDEX)
+			{
+				iActiveMenu = 0;
+			}
+
+			UpdatePlayerMenus(aPlayer.GetServerSideClient()->GetPlayerSlot());
 		}
 	}
 }
@@ -1051,58 +1119,21 @@ bool MenuSystem_Plugin::OnMenuExitButton(IMenu *pMenu, CPlayerSlot aSlot, IMenu:
 	CloseInternalMenu(pInternalMenu, IMenuHandler::MenuEnd_Exit);
 	m_MenuAllocator.ReleaseByMemBlock(pMenuMemBlock);
 
+	UpdatePlayerMenus(aSlot);
+
+	return true;
+}
+
+bool MenuSystem_Plugin::OnMenuSwitch(CPlayerSlot aSlot)
+{
 	auto &aPlayer = GetPlayerData(aSlot);
 
-	int iClient = aSlot.GetClientIndex();
-
-	if(!aPlayer.IsConnected())
+	if(!aPlayer.OnMenuSwitch(aSlot))
 	{
 		return false;
 	}
 
-	auto &vecAnotherMenus = aPlayer.GetMenus();
-
-	if(!vecAnotherMenus.Count())
-	{
-		return true;
-	}
-
-	auto *pPlayerController = instance_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(iClient)));
-
-	if(!pPlayerController)
-	{
-		return false;
-	}
-
-	CBasePlayerPawn *pPlayerPawn = CBasePlayerController_Helper::GetPawnAccessor(pPlayerController)->Get();
-
-	if(!pPlayerPawn)
-	{
-		return false;
-	}
-
-	uint8 iTeam = CBaseEntity_Helper::GetTeamNumAccessor(pPlayerController);
-
-	FOR_EACH_VEC(vecAnotherMenus, i)
-	{
-		const auto &[_, pMenu] = vecAnotherMenus.Element(i);
-
-		CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
-
-		if(pInternalMenu)
-		{
-			if(iTeam <= TEAM_SPECTATOR)
-			{
-				AttachMenuInstanceToObserver(i, pInternalMenu, instance_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn));
-			}
-			else
-			{
-				AttachMenuInstanceToCSPlayer(i, pInternalMenu, instance_upper_cast<CCSPlayerPawn *>(pPlayerPawn));
-			}
-
-			pInternalMenu->InternalDisplayAt(aSlot, pInternalMenu->GetCurrentPosition(aSlot), i ? IMenu::MENU_DISPLAY_READER_BASE_UPDATE : IMenu::MENU_DISPLAY_DEFAULT);
-		}
-	}
+	UpdatePlayerMenus(aSlot);
 
 	return true;
 }
@@ -2978,17 +3009,36 @@ void MenuSystem_Plugin::OnMenuSelectCommand(const CCommandContext &context, cons
 
 	auto &vecMenus = aPlayer.GetMenus();
 
-	FOR_EACH_VEC(vecMenus, i)
+	if(!vecMenus.Count())
 	{
-		const auto &[_, pMenu] = vecMenus.Element(i);
+		return;
+	}
 
-		CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
+	IMenu::Index_t iActiveMenu = aPlayer.GetActiveMenuIndex();
+
+	if(iActiveMenu == MENU_INVLID_INDEX)
+	{
+		FOR_EACH_VEC(vecMenus, i)
+		{
+			const auto &[_, pMenu] = vecMenus.Element(i);
+
+			CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
+
+			if(pInternalMenu)
+			{
+				pInternalMenu->OnSelect(aSlot, iSelectItem, IMenu::MENU_DISPLAY_DEFAULT);
+
+				break;
+			}
+		}
+	}
+	else
+	{
+		CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(vecMenus[iActiveMenu].m_pInstance);
 
 		if(pInternalMenu)
 		{
-			pInternalMenu->OnSelect(aSlot, iSelectItem);
-
-			break;
+			pInternalMenu->OnSelect(aSlot, iSelectItem, IMenu::MENU_DISPLAY_DEFAULT);
 		}
 	}
 }
@@ -3814,13 +3864,14 @@ bool MenuSystem_Plugin::ProcessUserCmd(CServerSideClientBase *pClient, CCSGOUser
 {
 	const auto *pBaseUserCmd = pMessage->has_base() ? &pMessage->base() : nullptr;
 
+	// Dump runcmd proto.
 	if(m_aEnablePlayerRunCmdDetailsConVar.GetValue() && Logger::IsChannelEnabled(LV_DETAILED))
 	{
 		const auto &aConcat = g_aEmbedConcat, 
 		           &aConcat2 = g_aEmbed2Concat, 
 		           &aConcat3 = g_aEmbed3Concat;
 
-		CBufferStringN<1024> sBuffer;
+		CBufferStringN<2048> sBuffer;
 
 		aConcat.AppendHeadToBuffer(sBuffer, pMessage->GetTypeName().c_str());
 		aConcat.AppendPointerToBuffer(sBuffer, "Base", pBaseUserCmd);
@@ -3883,9 +3934,111 @@ bool MenuSystem_Plugin::ProcessUserCmd(CServerSideClientBase *pClient, CCSGOUser
 		}
 
 		{
+			aConcat.AppendToBuffer(sBuffer, "Input history");
+
+			const auto &aInputHistory = pMessage->input_history();
+
+			for(const auto &aInput : aInputHistory)
+			{
+				if(aInput.has_view_angles())
+				{
+					const auto &aViewAnglesPB = aInput.view_angles();
+
+					aConcat2.AppendToBuffer(sBuffer, "View angles", QAngle(aViewAnglesPB.x(), aViewAnglesPB.y(), aViewAnglesPB.z()));
+				}
+
+				aConcat2.AppendToBuffer(sBuffer, "Render tick count", aInput.render_tick_count());
+				aConcat2.AppendToBuffer(sBuffer, "Render tick fraction", aInput.render_tick_fraction());
+				aConcat2.AppendToBuffer(sBuffer, "Player tick count", aInput.player_tick_count());
+				aConcat2.AppendToBuffer(sBuffer, "Player tick fraction", aInput.player_tick_fraction());
+
+				if(aInput.has_cl_interp())
+				{
+					aConcat2.AppendToBuffer(sBuffer, "CL interpolation");
+
+					const auto &aCLInterp = aInput.cl_interp();
+
+					aConcat3.AppendToBuffer(sBuffer, "Fraction", aCLInterp.frac());
+				}
+
+				if(aInput.has_sv_interp0())
+				{
+					aConcat2.AppendToBuffer(sBuffer, "Server interpolation");
+
+					const auto &aSVInterpolation0 = aInput.sv_interp0();
+
+					aConcat3.AppendToBuffer(sBuffer, "Source tick", aSVInterpolation0.src_tick());
+					aConcat3.AppendToBuffer(sBuffer, "Destination tick", aSVInterpolation0.dst_tick());
+					aConcat3.AppendToBuffer(sBuffer, "Fraction", aSVInterpolation0.frac());
+				}
+
+				if(aInput.has_sv_interp1())
+				{
+					aConcat2.AppendToBuffer(sBuffer, "Server interpolation (2)");
+
+					const auto &aSVInterpolation1 = aInput.sv_interp1();
+
+					aConcat3.AppendToBuffer(sBuffer, "Source tick", aSVInterpolation1.src_tick());
+					aConcat3.AppendToBuffer(sBuffer, "Destination tick", aSVInterpolation1.dst_tick());
+					aConcat3.AppendToBuffer(sBuffer, "Fraction", aSVInterpolation1.frac());
+				}
+
+				if(aInput.has_player_interp())
+				{
+					aConcat2.AppendToBuffer(sBuffer, "Player interpolation");
+
+					const auto &aPlayerInterpolation = aInput.player_interp();
+
+					aConcat3.AppendToBuffer(sBuffer, "Source tick", aPlayerInterpolation.src_tick());
+					aConcat3.AppendToBuffer(sBuffer, "Destination tick", aPlayerInterpolation.dst_tick());
+					aConcat3.AppendToBuffer(sBuffer, "Fraction", aPlayerInterpolation.frac());
+				}
+
+				aConcat2.AppendToBuffer(sBuffer, "Frame number", aInput.frame_number());
+				aConcat2.AppendToBuffer(sBuffer, "Target entity index", aInput.target_ent_index());
+
+				if(aInput.has_shoot_position())
+				{
+					const auto &aVectorPB = aInput.shoot_position();
+
+					aConcat2.AppendToBuffer(sBuffer, "Shot position", Vector(aVectorPB.x(), aVectorPB.y(), aVectorPB.z()));
+				}
+
+				if(aInput.has_target_head_pos_check())
+				{
+					const auto &aVectorPB = aInput.target_head_pos_check();
+
+					aConcat2.AppendToBuffer(sBuffer, "Target head position check", Vector(aVectorPB.x(), aVectorPB.y(), aVectorPB.z()));
+				}
+
+				if(aInput.has_target_abs_pos_check())
+				{
+					const auto &aVectorPB = aInput.target_abs_pos_check();
+
+					aConcat2.AppendToBuffer(sBuffer, "Target abs position check", Vector(aVectorPB.x(), aVectorPB.y(), aVectorPB.z()));
+				}
+
+				if(aInput.has_target_abs_ang_check())
+				{
+					const auto &aAnglesPB = aInput.target_abs_ang_check();
+
+					aConcat2.AppendToBuffer(sBuffer, "Target abs angles check", QAngle(aAnglesPB.x(), aAnglesPB.y(), aAnglesPB.z()));
+				}
+			}
+		}
+
+		{
 			aConcat.AppendToBuffer(sBuffer, "Start History index attack", pMessage->attack1_start_history_index());
 			aConcat.AppendToBuffer(sBuffer, "Start History index attack (2)", pMessage->attack2_start_history_index());
 			aConcat.AppendToBuffer(sBuffer, "Start History index attack (3)", pMessage->attack3_start_history_index());
+		}
+
+		aConcat.AppendToBuffer(sBuffer, "Left hand desired", pMessage->left_hand_desired());
+
+		{
+			aConcat.AppendToBuffer(sBuffer, "Is predicting body shot FX", pMessage->is_predicting_body_shot_fx());
+			aConcat.AppendToBuffer(sBuffer, "Is predicting head shot FX", pMessage->is_predicting_head_shot_fx());
+			aConcat.AppendToBuffer(sBuffer, "Is predicting kill ragdolls", pMessage->is_predicting_kill_ragdolls());
 		}
 
 		Logger::Detailed(sBuffer);
@@ -3902,29 +4055,55 @@ bool MenuSystem_Plugin::ProcessUserCmd(CServerSideClientBase *pClient, CCSGOUser
 		return false;
 	}
 
-	if(pBaseUserCmd && pBaseUserCmd->has_weaponselect())
+	if(pBaseUserCmd)
 	{
-		int iClient = aPlayerSlot.GetClientIndex();
-		int iWeaponIndex = pBaseUserCmd->weaponselect();
-
-		int iFoundItem = FindItemIndexFromMyWeapons(iClient, iWeaponIndex);
-
-		if(iFoundItem != -1)
+		// Menu switcher.
 		{
-			for(const auto &[_, pMenu] : vecMenus)
+			bool bLeftHandDesired = pMessage->left_hand_desired();
+
+			bool &bMenuToggler = aPlayer.GetMenuTogglerStateRef();
+
+			if(bLeftHandDesired != bMenuToggler)
 			{
-				CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
+				int nClientTick = pBaseUserCmd->client_tick();
 
-				if(pInternalMenu)
+				int &mMenuTogglerClientTick = aPlayer.GetMenuTogglerClientTickRef();
+
+				if(nClientTick != mMenuTogglerClientTick)
 				{
-					bool bSelectResult = pInternalMenu->OnSelect(aPlayerSlot, iFoundItem % 10);
+					OnMenuSwitch(aPlayerSlot);
+					mMenuTogglerClientTick = nClientTick;
+				}
 
-					if(bSelectResult)
+				bMenuToggler = bLeftHandDesired;
+			}
+		}
+
+		// Change the weapon selection to an item of the menu.
+		if(pBaseUserCmd->has_weaponselect())
+		{
+			int iClient = aPlayerSlot.GetClientIndex();
+			int iWeaponIndex = pBaseUserCmd->weaponselect();
+
+			int iFoundItem = FindItemIndexFromMyWeapons(iClient, iWeaponIndex);
+
+			if(iFoundItem != -1)
+			{
+				for(const auto &[_, pMenu] : vecMenus)
+				{
+					CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
+
+					if(pInternalMenu)
 					{
-						const_cast<CBaseUserCmdPB *>(pBaseUserCmd)->set_weaponselect(0); // Change the cmd weapon to rehandled select a menu item.
-					}
+						bool bSelectResult = pInternalMenu->OnSelect(aPlayerSlot, iFoundItem % 10);
 
-					return bSelectResult;
+						if(bSelectResult)
+						{
+							const_cast<CBaseUserCmdPB *>(pBaseUserCmd)->set_weaponselect(0); // Change the cmd weapon to rehandled select a menu item.
+						}
+
+						return bSelectResult;
+					}
 				}
 			}
 		}
