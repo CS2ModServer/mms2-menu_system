@@ -53,56 +53,56 @@ public:
 
 protected:
 	template<bool INSERT_BEFORE = true>
-	inline std::vector<T> GetHeadConcat(const T &aHead) const
+	inline auto GetHeadConcat(const T &aHead) const
 	{
-		std::vector<T> vecResult {Base_t::m_aHeadWith, aHead};
+		std::array<T, 3 + INSERT_BEFORE> arrResult {Base_t::m_aHeadWith, aHead};
 
 		if constexpr (INSERT_BEFORE)
 		{
-			vecResult.push_back(Base_t::m_aBefore);
+			arrResult[2] = Base_t::m_aBefore;
 		}
 
-		vecResult.push_back(Base_t::m_aEnds);
+		arrResult[2 + INSERT_BEFORE] = Base_t::m_aEnds;
 
-		return vecResult;
+		return arrResult;
 	}
 
 	template<bool INSERT_BEFORE = true>
-	inline std::vector<T> GetStringHeadConcat(const T &aHead) const
+	inline auto GetStringHeadConcat(const T &aHead) const
 	{
-		std::vector<T> vecResult {Base_t::m_aHeadWith, "\"", aHead, "\""};
+		std::array<T, 5 + INSERT_BEFORE> arrResult {Base_t::m_aHeadWith, "\"", aHead, "\""};
 
 		if constexpr (INSERT_BEFORE)
 		{
-			vecResult.push_back(Base_t::m_aBefore);
+			arrResult[4] = Base_t::m_aBefore;
 		}
 
-		vecResult.push_back(Base_t::m_aEnds);
+		arrResult[4 + INSERT_BEFORE] = Base_t::m_aEnds;
 
-		return vecResult;
+		return arrResult;
 	}
 
 	template<bool INSERT_BEFORE = true>
-	inline std::vector<T> GetKeyConcat(const T &aKey) const
+	inline auto GetKeyConcat(const T &aKey) const
 	{
-		std::vector<T> vecResult {Base_t::m_aStartWith, aKey};
+		std::array<T, 3 + INSERT_BEFORE> arrResult {Base_t::m_aStartWith, aKey};
 
 		if constexpr (INSERT_BEFORE)
 		{
-			vecResult.push_back(Base_t::m_aBefore);
+			arrResult[2] = Base_t::m_aBefore;
 		}
 
-		vecResult.push_back(Base_t::m_aEnds);
+		arrResult[2 + INSERT_BEFORE] = Base_t::m_aEnds;
 
-		return vecResult;
+		return arrResult;
 	}
 
-	inline std::vector<T> GetKeyValueConcat(const T &aKey, const T &aValue) const
+	inline std::array<T, 5> GetKeyValueConcat(const T &aKey, const T &aValue) const
 	{
 		return {Base_t::m_aStartWith, aKey, Base_t::m_aBetween, aValue, Base_t::m_aEnds};
 	}
 
-	inline std::vector<T> GetKeyValueConcat(const T &aKey, const std::vector<T> &vecValues) const
+	inline auto GetKeyValueConcat(const T &aKey, const std::vector<T> &vecValues) const
 	{
 		std::vector<T> vecResult = {Base_t::m_aStartWith, aKey, Base_t::m_aBetween};
 
@@ -112,17 +112,17 @@ protected:
 		return vecResult;
 	}
 
-	inline std::vector<T> GetKeyStringValueConcat(const T &aKey, const T &aValue) const
+	inline std::array<T, 7> GetKeyStringValueConcat(const T &aKey, const T &aValue) const
 	{
 		return {Base_t::m_aStartWith, "\"", aKey, "\"", Base_t::m_aBetween, aValue, Base_t::m_aEnds};
 	}
 
-	inline std::vector<T> GetKeyValueStringConcat(const T &aKey, const T &aValue) const
+	inline std::array<T, 7> GetKeyValueStringConcat(const T &aKey, const T &aValue) const
 	{
 		return {Base_t::m_aStartWith, aKey, Base_t::m_aBetween, "\"", aValue, "\"", Base_t::m_aEnds};
 	}
 
-	inline std::vector<T> GetKeyStringValueStringConcat(const T &aKey, const T &aValue) const
+	inline std::array<T, 9> GetKeyStringValueStringConcat(const T &aKey, const T &aValue) const
 	{
 		return {Base_t::m_aStartWith, "\"", aKey, "\"", Base_t::m_aBetween, "\"", aValue, "\"", Base_t::m_aEnds};
 	}
