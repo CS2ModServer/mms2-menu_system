@@ -1164,7 +1164,7 @@ void MenuSystem_Plugin::OnMenuDestroy(IMenu *pMenu)
 
 			auto &vecMenus = aPlayer.GetMenus();
 
-			if(vecMenus.Count() > 1) // Pass mutlimenu.
+			if(vecMenus.Count() != 1) // Pass mutlimenu.
 			{
 				continue;
 			}
