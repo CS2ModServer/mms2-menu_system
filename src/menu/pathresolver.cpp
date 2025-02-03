@@ -23,8 +23,6 @@
 
 #include <cstddef>
 
-#include <dynlibutils/module.hpp>
-
 #include <tier0/basetypes.h>
 #include <tier0/dbg.h>
 
@@ -35,24 +33,24 @@ Menu::CPathResolver::CPathResolver(const void *pInitModule)
 
 bool Menu::CPathResolver::Init()
 {
-	m_sModuleFilename = DynLibUtils::CModule(m_pModule).GetModulePath();
+	m_aModule.InitFromMemory(m_pModule);
 
 	return true;
 }
 
 void Menu::CPathResolver::Clear()
 {
-	m_sModuleFilename = {};
+	// ...
 }
 
 std::string_view Menu::CPathResolver::GetAbsoluteModuleFilename()
 {
-	return m_sModuleFilename;
+	return m_aModule.GetModulePath();
 }
 
 std::string_view Menu::CPathResolver::Extract(std::string_view sStartMarker, std::string_view sEndMarker)
 {
-	auto &sFullPath = m_sModuleFilename;
+	auto sFullPath = GetAbsoluteModuleFilename();
 
 	std::size_t nStartPosition = sFullPath.find(sStartMarker);
 

@@ -25,6 +25,8 @@
 #	define MENU_PATHRESOLVER_ADDONS_DIR "addons"
 #	define MENU_PATHRESOLVER_BINARY_DIR "bin"
 
+#	include <dynlibutils/module.hpp>
+
 #	include <stddef.h>
 
 #	include <string_view>
@@ -46,7 +48,7 @@ namespace Menu
 
 	private:
 		const void *m_pModule;
-		std::string_view m_sModuleFilename;
+		DynLibUtils::CModule m_aModule;
 	};
 };
 
