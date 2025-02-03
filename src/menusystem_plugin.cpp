@@ -312,7 +312,7 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 
 			for(const auto &[_, pMenu] : vecMenus)
 			{
-				CloseMenu(pMenu);
+				CloseInstance(pMenu);
 			}
 
 			return true;
@@ -784,12 +784,12 @@ IMenuProfileSystem *MenuSystem_Plugin::GetProfiles()
 	return static_cast<IMenuProfileSystem *>(this);
 }
 
-IMenu *MenuSystem_Plugin::CreateMenu(IMenuProfile *pProfile, IMenuHandler *pHandler)
+IMenu *MenuSystem_Plugin::CreateInstance(IMenuProfile *pProfile, IMenuHandler *pHandler)
 {
 	return static_cast<IMenu *>(CreateInternalMenu(pProfile, pHandler));
 }
 
-bool MenuSystem_Plugin::DisplayMenuToPlayer(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iStartItem, int nManyTimes)
+bool MenuSystem_Plugin::DisplayInstanceToPlayer(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iStartItem, int nManyTimes)
 {
 	CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
 
@@ -801,7 +801,7 @@ bool MenuSystem_Plugin::DisplayMenuToPlayer(IMenu *pMenu, CPlayerSlot aSlot, IMe
 	return DisplayInternalMenuToPlayer(pInternalMenu, aSlot, iStartItem, nManyTimes);
 }
 
-bool MenuSystem_Plugin::CloseMenu(IMenu *pMenu)
+bool MenuSystem_Plugin::CloseInstance(IMenu *pMenu)
 {
 	auto *pMemBlock = m_MenuAllocator.FindMemBlock(pMenu);
 
@@ -1477,7 +1477,7 @@ void MenuSystem_Plugin::OnSpawnGroupInit(SpawnGroupHandle_t hSpawnGroup, IEntity
 		}
 	}
 
-	// Adds clean resutl to an entity resource manifest.
+	// Adds clean result to an entity resource manifest.
 	for(const char *pszResource : vecExportResources)
 	{
 		m_pEntityManagerProviderAgent->AddResourceToEntityManifest(pManifest, pszResource);

@@ -31,28 +31,12 @@ set(EXTERNAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external")
 set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(PUBLIC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/public")
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
+set(SYMBOLS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/sym")
 set(SOURCE_MENU_DIR "${SOURCE_DIR}/menu")
 set(SOURCE_MENU_PROVIDER_DIR "${SOURCE_MENU_DIR}/provider")
 set(SOURCE_MENU_PROVIDER_GAMEDATA_DIR "${SOURCE_MENU_PROVIDER_DIR}/gamedata")
 set(SOURCE_MENU_SCHEMA_DIR "${SOURCE_MENU_DIR}/schema")
 set(SOURCE_MENU_SYSTEM_DIR "${SOURCE_MENU_DIR}/system")
-
-set(SOURCESDK_PROTOS
-	netmessages
-	network_connection
-	networkbasetypes
-	networksystem_protomessages
-	usermessages
-
-	# steammessages
-	# engine_gcmessages
-	# gcsdk_gcmessages
-	# cstrike15_gcmessages
-	# cstrike15_usermessages
-
-	usercmd
-	cs_usercmd
-)
 
 function(set_or_external_dir VAR_NAME DEFAULT_DIR)
 	if(${VAR_NAME})
@@ -139,7 +123,16 @@ set(SOURCE_FILES
 	${SOURCE_MENU_FILES}
 	${SOURCE_DIR}/menu.cpp
 	${SOURCE_DIR}/menusystem_plugin.cpp # The shared entry point.
+	${SOURCE_DIR}/menusystem_exports.cpp # Wrapper for C-like functions.
 )
+
+if(LINUX)
+	set(LINK_OPTIONS
+		${LINK_OPTIONS}
+
+		-Wl,--version-script,${SYMBOLS_DIR}/version_script.lds
+	)
+endif()
 
 set(INCLUDE_DIRS
 	${INCLUDE_DIR}

@@ -118,7 +118,7 @@ public: // The definitions.
 		 * @param iItemOnPage   The position of the item on the current page.
 		 * @param pData         Additional data associated with the menu item.
 		 */
-		virtual void OnMenuSelectItem(IMenuInstance *pMenu, CPlayerSlot aSlot, ItemPosition_t iItem, ItemPositionOnPage_t iItemOnPage, void *pData) {}
+		virtual void OnMenuSelectItem(IMenu *pMenu, CPlayerSlot aSlot, ItemPosition_t iItem, ItemPositionOnPage_t iItemOnPage, void *pData) {}
 	};
 
 	struct Title_t
@@ -149,20 +149,32 @@ public: // The definitions.
 		IItemHandler *m_pHandler = nullptr;             ///< The handler for item actions.
 		void *m_pData = nullptr;                        ///< Additional data passed to item actions.
 
+		Item_t(ItemStyleFlags_t eStyle, const char *pszContent, IItemHandler *pHandler, void *pData)
+		 :  m_eStyle(eStyle), 
+		    m_sContent(pszContent), 
+		    m_pHandler(pHandler), 
+		    m_pData(pData)
+		{
+		}
+
 		Item_t(ItemStyleFlags_t eStyle, const char *pszContent)
-		 :  m_eStyle(eStyle),
-		    m_sContent(pszContent)
+		 :  Item_t(eStyle, pszContent, nullptr, nullptr)
 		{
 		}
 
 		Item_t(const char *pszContent)
-		 :  m_sContent(pszContent)
+		 :  Item_t(MENU_ITEM_DEFAULT, pszContent, nullptr, nullptr)
 		{
 		}
 
 		bool IsEmpty() const
 		{
 			return m_sContent.IsEmpty();
+		}
+
+		ItemStyleFlags_t GetStyle() const
+		{
+			return m_eStyle;
 		}
 
 		const char *Get() const

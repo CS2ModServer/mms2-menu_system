@@ -43,7 +43,7 @@ CMenu::CMenu(const CPointWorldText_Helper *pSchemaHelper, const CGameData_BaseEn
     m_aData(pControls), 
     m_arrCurrentPositions(Menu::Utils::MakeArrayRepeat<ItemPosition_t, ABSOLUTE_PLAYER_LIMIT>(-1)), 
     m_arrCachedPageBasesMap(Menu::Utils::MakeArrayRepeat<ItemPages_t<IPage>, ABSOLUTE_PLAYER_LIMIT + 1>(DefLessFunc(const ItemPosition_t))), 
-    m_arrCachedPagesMap(Menu::Utils::MakeArrayRepeat<ItemPages_t<CPage>, ABSOLUTE_PLAYER_LIMIT + 1>(DefLessFunc(const ItemPosition_t)))
+    m_arrCachedPagesMap(Menu::Utils::MakeArrayRepeat<ItemPages_t<IPage>, ABSOLUTE_PLAYER_LIMIT + 1>(DefLessFunc(const ItemPosition_t)))
 {
 }
 

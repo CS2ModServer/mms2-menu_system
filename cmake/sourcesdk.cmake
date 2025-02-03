@@ -7,6 +7,24 @@ if(NOT SOURCESDK_DIR)
 endif()
 
 set(SOURCESDK_BINARY_DIR "sourcesdk")
+set(SOURCESDK_CONFIGURE_EXPORT_MAP OFF)
+
+set(SOURCESDK_PROTOS
+	netmessages
+	network_connection
+	networkbasetypes
+	networksystem_protomessages
+	usermessages
+
+	# steammessages
+	# engine_gcmessages
+	# gcsdk_gcmessages
+	# cstrike15_gcmessages
+	# cstrike15_usermessages
+
+	usercmd
+	cs_usercmd
+)
 
 add_subdirectory(${SOURCESDK_DIR} ${SOURCESDK_BINARY_DIR})
 

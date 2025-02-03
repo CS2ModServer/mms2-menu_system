@@ -95,14 +95,14 @@ public:
 
 	/**
 	 * @brief Allocates a menu instance. 
-	 * NOTE: Must be closed with CloseMenu()!
+	 * NOTE: Must be closed with CloseInstance()!
 	 * 
 	 * @param pProfile      The profile styles of new menu.
 	 * @param pHandler      A menu handler.
 	 * 
 	 * @return              Returns the allocated menu instance.
 	 */
-	virtual IMenu *CreateMenu(IMenuProfile *pProfile, IMenuHandler *pHandler = nullptr) = 0;
+	virtual IMenu *CreateInstance(IMenuProfile *pProfile, IMenuHandler *pHandler = nullptr) = 0;
 
 	/**
 	 * @brief Display a menu instance to the player.
@@ -114,7 +114,7 @@ public:
 	 * @return              `true` if the menu was displayed successfully,
 	 *                      `false` otherwise.
 	 */
-	virtual bool DisplayMenuToPlayer(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iStartItem = MENU_FIRST_ITEM_INDEX, int nManyTimes = MENU_TIME_FOREVER) = 0;
+	virtual bool DisplayInstanceToPlayer(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iStartItem = MENU_FIRST_ITEM_INDEX, int nManyTimes = MENU_TIME_FOREVER) = 0;
 
 	/**
 	 * @brief Closes a menu instance.
@@ -123,7 +123,7 @@ public:
 	 * 
 	 * @return              
 	 */
-	virtual bool CloseMenu(IMenu *pMenu) = 0;
+	virtual bool CloseInstance(IMenu *pMenu) = 0;
 }; // IMenuSystem
 
 #endif // _INCLUDE_METAMOD_SOURCE_IMENUSYSTEM_HPP_

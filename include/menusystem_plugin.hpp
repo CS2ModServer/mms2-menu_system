@@ -298,9 +298,9 @@ public: // IMenuSystem
 	int FindItemIndexFromMyWeapons(int iClient, int iEntity);
 
 	IMenuProfileSystem *GetProfiles() override;
-	IMenu *CreateMenu(IMenuProfile *pProfile, IMenuHandler *pHandler = nullptr) override;
-	bool DisplayMenuToPlayer(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iStartItem = MENU_FIRST_ITEM_INDEX, int nManyTimes = MENU_TIME_FOREVER) override;
-	bool CloseMenu(IMenu *pMenu) override;
+	IMenu *CreateInstance(IMenuProfile *pProfile, IMenuHandler *pHandler = nullptr) override;
+	bool DisplayInstanceToPlayer(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iStartItem = MENU_FIRST_ITEM_INDEX, int nManyTimes = MENU_TIME_FOREVER) override;
+	bool CloseInstance(IMenu *pMenu) override;
 
 	CMenu *CreateInternalMenu(IMenuProfile *pProfile, IMenuHandler *pHandler = nullptr);
 	bool UpdatePlayerMenus(CPlayerSlot aSlot);
