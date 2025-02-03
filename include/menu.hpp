@@ -144,7 +144,7 @@ public: // IMenu
 
 	ItemPosition_t GetCurrentPosition(CPlayerSlot aSlot) const override
 	{
-		return m_arrCurrentPositions[aSlot];
+		return m_arrCurrentPositions[aSlot.GetClientIndex()];
 	}
 
 	class CBufferStringText : public CBufferString
@@ -294,10 +294,8 @@ protected: // Pages fields.
 	template<class T>
 	using ItemPages_t = CUtlMap<ItemPosition_t, IPage *>; 
 
-	// By slots.
-	std::array<ItemPosition_t, ABSOLUTE_PLAYER_LIMIT> m_arrCurrentPositions;
-
 	 // By client indexes.
+	std::array<ItemPosition_t, ABSOLUTE_PLAYER_LIMIT + 1> m_arrCurrentPositions;
 	std::array<ItemPages_t<IPage>, ABSOLUTE_PLAYER_LIMIT + 1> m_arrCachedPageBasesMap;
 	std::array<ItemPages_t<IPage>, ABSOLUTE_PLAYER_LIMIT + 1> m_arrCachedPagesMap;
 

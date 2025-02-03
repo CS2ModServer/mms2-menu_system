@@ -41,7 +41,7 @@ CMenu::CMenu(const CPointWorldText_Helper *pSchemaHelper, const CGameData_BaseEn
     m_pHandler(pHandler), 
 
     m_aData(pControls), 
-    m_arrCurrentPositions(Menu::Utils::MakeArrayRepeat<ItemPosition_t, ABSOLUTE_PLAYER_LIMIT>(-1)), 
+    m_arrCurrentPositions(Menu::Utils::MakeArrayRepeat<ItemPosition_t, ABSOLUTE_PLAYER_LIMIT + 1>(-1)), 
     m_arrCachedPageBasesMap(Menu::Utils::MakeArrayRepeat<ItemPages_t<IPage>, ABSOLUTE_PLAYER_LIMIT + 1>(DefLessFunc(const ItemPosition_t))), 
     m_arrCachedPagesMap(Menu::Utils::MakeArrayRepeat<ItemPages_t<IPage>, ABSOLUTE_PLAYER_LIMIT + 1>(DefLessFunc(const ItemPosition_t)))
 {
@@ -155,7 +155,9 @@ inline uint8 CMenu::GetMaxItemsPerPageWithoutControls()
 
 CMenu::IPage *CMenu::Render(CPlayerSlot aSlot, ItemPosition_t iStartItem, bool bIsBase)
 {
-	auto &mapCachedPages = (bIsBase ? m_arrCachedPageBasesMap : m_arrCachedPagesMap)[aSlot.GetClientIndex()];
+	int iClient = aSlot.GetClientIndex();
+
+	auto &mapCachedPages = (bIsBase ? m_arrCachedPageBasesMap : m_arrCachedPagesMap)[iClient];
 
 	auto iFoundPage = mapCachedPages.Find(iStartItem);
 
@@ -172,7 +174,7 @@ CMenu::IPage *CMenu::Render(CPlayerSlot aSlot, ItemPosition_t iStartItem, bool b
 		mapCachedPages.Insert(iStartItem, pPage);
 	}
 
-	m_arrCurrentPositions[aSlot] = iStartItem;
+	m_arrCurrentPositions[iClient] = iStartItem;
 
 	return pPage;
 }
@@ -215,7 +217,7 @@ bool CMenu::OnSelect(CPlayerSlot aSlot, int iSlectedItem, DisplayFlags_t eFlags)
 
 	ItemPosition_t iTargetItem {};
 
-	ItemPosition_t iStartItem = m_arrCurrentPositions[aSlot];
+	ItemPosition_t iStartItem = GetCurrentPosition(aSlot);
 
 	ItemPositionOnPage_t iItemOnPage = static_cast<ItemPosition_t>(iSlectedItem - nMaxItemsPerPage);
 
