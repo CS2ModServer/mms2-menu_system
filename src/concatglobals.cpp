@@ -2,9 +2,9 @@
 
 #include <concat.hpp>
 
-#define CONCAT_LINE_STRING_CONSTRUCT(head, starts, before, between, ends, endsAndStartsWith) {{{{head, starts, before, between, ends, endsAndStartsWith}}}}
+#define CONCAT_LINE_STRING_CONSTRUCT(head, starts, before, between, ends, endsAndStartsWith) ConcatLine_t<const char *>{head, starts, before, between, ends, endsAndStartsWith}
 
-const std::array<const CConcatLineString, 8> g_arrEmbedsConcat = 
+const std::array<const CConcatLineString, 8> g_arrEmbedsConcat 
 {
 	{
 		// 0-3

@@ -31,6 +31,7 @@
 #include <functional>
 #include <iterator>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <any_config.hpp>
@@ -47,6 +48,7 @@
 #include <shareddefs.h>
 #include <tier0/commonmacros.h>
 #include <tier0/utlstringtoken.h>
+#include <tier0/memalloc.h>
 #include <tier1/convar.h>
 #include <mathlib/mathlib.h>
 
@@ -1477,19 +1479,19 @@ void MenuSystem_Plugin::OnSpawnGroupInit(SpawnGroupHandle_t hSpawnGroup, IEntity
 		}
 	}
 
+	// CMenu resource.
+	vecExportResources.AddToTail(MENU_EMPTY_BACKGROUND_MATERIAL_NAME);
+
 	// Adds clean result to an entity resource manifest.
 	for(const char *pszResource : vecExportResources)
 	{
-		m_pEntityManagerProviderAgent->AddResourceToEntityManifest(pManifest, pszResource);
+		m_pEntityManagerProviderAgent->AddResourceToEntityManifest(pManifest, strdup(pszResource));
 
 		if(Logger::IsChannelEnabled(LV_DETAILED))
 		{
 			Logger::DetailedFormat("%s: Added \"%s\" export resource from the profile system to a manifest\n", __FUNCTION__, pszResource);
 		}
 	}
-
-	// CMenu resource.
-	m_pEntityManagerProviderAgent->AddResourceToEntityManifest(pManifest, MENU_EMPTY_BACKGROUND_MATERIAL_NAME);
 }
 
 void MenuSystem_Plugin::OnSpawnGroupCreateLoading(SpawnGroupHandle_t hSpawnGroup, CMapSpawnGroup *pMapSpawnGroup, bool bSynchronouslySpawnEntities, bool bConfirmResourcesLoaded, CUtlVector<const CEntityKeyValues *> &vecKeyValues)
@@ -1605,11 +1607,9 @@ bool MenuSystem_Plugin::LoadSchema(char *error, size_t maxlen)
 
 		auto aFullDetails = SchemaFullDetails_t 
 		{
-			{
-				&vecMessages,
-			},
+			&vecMessages,
 
-			arrSchemaEmbedConcats
+			std::move(arrSchemaEmbedConcats)
 		};
 
 		bResult = Menu::Schema::CSystem::Load(&aFullDetails);
@@ -3178,6 +3178,8 @@ void MenuSystem_Plugin::OnDisconectClientHook(ENetworkDisconnectionReason eReaso
 	RETURN_META(MRES_IGNORED);
 }
 
+#include <tier0/memdbgon.h>
+
 void MenuSystem_Plugin::SendSetConVarMessage(IRecipientFilter *pFilter, CUtlVector<CVar_t> &vecCvars)
 {
 	auto *pSetConVarMessage = m_pSetConVarMessage;
@@ -3200,9 +3202,11 @@ void MenuSystem_Plugin::SendSetConVarMessage(IRecipientFilter *pFilter, CUtlVect
 		Logger::Detailed(sBuffer);
 	}
 
-	auto *pMessage = pSetConVarMessage->AllocateMessage()->ToPB<CNETMsg_SetConVar>();
+	auto *pMessage = pSetConVarMessage->AllocateMessage();
 
-	auto *pMessageCVars = pMessage->mutable_convars();
+	auto *pMessagePB = pMessage->ToPB<CNETMsg_SetConVar>();
+
+	auto *pMessageCVars = pMessagePB->mutable_convars();
 
 	for(const auto &[pszName, pszValue] : vecCvars)
 	{
@@ -3214,21 +3218,29 @@ void MenuSystem_Plugin::SendSetConVarMessage(IRecipientFilter *pFilter, CUtlVect
 
 	g_pGameEventSystem->PostEventAbstract(-1, false, pFilter, pSetConVarMessage, pMessage, 0);
 
-	delete pMessage;
+#ifndef _WIN32
+	Destruct(pMessage);
+	free((void *)pMessage);
+#endif // !_WIN32
 }
 
 void MenuSystem_Plugin::SendCvarValueQuery(IRecipientFilter *pFilter, const char *pszName, int iCookie)
 {
 	auto *pGetCvarValueMessage = m_pGetCvarValueMessage;
 
-	auto *pMessage = pGetCvarValueMessage->AllocateMessage()->ToPB<CSVCMsg_GetCvarValue>();
+	auto *pMessage = pGetCvarValueMessage->AllocateMessage();
 
-	pMessage->set_cvar_name(pszName);
-	pMessage->set_cookie(iCookie);
+	auto *pMessagePB = pMessage->ToPB<CSVCMsg_GetCvarValue>();
+
+	pMessagePB->set_cvar_name(pszName);
+	pMessagePB->set_cookie(iCookie);
 
 	g_pGameEventSystem->PostEventAbstract(-1, false, pFilter, pGetCvarValueMessage, pMessage, 0);
 
-	delete pMessage;
+#ifndef _WIN32
+	Destruct(pMessage);
+	free((void *)pMessage);
+#endif // !_WIN32
 }
 
 void MenuSystem_Plugin::SendChatMessage(IRecipientFilter *pFilter, int iEntityIndex, bool bIsChat, const char *pszChatMessageFormat, const char *pszParam1, const char *pszParam2, const char *pszParam3, const char *pszParam4)
@@ -3275,19 +3287,24 @@ void MenuSystem_Plugin::SendChatMessage(IRecipientFilter *pFilter, int iEntityIn
 		Logger::Detailed(sBuffer);
 	}
 
-	auto *pMessage = pSayText2Message->AllocateMessage()->ToPB<CUserMessageSayText2>();
+	auto *pMessage = pSayText2Message->AllocateMessage();
 
-	pMessage->set_entityindex(iEntityIndex);
-	pMessage->set_chat(bIsChat);
-	pMessage->set_messagename(pszChatMessageFormat);
-	pMessage->set_param1(pszParam1);
-	pMessage->set_param2(pszParam2);
-	pMessage->set_param3(pszParam3);
-	pMessage->set_param4(pszParam4);
+	auto *pMessagePB = pMessage->ToPB<CUserMessageSayText2>();
+
+	pMessagePB->set_entityindex(iEntityIndex);
+	pMessagePB->set_chat(bIsChat);
+	pMessagePB->set_messagename(pszChatMessageFormat);
+	pMessagePB->set_param1(pszParam1);
+	pMessagePB->set_param2(pszParam2);
+	pMessagePB->set_param3(pszParam3);
+	pMessagePB->set_param4(pszParam4);
 
 	g_pGameEventSystem->PostEventAbstract(-1, false, pFilter, pSayText2Message, pMessage, 0);
 
-	delete pMessage;
+#ifndef _WIN32
+	Destruct(pMessage);
+	free((void *)pMessage);
+#endif // !_WIN32
 }
 
 void MenuSystem_Plugin::SendTextMessage(IRecipientFilter *pFilter, int iDestination, size_t nParamCount, const char *pszParam, ...)
@@ -3312,10 +3329,12 @@ void MenuSystem_Plugin::SendTextMessage(IRecipientFilter *pFilter, int iDestinat
 		Logger::Detailed(sBuffer);
 	}
 
-	auto *pMessage = pTextMsg->AllocateMessage()->ToPB<CUserMessageTextMsg>();
+	auto *pMessage = pTextMsg->AllocateMessage();
 
-	pMessage->set_dest(iDestination);
-	pMessage->add_param(pszParam);
+	auto *pMessagePB = pMessage->ToPB<CUserMessageTextMsg>();
+
+	pMessagePB->set_dest(iDestination);
+	pMessagePB->add_param(pszParam);
 	nParamCount--;
 
 	// Parse incoming parameters.
@@ -3329,7 +3348,7 @@ void MenuSystem_Plugin::SendTextMessage(IRecipientFilter *pFilter, int iDestinat
 
 		do
 		{
-			pMessage->add_param(va_arg(aParams, const char *));
+			pMessagePB->add_param(va_arg(aParams, const char *));
 
 			n++;
 		}
@@ -3338,9 +3357,12 @@ void MenuSystem_Plugin::SendTextMessage(IRecipientFilter *pFilter, int iDestinat
 		va_end(aParams);
 	}
 
-	g_pGameEventSystem->PostEventAbstract(-1, false, pFilter, pTextMsg, pMessage, 0);
+	g_pGameEventSystem->PostEventAbstract(-1, false, pFilter, pTextMsg, pMessagePB, 0);
 
-	delete pMessage;
+#ifndef _WIN32
+	Destruct(pMessage);
+	free((void *)pMessage);
+#endif // !_WIN32
 }
 
 // void MenuSystem_Plugin::SendVGUIMenuMessage(IRecipientFilter *pFilter, const char *pszName, const bool *pIsShow, KeyValues3 *pKeys)
@@ -3439,19 +3461,21 @@ void MenuSystem_Plugin::SendTextMessage(IRecipientFilter *pFilter, int iDestinat
 // 	delete pMessage;
 // }
 
+#include <tier0/memdbgoff.h>
+
 void MenuSystem_Plugin::OnStartupServer(CNetworkGameServerBase *pNetServer, const GameSessionConfiguration_t &config, ISource2WorldSession *pWorldSession)
 {
 	SH_ADD_HOOK_MEMFUNC(CNetworkGameServerBase, ConnectClient, pNetServer, this, &MenuSystem_Plugin::OnConnectClientHook, true);
 
 	{
-		char sMessage[256];
-
 		bool (MenuSystem_Plugin::*pfnIntializers[])(char *error, size_t maxlen) = 
 		{
 			&MenuSystem_Plugin::RegisterSource2Server,
 			&MenuSystem_Plugin::RegisterNetMessages,
 			&MenuSystem_Plugin::HookGameEvents,
 		};
+
+		char sMessage[256];
 
 		for(const auto &aInitializer : pfnIntializers)
 		{
@@ -3505,17 +3529,17 @@ void MenuSystem_Plugin::OnConnectClient(CNetworkGameServerBase *pNetServer, CSer
 
 			auto iFound = m_mapConVarCookies.Find(sConVarSymbol);
 
-			if(m_mapConVarCookies.IsValidIndex(iFound))
+			if(iFound == m_mapConVarCookies.InvalidIndex())
+			{
+				iCookie = 0;
+				m_mapConVarCookies.Insert(sConVarSymbol, iCookie);
+			}
+			else
 			{
 				auto &iFoundCookie = m_mapConVarCookies.Element(iFound);
 
 				iFoundCookie++;
 				iCookie = iFoundCookie;
-			}
-			else
-			{
-				iCookie = 0;
-				m_mapConVarCookies.Insert(sConVarSymbol, iCookie);
 			}
 		}
 

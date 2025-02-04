@@ -38,12 +38,6 @@
 #include <tier1/utlvector.h>
 #include <schemasystem/schemasystem.h>
 
-#ifdef __cpp_constinit
-#	define SCHEMA_CONSTINIT constinit
-#else
-#	define SCHEMA_CONSTINIT const
-#endif // __cpp_constinit
-
 #define SCHEMA_HASH_TYPE CUtlStringToken
 #define SCHEMA_HASH(x) SCHEMA_HASH_TYPE(x)
 #define SCHEMA_MAKE_HASH MakeStringToken
@@ -57,7 +51,7 @@
 	\
 	Assert(concatVar);
 
-static SCHEMA_CONSTINIT std::array s_arrSchemaMetadataHash_Integer 
+static const std::array s_arrSchemaMetadataHash_Integer 
 {
 	SCHEMA_HASH("MNetworkVarEmbeddedFieldOffsetDelta"),
 	SCHEMA_HASH("MNetworkBitCount"),
@@ -71,13 +65,13 @@ static SCHEMA_CONSTINIT std::array s_arrSchemaMetadataHash_Integer
 	SCHEMA_HASH("MNetworkEncodeFlags"),
 };
 
-static SCHEMA_CONSTINIT std::array s_arrSchemaMetadataHash_Float 
+static const std::array s_arrSchemaMetadataHash_Float 
 {
 	SCHEMA_HASH("MNetworkMinValue"),
 	SCHEMA_HASH("MNetworkMaxValue"),
 };
 
-static SCHEMA_CONSTINIT std::array s_arrSchemaMetadataHash_String 
+static const std::array s_arrSchemaMetadataHash_String 
 {
 	SCHEMA_HASH("MNetworkChangeCallback"),
 
@@ -123,12 +117,12 @@ static SCHEMA_CONSTINIT std::array s_arrSchemaMetadataHash_String
 	SCHEMA_HASH("MScriptDescription"),
 };
 
-static SCHEMA_CONSTINIT std::array s_arrSchemaMetadataHash_BufferString 
+static const std::array s_arrSchemaMetadataHash_BufferString 
 {
 	SCHEMA_HASH("MResourceTypeForInfoType"),
 };
 
-static SCHEMA_CONSTINIT std::array s_arrSchemaMetadataHash_VarName 
+static const std::array s_arrSchemaMetadataHash_VarName 
 {
 	SCHEMA_HASH("MNetworkVarNames"),
 	SCHEMA_HASH("MNetworkOverride"),
@@ -142,7 +136,7 @@ Menu::Schema::CSystem::CBufferStringVector *Menu::Schema::CSystem::CDetailsConca
 
 const CConcatLineString *Menu::Schema::CSystem::CDetailsConcatBase::GetConcatLine() const
 {
-	return m_pConcats[0];
+	return m_arrConcats[0];
 }
 
 void Menu::Schema::CSystem::CDetailsConcatBase::AppendHeader()
@@ -376,6 +370,8 @@ void Menu::Schema::CSystem::CDetailsConcatMetadataEntry::AppendMembers()
 
 		union Data_t
 		{
+			~Data_t() = delete;
+
 			int nValue;
 			float flValue;
 			const char *pszValue;

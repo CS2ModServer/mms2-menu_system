@@ -37,8 +37,18 @@
 template<class T>
 struct ConcatLine_t
 {
-	T m_aHeadWith;
-	T m_aStartWith;
+	ConcatLine_t(const T &aHeadsWith, const T &aStartsWith, const T &aBefore, const T &aBetween, const T &aEnds, const T &aEndsAndStartsWith)
+	 :  m_aHeadsWith(aHeadsWith), 
+	    m_aStartsWith(aStartsWith), 
+	    m_aBefore(aBefore), 
+	    m_aBetween(aBetween), 
+	    m_aEnds(aEnds), 
+	    m_aEndsAndStartsWith(aEndsAndStartsWith)
+	{
+	}
+
+	T m_aHeadsWith;
+	T m_aStartsWith;
 	T m_aBefore;
 	T m_aBetween;
 	T m_aEnds;
@@ -50,12 +60,17 @@ class CConcatLineStringImpl : public ConcatLine_t<T>
 {
 public:
 	using Base_t = ConcatLine_t<T>;
+	using Base_t::Base_t;
+	CConcatLineStringImpl(const Base_t &&aBase)
+	 :  Base_t(aBase)
+	{
+	}
 
 protected:
 	template<bool INSERT_BEFORE = true>
 	inline auto GetHeadConcat(const T &aHead) const
 	{
-		std::array<T, 3 + INSERT_BEFORE> arrResult {Base_t::m_aHeadWith, aHead};
+		std::array<T, 3 + INSERT_BEFORE> arrResult {Base_t::m_aHeadsWith, aHead};
 
 		if constexpr (INSERT_BEFORE)
 		{
@@ -70,7 +85,7 @@ protected:
 	template<bool INSERT_BEFORE = true>
 	inline auto GetStringHeadConcat(const T &aHead) const
 	{
-		std::array<T, 5 + INSERT_BEFORE> arrResult {Base_t::m_aHeadWith, "\"", aHead, "\""};
+		std::array<T, 5 + INSERT_BEFORE> arrResult {Base_t::m_aHeadsWith, "\"", aHead, "\""};
 
 		if constexpr (INSERT_BEFORE)
 		{
@@ -85,7 +100,7 @@ protected:
 	template<bool INSERT_BEFORE = true>
 	inline auto GetKeyConcat(const T &aKey) const
 	{
-		std::array<T, 3 + INSERT_BEFORE> arrResult {Base_t::m_aStartWith, aKey};
+		std::array<T, 3 + INSERT_BEFORE> arrResult {Base_t::m_aStartsWith, aKey};
 
 		if constexpr (INSERT_BEFORE)
 		{
@@ -99,12 +114,12 @@ protected:
 
 	inline std::array<T, 5> GetKeyValueConcat(const T &aKey, const T &aValue) const
 	{
-		return {Base_t::m_aStartWith, aKey, Base_t::m_aBetween, aValue, Base_t::m_aEnds};
+		return {Base_t::m_aStartsWith, aKey, Base_t::m_aBetween, aValue, Base_t::m_aEnds};
 	}
 
 	inline auto GetKeyValueConcat(const T &aKey, const std::vector<T> &vecValues) const
 	{
-		std::vector<T> vecResult = {Base_t::m_aStartWith, aKey, Base_t::m_aBetween};
+		std::vector<T> vecResult = {Base_t::m_aStartsWith, aKey, Base_t::m_aBetween};
 
 		vecResult.insert(vecResult.cend(), vecValues.cbegin(), vecValues.cend());
 		vecResult.push_back(Base_t::m_aEnds);
@@ -114,17 +129,17 @@ protected:
 
 	inline std::array<T, 7> GetKeyStringValueConcat(const T &aKey, const T &aValue) const
 	{
-		return {Base_t::m_aStartWith, "\"", aKey, "\"", Base_t::m_aBetween, aValue, Base_t::m_aEnds};
+		return {Base_t::m_aStartsWith, "\"", aKey, "\"", Base_t::m_aBetween, aValue, Base_t::m_aEnds};
 	}
 
 	inline std::array<T, 7> GetKeyValueStringConcat(const T &aKey, const T &aValue) const
 	{
-		return {Base_t::m_aStartWith, aKey, Base_t::m_aBetween, "\"", aValue, "\"", Base_t::m_aEnds};
+		return {Base_t::m_aStartsWith, aKey, Base_t::m_aBetween, "\"", aValue, "\"", Base_t::m_aEnds};
 	}
 
 	inline std::array<T, 9> GetKeyStringValueStringConcat(const T &aKey, const T &aValue) const
 	{
-		return {Base_t::m_aStartWith, "\"", aKey, "\"", Base_t::m_aBetween, "\"", aValue, "\"", Base_t::m_aEnds};
+		return {Base_t::m_aStartsWith, "\"", aKey, "\"", Base_t::m_aBetween, "\"", aValue, "\"", Base_t::m_aEnds};
 	}
 }; // CConcatLineStringImpl<T>
 
@@ -134,18 +149,17 @@ class CConcatLineStringBase : public CConcatLineStringBaseImpl
 {
 public:
 	using Impl = CConcatLineStringBaseImpl;
-
-	CConcatLineStringBase() = delete;
+	using Impl::Impl;
 
 public:
 	const char *GetHeadsWith() const
 	{
-		return m_aHeadWith;
+		return m_aHeadsWith;
 	}
 
 	const char *GetStartsWith() const
 	{
-		return m_aStartWith;
+		return m_aStartsWith;
 	}
 
 	const char *GetBefore() const
@@ -173,6 +187,7 @@ class CConcatLineString : public CConcatLineStringBase
 {
 public:
 	using Base = CConcatLineStringBase;
+	using Base::Base;
 	using Base::GetHeadsWith;
 	using Base::GetStartsWith;
 	using Base::GetBefore;

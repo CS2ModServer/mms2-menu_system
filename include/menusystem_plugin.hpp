@@ -81,7 +81,7 @@
 #	include <entity2/entitykeyvalues.h>
 #	include <network_connection.pb.h>
 
-#	define MENUSYSTEM_LOGGINING_COLOR {127, 255, 0, 191} // Green (Chartreuse)
+#	define MENUSYSTEM_LOGGINING_COLOR {255, 200, 63, 255} // Orange.
 
 #	define MENUSYSTEM_GAME_BASE_DIR "addons" CORRECT_PATH_SEPARATOR_S META_PLUGIN_PREFIX
 #	define MENUSYSTEM_GAME_EVENTS_FILES "resource" CORRECT_PATH_SEPARATOR_S "*.gameevents"
@@ -467,9 +467,14 @@ public: // Utils.
 	struct CVar_t // Pair.
 	{
 		CVar_t() = delete;
+		CVar_t(const char *pszName, const char *pszValue)
+		 :  m_pszName(pszName), 
+		    m_pszValue(pszValue)
+		{
+		}
 
-		const char *pszName;
-		const char *pszValue;
+		const char *m_pszName;
+		const char *m_pszValue;
 	};
 
 	void SendSetConVarMessage(IRecipientFilter *pFilter, CUtlVector<CVar_t> &vecCvars);

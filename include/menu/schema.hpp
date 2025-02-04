@@ -176,6 +176,10 @@ namespace Menu
 			struct DetailsBase_t
 			{
 				DetailsBase_t() = delete;
+				DetailsBase_t(CBufferStringVector *pMessages)
+				 :  m_pMessages(pMessages)
+				{
+				}
 
 				CBufferStringVector *m_pMessages;
 			}; // Menu::Schema::CSystem::DetailsBase_t
@@ -184,14 +188,20 @@ namespace Menu
 			struct DetailsConcatBase_t : DetailsBase_t
 			{
 				using Base_t = DetailsBase_t;
+				using ConcatArr_t = std::array<const CConcatLineString *, N>;
 
 				DetailsConcatBase_t() = delete;
+				DetailsConcatBase_t(CBufferStringVector *pMessages, const ConcatArr_t &&arrConcats)
+				 :  Base_t(pMessages), 
+				    m_arrConcats(arrConcats)
+				{
+				}
 
 				static_assert(N != 0, "Template parameter N (number of nests) must not be 0. Use \"DetailsBase_t\" instead");
 				static_assert(N <= g_arrEmbedsConcat.size(), "Template parameter N (number of nests) over the limit");
 				static constexpr std::size_t sm_nEmbeds = N;
 
-				std::array<const CConcatLineString *, N> m_pConcats; // From more nested to less.
+				std::array<const CConcatLineString *, N> m_arrConcats; // From more nested to less.
 			}; // Menu::Schema::CSystem::DetailsConcatBase_t<N>
 
 			template<std::size_t N>
@@ -233,7 +243,7 @@ namespace Menu
 
 				template<class T, uintp N = T::sm_nEmbeds, typename std::enable_if_t<std::is_base_of_v<DetailsConcatBase_t<N>, T>, int> = 0>
 				CDetailsConcatBase(const T *pDetails)
-				 :  Impl({{pDetails->m_pMessages}, {pDetails->m_pConcats[N - 1]}}) // Go down to a single concat.
+				 :  Impl({{pDetails->m_pMessages}, {pDetails->m_arrConcats[N - 1]}}) // Go down to a single concat.
 				{
 					Assert(pDetails);
 				}
