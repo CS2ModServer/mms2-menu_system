@@ -1485,7 +1485,7 @@ void MenuSystem_Plugin::OnSpawnGroupInit(SpawnGroupHandle_t hSpawnGroup, IEntity
 	// Adds clean result to an entity resource manifest.
 	for(const char *pszResource : vecExportResources)
 	{
-		m_pEntityManagerProviderAgent->AddResourceToEntityManifest(pManifest, strdup(pszResource));
+		m_pEntityManagerProviderAgent->AddResourceToEntityManifest(pManifest, pszResource);
 
 		if(Logger::IsChannelEnabled(LV_DETAILED))
 		{
