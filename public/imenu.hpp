@@ -162,8 +162,13 @@ public: // The definitions.
 		{
 		}
 
+		Item_t(const char *pszContent, IItemHandler *pHandler, void *pData = nullptr)
+		 :  Item_t(MENU_ITEM_DEFAULT, pszContent, pHandler, pData)
+		{
+		}
+
 		Item_t(const char *pszContent)
-		 :  Item_t(MENU_ITEM_DEFAULT, pszContent, nullptr, nullptr)
+		 :  Item_t(pszContent, nullptr, nullptr)
 		{
 		}
 

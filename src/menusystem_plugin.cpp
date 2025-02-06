@@ -72,6 +72,7 @@
 
 SH_DECL_HOOK3_void(ICvar, DispatchConCommand, SH_NOATTRIB, 0, ConCommandHandle, const CCommandContext &, const CCommand &);
 SH_DECL_HOOK3_void(INetworkServerService, StartupServer, SH_NOATTRIB, 0, const GameSessionConfiguration_t &, ISource2WorldSession *, const char *);
+SH_DECL_HOOK7_void(ISource2GameEntities, CheckTransmit, SH_NOATTRIB, 0, CCheckTransmitInfo **, int, CBitVec<MAX_EDICTS> &, const Entity2Networkable_t **, const uint16 *, int, bool);
 SH_DECL_HOOK8(CNetworkGameServerBase, ConnectClient, SH_NOATTRIB, 0, CServerSideClientBase *, const char *, ns_address *, void *, C2S_CONNECT_Message *, const char *, const byte *, int, bool);
 SH_DECL_HOOK1(CServerSideClientBase, ExecuteStringCommand, SH_NOATTRIB, 0, bool, const CNETMsg_StringCmd_t &);
 SH_DECL_HOOK1(CServerSideClientBase, ProcessRespondCvarValue, SH_NOATTRIB, 0, bool, const CCLCMsg_RespondCvarValue_t &);
@@ -280,22 +281,39 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 
 				auto &vecItems = pInternalMenu->GetItemsRef();
 
-				vecItems.AddToTail("First Item");
-				vecItems.AddToTail("Second Item");
-				vecItems.AddToTail("Item");
-				vecItems.AddToTail("Item - 2");
-				vecItems.AddToTail("Item - 3");
-				vecItems.AddToTail("Item - 4");
-				vecItems.AddToTail("Item - 5");
-				vecItems.AddToTail("Item - 6");
-				vecItems.AddToTail("Item - 7");
-				vecItems.AddToTail("Item - 8");
-				vecItems.AddToTail("Item - 9");
-				vecItems.AddToTail("Item - 10");
-				vecItems.AddToTail("Item - 11");
-				vecItems.AddToTail("Item - 12");
-				vecItems.AddToTail("Item - 13");
-				vecItems.AddToTail("Last Item");
+				static class CMenuSelectHandler : public IMenu::IItemHandler
+				{
+				public:
+					CMenuSelectHandler(MenuSystem_Plugin *pPlugin) : m_pPlugin(pPlugin) {}
+
+				public:
+					void OnMenuSelectItem(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iItem, IMenu::ItemPositionOnPage_t iItemOnPage, void *pData) override
+					{
+						CSingleRecipientFilter aFilter(aSlot);
+
+						m_pPlugin->SendTextMessage(&aFilter, HUD_PRINTTALK, 1, pMenu->GetItemsRef()[iItem].Get());
+					}
+
+				private:
+					MenuSystem_Plugin *m_pPlugin;
+				} s_aItemHandler(this);
+
+				vecItems.AddToTail({"First Item", &s_aItemHandler});
+				vecItems.AddToTail({"Second Item", &s_aItemHandler});
+				vecItems.AddToTail({"Item", &s_aItemHandler});
+				vecItems.AddToTail({"Item - 2", &s_aItemHandler});
+				vecItems.AddToTail({"Item - 3", &s_aItemHandler});
+				vecItems.AddToTail({"Item - 4", &s_aItemHandler});
+				vecItems.AddToTail({"Item - 5", &s_aItemHandler});
+				vecItems.AddToTail({"Item - 6", &s_aItemHandler});
+				vecItems.AddToTail({"Item - 7", &s_aItemHandler});
+				vecItems.AddToTail({"Item - 8", &s_aItemHandler});
+				vecItems.AddToTail({"Item - 9", &s_aItemHandler});
+				vecItems.AddToTail({"Item - 10", &s_aItemHandler});
+				vecItems.AddToTail({"Item - 11", &s_aItemHandler});
+				vecItems.AddToTail({"Item - 12", &s_aItemHandler});
+				vecItems.AddToTail({"Item - 13", &s_aItemHandler});
+				vecItems.AddToTail({"Last Item", &s_aItemHandler});
 
 				return DisplayInternalMenuToPlayer(pInternalMenu, aSlot);
 			}
@@ -418,7 +436,8 @@ bool MenuSystem_Plugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t max
 	}
 
 	SH_ADD_HOOK(ICvar, DispatchConCommand, g_pCVar, SH_MEMBER(this, &MenuSystem_Plugin::OnDispatchConCommandHook), false);
-	SH_ADD_HOOK_MEMFUNC(INetworkServerService, StartupServer, g_pNetworkServerService, this, &MenuSystem_Plugin::OnStartupServerHook, true);
+	SH_ADD_HOOK(INetworkServerService, StartupServer, g_pNetworkServerService, SH_MEMBER(this, &MenuSystem_Plugin::OnStartupServerHook), true);
+	SH_ADD_HOOK(ISource2GameEntities, CheckTransmit, g_pSource2GameEntities, SH_MEMBER(this, &MenuSystem_Plugin::OnCheckTransmitHook), true);
 
 	if(late)
 	{
@@ -462,11 +481,13 @@ bool MenuSystem_Plugin::Unload(char *error, size_t maxlen)
 
 		if(pNetServer)
 		{
-			SH_REMOVE_HOOK_MEMFUNC(CNetworkGameServerBase, ConnectClient, pNetServer, this, &MenuSystem_Plugin::OnConnectClientHook, true);
+			SH_REMOVE_HOOK(CNetworkGameServerBase, ConnectClient, pNetServer, SH_MEMBER(this, &MenuSystem_Plugin::OnConnectClientHook), true);
 		}
 	}
 
-	SH_REMOVE_HOOK_MEMFUNC(INetworkServerService, StartupServer, g_pNetworkServerService, this, &MenuSystem_Plugin::OnStartupServerHook, true);
+	SH_REMOVE_HOOK(INetworkServerService, StartupServer, g_pNetworkServerService, SH_MEMBER(this, &MenuSystem_Plugin::OnStartupServerHook), true);
+	SH_REMOVE_HOOK(ISource2GameEntities, CheckTransmit, g_pSource2GameEntities, SH_MEMBER(this, &MenuSystem_Plugin::OnCheckTransmitHook), true);
+	SH_REMOVE_HOOK(ICvar, DispatchConCommand, g_pCVar, SH_MEMBER(this, &MenuSystem_Plugin::OnDispatchConCommandHook), false);
 
 	if(!UnhookGameEvents(error, maxlen))
 	{
@@ -1329,65 +1350,7 @@ GS_EVENT_MEMBER(MenuSystem_Plugin, GameDeactivate)
 
 GS_EVENT_MEMBER(MenuSystem_Plugin, ServerPreEntityThink)
 {
-	// Teleport menu entities of active spectate players each think.
-	for(auto &aPlayer : m_aPlayers)
-	{
-		if(!aPlayer.IsConnected())
-		{
-			continue;
-		}
-
-		const auto &vecMenus = aPlayer.GetMenus();
-
-		if(!vecMenus.Count())
-		{
-			continue;
-		}
-
-		auto *pServerSideClient = aPlayer.GetServerSideClient();
-
-		auto *pPlayerController = instance_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(pServerSideClient->GetPlayerSlot().GetClientIndex())));
-
-		if(!pPlayerController)
-		{
-			continue;
-		}
-
-		CBasePlayerPawn *pPlayerPawn = CBasePlayerController_Helper::GetPawnAccessor(pPlayerController)->Get();
-
-		if(!pPlayerPawn)
-		{
-			continue;
-		}
-
-		auto *pCSPlayerPawn = instance_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
-
-		CPlayer_ObserverServices *pObserverServices = CCSPlayerPawnBase_Helper::GetObserverServicesAccessor(pCSPlayerPawn);
-
-		if(!pObserverServices)
-		{
-			continue;
-		}
-
-		uint8 iObserverMode = CPlayer_ObserverServices_Helper::GetObserverModeAccessor(pObserverServices);
-
-		if(iObserverMode != OBS_MODE_NONE && iObserverMode != OBS_MODE_ROAMING)
-		{
-			continue;
-		}
-
-		FOR_EACH_VEC(vecMenus, i)
-		{
-			const auto &[_, pMenu] = vecMenus[i];
-
-			CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
-
-			if(pInternalMenu)
-			{
-				TeleportMenuInstanceToCSPlayer(i, pInternalMenu, pCSPlayerPawn);
-			}
-		}
-	}
+	TeleportMenusBySpectatePlayers();
 }
 
 GS_EVENT_MEMBER(MenuSystem_Plugin, GameFrameBoundary)
@@ -2336,6 +2299,68 @@ bool MenuSystem_Plugin::AttachMenuInstanceToObserver(int i, CMenu *pInternalMenu
 	return false;
 }
 
+void MenuSystem_Plugin::TeleportMenusBySpectatePlayers()
+{
+	for(auto &aPlayer : m_aPlayers)
+	{
+		if(!aPlayer.IsConnected())
+		{
+			continue;
+		}
+
+		const auto &vecMenus = aPlayer.GetMenus();
+
+		if(!vecMenus.Count())
+		{
+			continue;
+		}
+
+		auto *pServerSideClient = aPlayer.GetServerSideClient();
+
+		auto *pPlayerController = instance_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(pServerSideClient->GetPlayerSlot().GetClientIndex())));
+
+		if(!pPlayerController)
+		{
+			continue;
+		}
+
+		CBasePlayerPawn *pPlayerPawn = CBasePlayerController_Helper::GetPawnAccessor(pPlayerController)->Get();
+
+		if(!pPlayerPawn)
+		{
+			continue;
+		}
+
+		auto *pCSPlayerPawn = instance_upper_cast<CCSPlayerPawnBase *>(pPlayerPawn);
+
+		CPlayer_ObserverServices *pObserverServices = CCSPlayerPawnBase_Helper::GetObserverServicesAccessor(pCSPlayerPawn);
+
+		if(!pObserverServices)
+		{
+			continue;
+		}
+
+		uint8 iObserverMode = CPlayer_ObserverServices_Helper::GetObserverModeAccessor(pObserverServices);
+
+		if(iObserverMode != OBS_MODE_NONE && iObserverMode != OBS_MODE_ROAMING)
+		{
+			continue;
+		}
+
+		FOR_EACH_VEC(vecMenus, i)
+		{
+			const auto &[_, pMenu] = vecMenus[i];
+
+			CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
+
+			if(pInternalMenu)
+			{
+				TeleportMenuInstanceToCSPlayer(i, pInternalMenu, pCSPlayerPawn);
+			}
+		}
+	}
+}
+
 bool MenuSystem_Plugin::SettingMenuEntity(CEntityInstance *pEntity)
 {
 	{
@@ -3137,9 +3162,7 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandHandle hCommand, cons
 
 void MenuSystem_Plugin::OnStartupServerHook(const GameSessionConfiguration_t &config, ISource2WorldSession *pWorldSession, const char *)
 {
-	auto *pNetServer = reinterpret_cast<CNetworkGameServerBase *>(g_pNetworkServerService->GetIGameServer());
-
-	OnStartupServer(pNetServer, config, pWorldSession);
+	OnStartupServer(reinterpret_cast<CNetworkGameServerBase *>(g_pNetworkServerService->GetIGameServer()), config, pWorldSession);
 
 	RETURN_META(MRES_IGNORED);
 }
@@ -3150,6 +3173,14 @@ CServerSideClientBase *MenuSystem_Plugin::OnConnectClientHook(const char *pszNam
 	OnConnectClient(META_IFACEPTR(CNetworkGameServerBase), META_RESULT_ORIG_RET(CServerSideClientBase *), pszName, pAddr, pNetInfo, pConnectMsg, pszChallenge, pAuthTicket, nAuthTicketLength, bIsLowViolence);
 
 	RETURN_META_VALUE(MRES_IGNORED, NULL);
+}
+
+void MenuSystem_Plugin::OnCheckTransmitHook(CCheckTransmitInfo **ppInfoList, int nInfoCount, CBitVec<MAX_EDICTS> &bvUnionTransmitEdicts, 
+                                            const Entity2Networkable_t **pNetworkables, const uint16 *pEntityIndicies, int nEntities, bool bEnablePVSBits)
+{
+	OnCheckTransmit(META_IFACEPTR(ISource2GameEntities), ppInfoList, nInfoCount, bvUnionTransmitEdicts, pNetworkables, pEntityIndicies, nEntities, bEnablePVSBits);
+
+	RETURN_META(MRES_IGNORED);
 }
 
 bool MenuSystem_Plugin::OnExecuteStringCommandPreHook(const CNETMsg_StringCmd_t &aMessage)
@@ -3465,7 +3496,7 @@ void MenuSystem_Plugin::SendTextMessage(IRecipientFilter *pFilter, int iDestinat
 
 void MenuSystem_Plugin::OnStartupServer(CNetworkGameServerBase *pNetServer, const GameSessionConfiguration_t &config, ISource2WorldSession *pWorldSession)
 {
-	SH_ADD_HOOK_MEMFUNC(CNetworkGameServerBase, ConnectClient, pNetServer, this, &MenuSystem_Plugin::OnConnectClientHook, true);
+	SH_ADD_HOOK(CNetworkGameServerBase, ConnectClient, pNetServer, SH_MEMBER(this, &MenuSystem_Plugin::OnConnectClientHook), true);
 
 	{
 		bool (MenuSystem_Plugin::*pfnIntializers[])(char *error, size_t maxlen) = 
@@ -3491,16 +3522,16 @@ void MenuSystem_Plugin::OnConnectClient(CNetworkGameServerBase *pNetServer, CSer
 {
 	if(pClient)
 	{
-		SH_ADD_HOOK_MEMFUNC(CServerSideClientBase, PerformDisconnection, pClient, this, &MenuSystem_Plugin::OnDisconectClientHook, false);
+		SH_ADD_HOOK(CServerSideClientBase, PerformDisconnection, pClient, SH_MEMBER(this, &MenuSystem_Plugin::OnDisconectClientHook), false);
 
 		if(pClient->IsFakeClient())
 		{
 			return;
 		}
 
-		SH_ADD_HOOK_MEMFUNC(CServerSideClientBase, ExecuteStringCommand, pClient, this, &MenuSystem_Plugin::OnExecuteStringCommandPreHook, false);
-		SH_ADD_HOOK_MEMFUNC(CServerSideClientBase, ProcessRespondCvarValue, pClient, this, &MenuSystem_Plugin::OnProcessRespondCvarValueHook, false);
-		SH_ADD_HOOK_MEMFUNC(CServerSideClientBase, ProcessMove, pClient, this, &MenuSystem_Plugin::OnProcessMoveHook, false);
+		SH_ADD_HOOK(CServerSideClientBase, ExecuteStringCommand, pClient, SH_MEMBER(this, &MenuSystem_Plugin::OnExecuteStringCommandPreHook), false);
+		SH_ADD_HOOK(CServerSideClientBase, ProcessRespondCvarValue, pClient, SH_MEMBER(this, &MenuSystem_Plugin::OnProcessRespondCvarValueHook), false);
+		SH_ADD_HOOK(CServerSideClientBase, ProcessMove, pClient, SH_MEMBER(this, &MenuSystem_Plugin::OnProcessMoveHook), false);
 	}
 	else
 	{
@@ -3547,6 +3578,56 @@ void MenuSystem_Plugin::OnConnectClient(CNetworkGameServerBase *pNetServer, CSer
 	}
 
 	aPlayer.OnConnected(pPlayer);
+}
+
+void MenuSystem_Plugin::OnCheckTransmit(ISource2GameEntities *pGameEntities, CCheckTransmitInfo **ppInfoList, int nInfoCount, CBitVec<MAX_EDICTS> &bvUnionTransmitEdicts, const Entity2Networkable_t **pNetworkables, const uint16 *pEntityIndicies, int nEntities, bool bEnablePVSBits)
+{
+	// if(Logger::IsChannelEnabled(LV_DETAILED))
+	// {
+	// 	Logger::DetailedFormat("%s(pGameEntities = %p, ppInfoList = %p, nInfoCount = %d, &bvUnionTransmitEdicts = %p, pNetworkables = %p, nEntities = %d)\n", __FUNCTION__, pGameEntities, ppInfoList, nInfoCount, &bvUnionTransmitEdicts, pNetworkables, nEntities);
+	// }
+
+	for(int i = 0; i < nInfoCount; i++)
+	{
+		auto *pInfo = ppInfoList[i];
+
+		auto aInfoSlot = pInfo->m_nPlayerSlot;
+
+		for(auto &aPlayer : m_aPlayers)
+		{
+			if(!aPlayer.IsConnected())
+			{
+				continue;
+			}
+
+			auto aPlayerSlot = aPlayer.GetServerSideClient()->GetPlayerSlot();
+
+			if(aInfoSlot == aPlayerSlot)
+			{
+				continue;
+			}
+
+			auto &vecMenus = aPlayer.GetMenus();
+
+			for(const auto &[_, pMenu] : vecMenus)
+			{
+				auto *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
+
+				if(!pInternalMenu)
+				{
+					continue;
+				}
+
+				if(!pInternalMenu->GetRecipients().IsBitSet(aInfoSlot))
+				{
+					for(const auto *pMenuEntity : pInternalMenu->GetActiveEntities())
+					{
+						pInfo->m_pTransmitEntity->Clear(pMenuEntity->GetEntityIndex().Get());
+					}
+				}
+			}
+		}
+	}
 }
 
 META_RES MenuSystem_Plugin::OnExecuteStringCommandPre(CServerSideClientBase *pClient, const CNETMsg_StringCmd_t &aMessage)
@@ -3851,16 +3932,16 @@ bool MenuSystem_Plugin::OnProcessRespondCvarValue(CServerSideClientBase *pClient
 
 void MenuSystem_Plugin::OnDisconectClient(CServerSideClientBase *pClient, ENetworkDisconnectionReason eReason)
 {
-	SH_REMOVE_HOOK_MEMFUNC(CServerSideClientBase, PerformDisconnection, pClient, this, &MenuSystem_Plugin::OnDisconectClientHook, false);
+	SH_REMOVE_HOOK(CServerSideClientBase, PerformDisconnection, pClient, SH_MEMBER(this, &MenuSystem_Plugin::OnDisconectClientHook), false);
 
 	if(pClient->IsFakeClient())
 	{
 		return;
 	}
 
-	SH_REMOVE_HOOK_MEMFUNC(CServerSideClientBase, ProcessMove, pClient, this, &MenuSystem_Plugin::OnProcessMoveHook, false);
-	SH_REMOVE_HOOK_MEMFUNC(CServerSideClientBase, ProcessRespondCvarValue, pClient, this, &MenuSystem_Plugin::OnProcessRespondCvarValueHook, false);
-	SH_REMOVE_HOOK_MEMFUNC(CServerSideClientBase, ExecuteStringCommand, pClient, this, &MenuSystem_Plugin::OnExecuteStringCommandPreHook, false);
+	SH_REMOVE_HOOK(CServerSideClientBase, ProcessMove, pClient, SH_MEMBER(this, &MenuSystem_Plugin::OnProcessMoveHook), false);
+	SH_REMOVE_HOOK(CServerSideClientBase, ProcessRespondCvarValue, pClient, SH_MEMBER(this, &MenuSystem_Plugin::OnProcessRespondCvarValueHook), false);
+	SH_REMOVE_HOOK(CServerSideClientBase, ExecuteStringCommand, pClient, SH_MEMBER(this, &MenuSystem_Plugin::OnExecuteStringCommandPreHook), false);
 
 	auto *pPlayer = reinterpret_cast<CServerSideClient *>(pClient);
 

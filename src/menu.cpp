@@ -231,7 +231,7 @@ bool CMenu::OnSelect(CPlayerSlot aSlot, int iSlectedItem, DisplayFlags_t eFlags)
 	}
 	else
 	{
-		iTargetItem = iStartItem + iSlectedItem;
+		iTargetItem = iStartItem + iSlectedItem - 1;
 	}
 
 	auto &vecItems = m_aData.m_vecItems;
@@ -266,7 +266,7 @@ bool CMenu::OnSelect(CPlayerSlot aSlot, int iSlectedItem, DisplayFlags_t eFlags)
 		}
 	}
 
-	if(0 < iTargetItem && iTargetItem < vecItems.Count())
+	if(0 <= iTargetItem && iTargetItem < vecItems.Count())
 	{
 		auto &aItem = vecItems[iTargetItem];
 
