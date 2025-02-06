@@ -63,26 +63,6 @@ public:
 		{
 		}
 
-		bool operator==(const MemBlockHandle_t &hRight)
-		{
-			return m_Handle == hRight;
-		}
-
-		bool operator!=(const MemBlockHandle_t &hRight)
-		{
-			return m_Handle != hRight;
-		}
-
-		void MarkFree()
-		{
-			m_nReserved |= MENU_MEMBLOCK_RESERVED_FREE_BIT;
-		}
-
-		void SetThisOffset(CInstance_t *pInstance)
-		{
-			m_nReserved = reinterpret_cast<uintp>(static_cast<Interface_t *>(pInstance)) - reinterpret_cast<uintp>(pInstance) & MENU_MEMBLOCK_RESERVED_INSTANCE_THISOFFSET_MASK;
-		}
-
 		bool IsFree() const
 		{
 			return !!(m_nReserved & MENU_MEMBLOCK_RESERVED_FREE_BIT);
@@ -97,16 +77,37 @@ public:
 		{
 			return m_Handle;
 		}
+
+		bool operator==(const MemBlockHandle_t &hRight) const
+		{
+			return m_Handle == hRight;
+		}
+
+		bool operator!=(const MemBlockHandle_t &hRight) const
+		{
+			return m_Handle != hRight;
+		}
+
+		void MarkFree()
+		{
+			m_nReserved |= MENU_MEMBLOCK_RESERVED_FREE_BIT;
+		}
+
+		void SetThisOffset(CInstance_t *pInstance)
+		{
+			m_nReserved = reinterpret_cast<uintp>(static_cast<Interface_t *>(pInstance)) - reinterpret_cast<uintp>(pInstance) & MENU_MEMBLOCK_RESERVED_INSTANCE_THISOFFSET_MASK;
+		}
 	};
 
-	inline CInstance_t *GetInstanceByHandle(MemBlockHandle_t hMemBlock, int nThisOffset = 0)
+	template<class T>
+	inline T *GetByHandle(MemBlockHandle_t hMemBlock, int nThisOffset = 0)
 	{
-		return reinterpret_cast<CInstance_t *>(reinterpret_cast<uintp>(m_MemBlockAllocator.GetBlock(hMemBlock)) + nThisOffset);
+		return reinterpret_cast<T *>(reinterpret_cast<uintp>(m_MemBlockAllocator.GetBlock(hMemBlock)) + nThisOffset);
 	}
 
-	inline CInstance_t *GetInstanceByMemBlock(MemBlock_t *pMemBlock, int nThisOffset = 0)
+	inline auto *GetInstanceByMemBlock(const MemBlock_t *pMemBlock)
 	{
-		return GetInstanceByHandle(pMemBlock->GetHandle());
+		return GetByHandle<CInstance_t>(pMemBlock->GetHandle(), pMemBlock->GetInstanceThisOffset());
 	}
 
 	MemBlock_t *FindLastFreeMemBlock()
@@ -158,7 +159,7 @@ public:
 			pMemBlock = &m_vecMemBlocks.Element(m_vecMemBlocks.AddToTail(MemBlock_t(hMemBlock)));
 		}
 
-		CInstance_t *pResult = GetInstanceByHandle(hMemBlock);
+		auto *pResult = GetByHandle<CInstance_t>(hMemBlock);
 
 		pMemBlock->SetThisOffset(pResult);
 
@@ -171,7 +172,7 @@ public:
 
 		if(pFoundBlock)
 		{
-			return GetInstanceByHandle(pFoundBlock->GetHandle(), pFoundBlock->GetInstanceThisOffset());
+			return GetInstanceByMemBlock(pFoundBlock);
 		}
 
 		return nullptr;
@@ -179,7 +180,7 @@ public:
 
 	void ReleaseByMemBlock(MemBlock_t *pMemBlock)
 	{
-		CInstance_t *pInstance = GetInstanceByHandle(pMemBlock->GetHandle());
+		auto *pInstance = GetInstanceByMemBlock(pMemBlock);
 
 		Destruct(pInstance);
 		pMemBlock->MarkFree();
@@ -207,6 +208,22 @@ public:
 
 	void Purge()
 	{
+		m_vecMemBlocks.Purge();
+		m_MemBlockAllocator.Purge();
+	}
+
+	void PurgeAndDeleteElements()
+	{
+		for(const auto &aMemBlock : m_vecMemBlocks)
+		{
+			if(aMemBlock.IsFree())
+			{
+				continue;
+			}
+
+			Destruct(GetInstanceByMemBlock(&aMemBlock));
+		}
+
 		m_vecMemBlocks.Purge();
 		m_MemBlockAllocator.Purge();
 	}

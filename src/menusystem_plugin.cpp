@@ -534,7 +534,7 @@ bool MenuSystem_Plugin::Unload(char *error, size_t maxlen)
 		return false;
 	}
 
-	if(!UnloadSpawnGroups(error, maxlen))
+	if(!UnloadSpawnGroupsNow(error, maxlen))
 	{
 		return false;
 	}
@@ -609,7 +609,7 @@ void MenuSystem_Plugin::OnPluginUnload(PluginId id)
 	{
 		char error[256];
 
-		if(!UnloadSpawnGroups(error, sizeof(error)))
+		if(!UnloadSpawnGroupsNow(error, sizeof(error)))
 		{
 			Logger::WarningFormat("%s\n", error);
 		}
@@ -986,12 +986,19 @@ IMenuHandler *MenuSystem_Plugin::FindMenuHandler(IMenu *pMenu)
 
 int MenuSystem_Plugin::DestroyInternalMenuEntities(CMenu *pInternalMenu)
 {
-	for(auto *pMenuEntity : pInternalMenu->GetActiveEntities())
+	for(auto *pMenuEntity : *pInternalMenu)
 	{
 		m_pEntityManagerProviderAgent->PushDestroyQueue(pMenuEntity);
 	}
 
-	return m_pEntityManagerProviderAgent->ExecuteDestroyQueued();
+	int iDestroyedCount = m_pEntityManagerProviderAgent->ExecuteDestroyQueued();
+
+	if(iDestroyedCount)
+	{
+		pInternalMenu->CMenuBase::Purge();
+	}
+
+	return iDestroyedCount;
 }
 
 bool MenuSystem_Plugin::CloseMenuHandler(IMenu *pMenu)
@@ -1061,6 +1068,35 @@ void MenuSystem_Plugin::CloseInternalMenu(CMenu *pInternalMenu, IMenuHandler::En
 			UpdatePlayerMenus(aPlayer.GetServerSideClient()->GetPlayerSlot());
 		}
 	}
+}
+
+void MenuSystem_Plugin::PurgeAllMenus()
+{
+	for(auto &aPlayer : m_aPlayers)
+	{
+		if(!aPlayer.IsConnected())
+		{
+			continue;
+		}
+
+		auto &vecMenus = aPlayer.GetMenus();
+
+		for(const auto &[_, pMenu] : vecMenus)
+		{
+			CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
+
+			if(!pInternalMenu)
+			{
+				continue;
+			}
+
+			CloseInternalMenu(pInternalMenu, IMenuHandler::MenuEnd_Disconnected);
+		}
+
+		vecMenus.Purge();
+	}
+
+	m_MenuAllocator.PurgeAndDeleteElements();
 }
 
 void MenuSystem_Plugin::OnMenuStart(IMenu *pMenu)
@@ -1324,28 +1360,31 @@ void MenuSystem_Plugin::Shutdown()
 
 GS_EVENT_MEMBER(MenuSystem_Plugin, GameActivate)
 {
-	// Initialize a game resource.
-	{
-		char sMessage[256];
+	char sMessage[256];
 
-		if(!RegisterGameResource(sMessage, sizeof(sMessage)))
+	bool (MenuSystem_Plugin::*pfnIntializers[])(char *error, size_t maxlen) = 
+	{
+		&MenuSystem_Plugin::RegisterGameResource,
+		&MenuSystem_Plugin::LoadSpawnGroups,
+	};
+
+	for(const auto &aInitializer : pfnIntializers)
+	{
+		if(!(this->*(aInitializer))(sMessage, sizeof(sMessage)))
 		{
 			Logger::WarningFormat("%s\n", sMessage);
-		}
-	}
-
-	// Load menu spawn groups.
-	{
-		if(!LoadSpawnGroups())
-		{
-			Logger::Warning("Failed to load the menu spawn groups\n");
 		}
 	}
 }
 
 GS_EVENT_MEMBER(MenuSystem_Plugin, GameDeactivate)
 {
-	// ...
+	char sMessage[256];
+
+	if(!UnloadSpawnGroups(sMessage, sizeof(sMessage)))
+	{
+		Logger::WarningFormat("%s\n", sMessage);
+	}
 }
 
 GS_EVENT_MEMBER(MenuSystem_Plugin, ServerPreEntityThink)
@@ -1381,7 +1420,7 @@ GS_EVENT_MEMBER(MenuSystem_Plugin, GameFrameBoundary)
 				continue;
 			}
 
-			vecMenus.FastRemove(i);
+			vecMenus.Remove(i);
 
 			CMenu *pInternalMenu = m_MenuAllocator.GetInstanceByMemBlock(pMemBlock);
 
@@ -1502,7 +1541,14 @@ void MenuSystem_Plugin::OnSpawnGroupCreateLoading(SpawnGroupHandle_t hSpawnGroup
 
 void MenuSystem_Plugin::OnSpawnGroupDestroyed(SpawnGroupHandle_t hSpawnGroup)
 {
-	m_pMySpawnGroupInstance->RemoveNotificationsListener(static_cast<IEntityManager::IProviderAgent::ISpawnGroupNotifications *>(this));
+	if(Logger::IsChannelEnabled(LV_DETAILED))
+	{
+		Logger::DetailedFormat("%s(hSpawnGroup = %d)\n", __FUNCTION__, hSpawnGroup);
+	}
+
+	PurgeAllMenus();
+
+	m_pMySpawnGroupInstance = nullptr;
 }
 
 bool MenuSystem_Plugin::InitSchema(char *error, size_t maxlen)
@@ -1883,11 +1929,22 @@ bool MenuSystem_Plugin::LoadSpawnGroups(char *error, size_t maxlen)
 
 bool MenuSystem_Plugin::UnloadSpawnGroups(char *error, size_t maxlen)
 {
-	if(m_pEntityManagerProviderAgent && m_pMySpawnGroupInstance)
+	if(m_pMySpawnGroupInstance)
 	{
-		m_pEntityManagerProviderAgent->ReleaseSpawnGroup(m_pMySpawnGroupInstance);
+		m_pMySpawnGroupInstance->Unload();
+		// Reset the instance into OnSpawnGroupDestroyed().
+	}
 
-		m_pEntityManagerProviderAgent = nullptr;
+	return true;
+}
+
+bool MenuSystem_Plugin::UnloadSpawnGroupsNow(char *error, size_t maxlen)
+{
+	if(m_pMySpawnGroupInstance)
+	{
+		PurgeAllMenus();
+
+		m_pMySpawnGroupInstance->Unload();
 		m_pMySpawnGroupInstance = nullptr;
 	}
 
@@ -3949,13 +4006,25 @@ void MenuSystem_Plugin::OnDisconectClient(CServerSideClientBase *pClient, ENetwo
 
 	auto &aPlayer = GetPlayerData(aSlot);
 
-	for(const auto &[_, pMenu] : aPlayer.GetMenus())
+	// Destroy all player's menus.
 	{
-		auto *pMemBlock = m_MenuAllocator.FindMemBlock(pMenu);
+		auto &vecMenus = aPlayer.GetMenus();
 
-		if(pMemBlock)
+		for(const auto &[_, pMenu] : vecMenus)
 		{
+			auto *pMemBlock = m_MenuAllocator.FindMemBlock(pMenu);
+
+			if(!pMemBlock)
+			{
+				continue;
+			}
+
 			CMenu *pInternalMenu = m_MenuAllocator.GetInstanceByMemBlock(pMemBlock);
+
+			if(!pInternalMenu)
+			{
+				continue;
+			}
 
 			CloseInternalMenu(pInternalMenu, IMenuHandler::MenuEnd_Disconnected);
 			m_MenuAllocator.ReleaseByMemBlock(pMemBlock);

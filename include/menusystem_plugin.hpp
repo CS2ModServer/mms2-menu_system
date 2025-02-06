@@ -307,8 +307,9 @@ public: // IMenuSystem
 	bool DisplayInternalMenuToPlayer(CMenu *pInternalMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iStartItem = MENU_FIRST_ITEM_INDEX, int nManyTimes = MENU_TIME_FOREVER);
 	IMenuHandler *FindMenuHandler(IMenu *pMenu);
 	int DestroyInternalMenuEntities(CMenu *pInternalMenu);
-	void CloseInternalMenu(CMenu *pInternalMenu, IMenuHandler::EndReason_t eReason);
 	bool CloseMenuHandler(IMenu *pMenu);
+	void CloseInternalMenu(CMenu *pInternalMenu, IMenuHandler::EndReason_t eReason);
+	void PurgeAllMenus(); // Close all menus of the players.
 
 public: // IMenuHandler
 	void OnMenuStart(IMenu *pMenu) override;
@@ -368,6 +369,7 @@ public: // Entity Manager.
 
 	bool LoadSpawnGroups(char *error = nullptr, size_t maxlen = 0);
 	bool UnloadSpawnGroups(char *error = nullptr, size_t maxlen = 0);
+	bool UnloadSpawnGroupsNow(char *error = nullptr, size_t maxlen = 0);
 
 	// Entity keyvalues.
 	enum MenuEntityKeyValuesFlags_t : uint8

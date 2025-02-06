@@ -91,6 +91,7 @@ using CMenuBase = CUtlVector<CEntityInstance *>; // List of active menu entities
 class CMenu : public IMenu, public CMenuBase
 {
 public:
+	using Base = CMenuBase;
 	using CPointWorldText_Helper = Menu::Schema::CPointWorldText_Helper;
 	using CGameData_BaseEntity = Menu::CProvider::CGameDataStorage::CBaseEntity;
 

@@ -89,19 +89,15 @@ void CMenu::Purge()
 {
 	for(auto &mapCachedPageBases : m_arrCachedPageBasesMap)
 	{
-		FOR_EACH_MAP(mapCachedPageBases, i)
-		{
-			delete mapCachedPageBases[i];
-		}
+		mapCachedPageBases.PurgeAndDeleteElements();
 	}
 
 	for(auto &mapCachedPages : m_arrCachedPagesMap)
 	{
-		FOR_EACH_MAP(mapCachedPages, i)
-		{
-			delete mapCachedPages[i];
-		}
+		mapCachedPages.PurgeAndDeleteElements();
 	}
+
+	Base::Purge();
 }
 
 bool CMenu::ApplyProfile(CPlayerSlot aSlot, IMenuProfile *pNewProfile)
