@@ -107,7 +107,7 @@ MenuSystem_Plugin::MenuSystem_Plugin()
     Logger(GetName(), [](LoggingChannelID_t nTagChannelID)
     {
     	LoggingSystem_AddTagToChannel(nTagChannelID, s_aMenuPlugin.GetLogTag());
-    }, 0, LV_DETAILED, MENUSYSTEM_LOGGINING_COLOR),
+    }, 0, LV_DEFAULT, MENUSYSTEM_LOGGINING_COLOR),
     CPathResolver(this),
 
     m_aEnableClientCommandDetailsConVar("mm_" META_PLUGIN_PREFIX "_enable_client_command_details", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable client command detial messages", false, true, false, true, true), 
@@ -298,22 +298,24 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 					MenuSystem_Plugin *m_pPlugin;
 				} s_aItemHandler(this);
 
-				vecItems.AddToTail({"First Item", &s_aItemHandler});
-				vecItems.AddToTail({"Second Item", &s_aItemHandler});
-				vecItems.AddToTail({"Item", &s_aItemHandler});
-				vecItems.AddToTail({"Item - 2", &s_aItemHandler});
-				vecItems.AddToTail({"Item - 3", &s_aItemHandler});
-				vecItems.AddToTail({"Item - 4", &s_aItemHandler});
-				vecItems.AddToTail({"Item - 5", &s_aItemHandler});
-				vecItems.AddToTail({"Item - 6", &s_aItemHandler});
-				vecItems.AddToTail({"Item - 7", &s_aItemHandler});
-				vecItems.AddToTail({"Item - 8", &s_aItemHandler});
-				vecItems.AddToTail({"Item - 9", &s_aItemHandler});
-				vecItems.AddToTail({"Item - 10", &s_aItemHandler});
-				vecItems.AddToTail({"Item - 11", &s_aItemHandler});
-				vecItems.AddToTail({"Item - 12", &s_aItemHandler});
-				vecItems.AddToTail({"Item - 13", &s_aItemHandler});
-				vecItems.AddToTail({"Last Item", &s_aItemHandler});
+				IMenu::IItemHandler *pItemHandler = static_cast<IMenu::IItemHandler *>(&s_aItemHandler);
+
+				vecItems.AddToTail({"First Item", pItemHandler});
+				vecItems.AddToTail({"Second Item", pItemHandler});
+				vecItems.AddToTail({"Item", pItemHandler});
+				vecItems.AddToTail({"Item - 2", pItemHandler});
+				vecItems.AddToTail({"Item - 3", pItemHandler});
+				vecItems.AddToTail({"Item - 4", pItemHandler});
+				vecItems.AddToTail({"Item - 5", pItemHandler});
+				vecItems.AddToTail({"Item - 6", pItemHandler});
+				vecItems.AddToTail({"Item - 7", pItemHandler});
+				vecItems.AddToTail({"Item - 8", pItemHandler});
+				vecItems.AddToTail({"Item - 9", pItemHandler});
+				vecItems.AddToTail({"Item - 10", pItemHandler});
+				vecItems.AddToTail({"Item - 11", pItemHandler});
+				vecItems.AddToTail({"Item - 12", pItemHandler});
+				vecItems.AddToTail({"Item - 13", pItemHandler});
+				vecItems.AddToTail({"Last Item", pItemHandler});
 
 				return DisplayInternalMenuToPlayer(pInternalMenu, aSlot);
 			}
@@ -328,7 +330,7 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 				return false;
 			}
 
-			const auto &vecMenus = aPlayer.GetMenus();
+			auto &vecMenus = aPlayer.GetMenus();
 
 			for(const auto &[_, pMenu] : vecMenus)
 			{
@@ -863,9 +865,7 @@ bool MenuSystem_Plugin::UpdatePlayerMenus(CPlayerSlot aSlot)
 		return false;
 	}
 
-	auto aPlayerSlot = aPlayer.GetServerSideClient()->GetPlayerSlot();
-
-	auto *pPlayerController = instance_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(aPlayerSlot.GetClientIndex())));
+	auto *pPlayerController = instance_upper_cast<CBasePlayerController *>(g_pEntitySystem->GetEntityInstance(CEntityIndex(aSlot.GetClientIndex())));
 
 	if(!pPlayerController)
 	{
@@ -904,7 +904,7 @@ bool MenuSystem_Plugin::UpdatePlayerMenus(CPlayerSlot aSlot)
 				AttachMenuInstanceToCSPlayer(iShift, pInternalMenu, instance_upper_cast<CCSPlayerPawn *>(pCSPlayerPawnBase));
 			}
 
-			pInternalMenu->InternalDisplayAt(aPlayerSlot, pInternalMenu->GetCurrentPosition(aPlayerSlot), i == iActiveMenu ? IMenu::MENU_DISPLAY_DEFAULT : IMenu::MENU_DISPLAY_READER_BASE_UPDATE);
+			pInternalMenu->InternalDisplayAt(aSlot, pInternalMenu->GetCurrentPosition(aSlot), i == iActiveMenu ? IMenu::MENU_DISPLAY_DEFAULT : IMenu::MENU_DISPLAY_READER_BASE_UPDATE);
 		}
 	}
 
@@ -1015,7 +1015,7 @@ bool MenuSystem_Plugin::CloseMenuHandler(IMenu *pMenu)
 	return true;
 }
 
-void MenuSystem_Plugin::CloseInternalMenu(CMenu *pInternalMenu, IMenuHandler::EndReason_t eReason)
+void MenuSystem_Plugin::CloseInternalMenu(CMenu *pInternalMenu, IMenuHandler::EndReason_t eReason, bool bCleanupPlayer)
 {
 	pInternalMenu->Close(eReason);
 	DestroyInternalMenuEntities(pInternalMenu);
@@ -1024,7 +1024,7 @@ void MenuSystem_Plugin::CloseInternalMenu(CMenu *pInternalMenu, IMenuHandler::En
 
 	CloseMenuHandler(pMenu);
 
-	if(eReason == IMenuHandler::MenuEnd_Disconnected)
+	if(!bCleanupPlayer)
 	{
 		return;
 	}
@@ -1090,7 +1090,7 @@ void MenuSystem_Plugin::PurgeAllMenus()
 				continue;
 			}
 
-			CloseInternalMenu(pInternalMenu, IMenuHandler::MenuEnd_Disconnected);
+			CloseInternalMenu(pInternalMenu, IMenuHandler::MenuEnd_Disconnected, false);
 		}
 
 		vecMenus.Purge();
@@ -1402,6 +1402,8 @@ GS_EVENT_MEMBER(MenuSystem_Plugin, GameFrameBoundary)
 			continue;
 		}
 
+		IMenu::Index_t &iActiveMenu = aPlayer.GetActiveMenuIndexRef();
+
 		auto &vecMenus = aPlayer.GetMenus();
 
 		FOR_EACH_VEC_BACK(vecMenus, i)
@@ -1420,11 +1422,16 @@ GS_EVENT_MEMBER(MenuSystem_Plugin, GameFrameBoundary)
 				continue;
 			}
 
+			if(i == iActiveMenu)
+			{
+				iActiveMenu--;
+			}
+
 			vecMenus.Remove(i);
 
 			CMenu *pInternalMenu = m_MenuAllocator.GetInstanceByMemBlock(pMemBlock);
 
-			CloseInternalMenu(pInternalMenu, IMenuHandler::MenuEnd_Timeout);
+			CloseInternalMenu(pInternalMenu, IMenuHandler::MenuEnd_Timeout, false);
 			m_MenuAllocator.ReleaseByMemBlock(pMemBlock);
 		}
 	}
@@ -3691,7 +3698,7 @@ META_RES MenuSystem_Plugin::OnExecuteStringCommandPre(CServerSideClientBase *pCl
 {
 	const char *pszFullCommand = aMessage.command().c_str();
 
-	if(m_aEnableClientCommandDetailsConVar.GetValue() && Logger::IsChannelEnabled(LV_DEFAULT))
+	if(m_aEnableClientCommandDetailsConVar.GetValue() && Logger::IsChannelEnabled(LV_DETAILED))
 	{
 		const auto &aConcat = g_aEmbedConcat;
 
@@ -4026,9 +4033,11 @@ void MenuSystem_Plugin::OnDisconectClient(CServerSideClientBase *pClient, ENetwo
 				continue;
 			}
 
-			CloseInternalMenu(pInternalMenu, IMenuHandler::MenuEnd_Disconnected);
+			CloseInternalMenu(pInternalMenu, IMenuHandler::MenuEnd_Disconnected, false);
 			m_MenuAllocator.ReleaseByMemBlock(pMemBlock);
 		}
+
+		vecMenus.Purge();
 	}
 
 	aPlayer.OnDisconnected(pPlayer, eReason);
@@ -4231,6 +4240,8 @@ bool MenuSystem_Plugin::ProcessUserCmd(CServerSideClientBase *pClient, CCSGOUser
 
 	if(pBaseUserCmd)
 	{
+		int nClientTick = pBaseUserCmd->client_tick();
+
 		// Menu switcher.
 		{
 			bool bLeftHandDesired = pMessage->left_hand_desired();
@@ -4239,8 +4250,6 @@ bool MenuSystem_Plugin::ProcessUserCmd(CServerSideClientBase *pClient, CCSGOUser
 
 			if(bLeftHandDesired != bMenuToggler)
 			{
-				int nClientTick = pBaseUserCmd->client_tick();
-
 				int &mMenuTogglerClientTick = aPlayer.GetMenuTogglerClientTickRef();
 
 				if(nClientTick != mMenuTogglerClientTick)

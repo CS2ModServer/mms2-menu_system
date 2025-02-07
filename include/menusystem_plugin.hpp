@@ -308,7 +308,7 @@ public: // IMenuSystem
 	IMenuHandler *FindMenuHandler(IMenu *pMenu);
 	int DestroyInternalMenuEntities(CMenu *pInternalMenu);
 	bool CloseMenuHandler(IMenu *pMenu);
-	void CloseInternalMenu(CMenu *pInternalMenu, IMenuHandler::EndReason_t eReason);
+	void CloseInternalMenu(CMenu *pInternalMenu, IMenuHandler::EndReason_t eReason, bool bCleanupPlayer = true);
 	void PurgeAllMenus(); // Close all menus of the players.
 
 public: // IMenuHandler
