@@ -403,11 +403,6 @@ bool MenuSystem_Plugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t max
 		return false;
 	}
 
-	if(!InitEntityManager(error, maxlen))
-	{
-		return false;
-	}
-
 	if(Logger::IsChannelEnabled(LS_DETAILED))
 	{
 		CBufferStringN<1024> sMessage;
