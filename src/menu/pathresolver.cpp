@@ -45,7 +45,7 @@ void Menu::CPathResolver::Clear()
 
 std::string_view Menu::CPathResolver::GetAbsoluteModuleFilename()
 {
-	return m_aModule.GetModulePath();
+	return m_aModule.GetPath();
 }
 
 std::string_view Menu::CPathResolver::Extract(std::string_view sStartMarker, std::string_view sEndMarker)
