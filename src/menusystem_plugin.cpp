@@ -73,6 +73,7 @@
 SH_DECL_HOOK3_void(ICvar, DispatchConCommand, SH_NOATTRIB, 0, ConCommandHandle, const CCommandContext &, const CCommand &);
 SH_DECL_HOOK3_void(INetworkServerService, StartupServer, SH_NOATTRIB, 0, const GameSessionConfiguration_t &, ISource2WorldSession *, const char *);
 SH_DECL_HOOK7_void(ISource2GameEntities, CheckTransmit, SH_NOATTRIB, 0, CCheckTransmitInfo **, int, CBitVec<MAX_EDICTS> &, const Entity2Networkable_t **, const uint16 *, int, bool);
+SH_DECL_HOOK0_void(CNetworkGameServerBase, Release, SH_NOATTRIB, 0);
 SH_DECL_HOOK8(CNetworkGameServerBase, ConnectClient, SH_NOATTRIB, 0, CServerSideClientBase *, const char *, ns_address *, void *, C2S_CONNECT_Message *, const char *, const byte *, int, bool);
 SH_DECL_HOOK1(CServerSideClientBase, ExecuteStringCommand, SH_NOATTRIB, 0, bool, const CNETMsg_StringCmd_t &);
 SH_DECL_HOOK1(CServerSideClientBase, ProcessRespondCvarValue, SH_NOATTRIB, 0, bool, const CCLCMsg_RespondCvarValue_t &);
@@ -3555,7 +3556,14 @@ void MenuSystem_Plugin::SendTextMessage(IRecipientFilter *pFilter, int iDestinat
 
 void MenuSystem_Plugin::OnStartupServer(CNetworkGameServerBase *pNetServer, const GameSessionConfiguration_t &config, ISource2WorldSession *pWorldSession)
 {
+	if(g_pNetworkGameServer && g_pNetworkGameServer != pNetServer)
+	{
+		SH_REMOVE_HOOK(CNetworkGameServerBase, ConnectClient, g_pNetworkGameServer, SH_MEMBER(this, &MenuSystem_Plugin::OnConnectClientHook), true);
+	}
+
 	SH_ADD_HOOK(CNetworkGameServerBase, ConnectClient, pNetServer, SH_MEMBER(this, &MenuSystem_Plugin::OnConnectClientHook), true);
+
+	g_pNetworkGameServer = pNetServer;
 
 	{
 		bool (MenuSystem_Plugin::*pfnIntializers[])(char *error, size_t maxlen) = 

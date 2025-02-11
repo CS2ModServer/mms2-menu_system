@@ -38,6 +38,7 @@ CEntitySystem *g_pEntitySystem = NULL;
 CGameEntitySystem *g_pGameEntitySystem = NULL;
 CBaseGameSystemFactory **CBaseGameSystemFactory::sm_pFirst = NULL;
 IGameEventManager2 *g_pGameEventManager = NULL;
+CNetworkGameServerBase *g_pNetworkGameServer = NULL;
 
 bool InitGlobals(SourceMM::ISmmAPI *ismm, char *error, size_t maxlen)
 {
