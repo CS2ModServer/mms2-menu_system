@@ -486,11 +486,6 @@ CEntityKeyValues *Menu::CProfile::GetAllocactedEntityKeyValues(CKeyValues3Contex
 
 	Assert(pResult);
 
-	if(m_pData)
-	{
-		pResult->CopyFrom(m_pData);
-	}
-
 	Metadata_t::Bases_t vecBaseline = m_aMetadata.GetBaseline();
 
 	FOR_EACH_VEC_BACK(vecBaseline, i)
@@ -519,6 +514,11 @@ CEntityKeyValues *Menu::CProfile::GetAllocactedEntityKeyValues(CKeyValues3Contex
 				}
 			}
 		}
+	}
+
+	if(m_pData)
+	{
+		pResult->CopyFrom(m_pData);
 	}
 
 	return pResult;
