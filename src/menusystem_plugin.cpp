@@ -841,7 +841,7 @@ bool MenuSystem_Plugin::CloseInstance(IMenu *pMenu)
 
 CMenu *MenuSystem_Plugin::CreateInternalMenu(IMenuProfile *pProfile, IMenuHandler *pHandler)
 {
-	auto *pNewMenu = m_MenuAllocator.CreateInstance(static_cast<CMenu::CPointWorldText_Helper *>(this), &GetGameDataStorage().GetBaseEntity(), pProfile, this, &m_aControls);
+	auto *pNewMenu = m_MenuAllocator.CreateInstance(static_cast<CMenu::CPointWorldText_Helper *>(this), &GetGameDataStorage().GetBaseEntity(), pProfile, static_cast<IMenuHandler *>(this), &m_aControls);
 
 	m_mapMenuHandlers.InsertOrReplace(pNewMenu, pHandler);
 
@@ -999,16 +999,7 @@ int MenuSystem_Plugin::DestroyInternalMenuEntities(CMenu *pInternalMenu)
 
 bool MenuSystem_Plugin::CloseMenuHandler(IMenu *pMenu)
 {
-	auto *pHandler = FindMenuHandler(pMenu);
-
-	if(!pHandler)
-	{
-		return false;
-	}
-
-	delete pHandler;
-
-	return true;
+	return m_mapMenuHandlers.Remove(pMenu);
 }
 
 void MenuSystem_Plugin::CloseInternalMenu(CMenu *pInternalMenu, IMenuHandler::EndReason_t eReason, bool bCleanupPlayer)

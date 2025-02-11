@@ -35,7 +35,7 @@ public:
 public: // IMenuHandler
 	void OnMenuDestroy(IMenu *pMenu) override
 	{
-		RemoveHandler(pMenu);
+		RemoveHandlers(pMenu);
 	}
 
 public: // IMenu::IItemHandler
@@ -43,10 +43,19 @@ public: // IMenu::IItemHandler
 	{
 		auto itFound = m_mapHandlers.find({iItem, pMenu});
 
-		if(itFound != m_mapHandlers.cend())
+		if(itFound == m_mapHandlers.cend())
 		{
-			itFound->second(pMenu, aSlot, iItem, iItemOnPage, pData);
+			return;
 		}
+
+		auto *pHandler = itFound->second;
+
+		if(!pHandler)
+		{
+			return;
+		}
+
+		pHandler(pMenu, aSlot, iItem, iItemOnPage, pData);
 	}
 
 public:
@@ -55,24 +64,20 @@ public:
 		m_mapHandlers.emplace(aKey, aValue);
 	}
 
-	void RemoveHandler(const IMenu_t *pMenu)
+	void RemoveHandlers(const IMenu_t *pMenu)
 	{
 		auto &mapHandlers = m_mapHandlers;
 
-		const auto &itHandlersBegin = mapHandlers.cbegin(), 
-		           &itHandlersEnd = mapHandlers.cend();
-
-		for(auto it = itHandlersBegin; it != itHandlersEnd;)
+		for(auto it = mapHandlers.begin(); it != mapHandlers.end();)
 		{
 			if(it->first.second == pMenu)
 			{
 				it = mapHandlers.erase(it);
-				it++;
-
-				continue;
 			}
-
-			it++;
+			else
+			{
+				it++;
+			}
 		}
 	}
 
@@ -94,7 +99,7 @@ MENU_DLL_EXPORT IMenuProfileSystem_t *MenuSystem_GetProfiles(IMenuSystem_t *pSys
 
 MENU_DLL_EXPORT IMenu_t *MenuSystem_CreateInstance(IMenuSystem_t *pSystem, IMenuProfile_t *pProfile)
 {
-	return pSystem->CreateInstance(pProfile, &g_aMenuWrapper);
+	return pSystem->CreateInstance(pProfile, static_cast<IMenuHandler *>(&g_aMenuWrapper));
 }
 
 MENU_DLL_EXPORT bool MenuSystem_DisplayInstanceToPlayer(IMenuSystem_t *pSystem, IMenu_t *pMenuInstance, CPlayerSlot aSlot, IMenuItemPosition_t iStartItem, int nManyTimes)
