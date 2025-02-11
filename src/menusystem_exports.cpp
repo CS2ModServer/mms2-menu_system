@@ -67,6 +67,7 @@ public:
 			if(it->first.second == pMenu)
 			{
 				it = mapHandlers.erase(it);
+				it++;
 
 				continue;
 			}
