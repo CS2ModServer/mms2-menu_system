@@ -149,21 +149,28 @@ inline uint8 CMenu::GetMaxItemsPerPageWithoutControls()
 	return sm_nMaxItemsPerPage - (!!(eControlFlags & MENU_ITEM_CONTROL_FLAG_BACK) + !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_BACK) + !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_EXIT));
 }
 
-CMenu::IPage *CMenu::Render(CPlayerSlot aSlot, ItemPosition_t iStartItem, bool bIsBase)
+CMenu::IPage *CMenu::Render(CPlayerSlot aSlot, ItemPosition_t iStartItem, DisplayFlags_t eFlags)
 {
 	int iClient = aSlot.GetClientIndex();
 
-	auto &mapCachedPages = (bIsBase ? m_arrCachedPageBasesMap : m_arrCachedPagesMap)[iClient];
+	auto &mapCachedPages = (eFlags & MENU_DISPLAY_READER_BASE ? m_arrCachedPageBasesMap : m_arrCachedPagesMap)[iClient];
 
 	auto iFoundPage = mapCachedPages.Find(iStartItem);
 
 	IPage *pPage = iFoundPage == mapCachedPages.InvalidIndex() ? nullptr : mapCachedPages.Element(iFoundPage);
 
-	if(!pPage)
+	if(pPage)
+	{
+		if(eFlags & MENU_DISPLAY_RERENDER)
+		{
+			pPage->Render(static_cast<IMenu *>(this), m_aData, aSlot, iStartItem, GetMaxItemsPerPageWithoutControls());
+		}
+	}
+	else
 	{
 		const int nMessageTextSize = m_pSchemaHelper_PointWorldText->GetMessageTextSize();
 
-		pPage = static_cast<IPage *>(bIsBase ? new CPageBase(nMessageTextSize) : new CPage(nMessageTextSize));
+		pPage = static_cast<IPage *>(eFlags & MENU_DISPLAY_READER_BASE ? new CPageBase(nMessageTextSize) : new CPage(nMessageTextSize));
 
 		Assert(pPage);
 		pPage->Render(static_cast<IMenu *>(this), m_aData, aSlot, iStartItem, GetMaxItemsPerPageWithoutControls());
@@ -179,7 +186,7 @@ bool CMenu::InternalDisplayAt(CPlayerSlot aSlot, ItemPosition_t iStartItem, Disp
 {
 	m_bvPlayers.Set(aSlot.Get());
 
-	auto *pPage = Render(aSlot, iStartItem, !!(eFlags & MENU_DISPLAY_READER_BASE));
+	auto *pPage = Render(aSlot, iStartItem, eFlags);
 
 	if(eFlags & MENU_DISPLAY_UPDATE_TEXT_NOW)
 	{

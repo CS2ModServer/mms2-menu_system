@@ -166,6 +166,9 @@ public: // IMenu
 	class IPage
 	{
 	public:
+		virtual ~IPage() = default;
+
+	public:
 		virtual bool IsEmpty() const = 0;
 		virtual const char *GetText() const = 0; // Aka background text.
 		virtual const char *GetInactiveText() const = 0;
@@ -241,7 +244,7 @@ public: // IMenu
 	static constexpr uint8 sm_nMaxItemsPerPage = MENU_DEFAULT_ITEMS_COUNT_PER_PAGE;
 	uint8 GetMaxItemsPerPageWithoutControls();
 
-	IPage *Render(CPlayerSlot aSlot, ItemPosition_t iStartItem = MENU_FIRST_ITEM_INDEX, bool bBase = false);
+	IPage *Render(CPlayerSlot aSlot, ItemPosition_t iStartItem = MENU_FIRST_ITEM_INDEX, DisplayFlags_t eFlags = MENU_DISPLAY_DEFAULT);
 	bool InternalDisplayAt(CPlayerSlot aSlot, ItemPosition_t iStartItem = MENU_FIRST_ITEM_INDEX, DisplayFlags_t eFlags = MENU_DISPLAY_DEFAULT) override;
 
 	virtual bool OnSelect(CPlayerSlot aSlot, int iSelectedItem, DisplayFlags_t eFlags = MENU_DISPLAY_DEFAULT);
