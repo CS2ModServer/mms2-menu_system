@@ -242,6 +242,8 @@ public: // IMenu
 
 		void Clear() override
 		{
+			Base::Clear();
+
 			m_sInactiveText.Clear();
 			m_sActiveText.Clear();
 		}
