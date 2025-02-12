@@ -41,6 +41,11 @@ Menu::CProfile::CProfile::~CProfile()
 		delete m_pMatrixOffset_Previos;
 	}
 
+	if(m_pBackgroundColor)
+	{
+		delete m_pBackgroundColor;
+	}
+
 	if(m_pInactiveColor)
 	{
 		delete m_pInactiveColor;
@@ -74,6 +79,7 @@ bool Menu::CProfile::Load(CProfileSystem *pSystem, KeyValues3 *pData, ProfileLoa
 	m_sItemsVerificationClientConVarName = pData->GetMemberString("items_verification_client_convar_name");
 	m_pMatrixOffset = LoadAllocatedMatrixOffset(pData->FindMember("matrix_offset"), vecMessages);
 	m_pMatrixOffset_Previos = LoadAllocatedMatrixOffset(pData->FindMember("matrix_offset-previous"), vecMessages);
+	m_pBackgroundColor = (pMember = pData->FindMember("background_color")) ? new Color(pMember->GetColor()) : nullptr;
 	m_pInactiveColor = (pMember = pData->FindMember("inactive_color")) ? new Color(pMember->GetColor()) : nullptr;
 	m_pActiveColor = (pMember = pData->FindMember("active_color")) ? new Color(pMember->GetColor()) : nullptr;
 	m_flBackgroundAwayUnits = pData->GetMemberFloat("background_away_units");
@@ -406,6 +412,25 @@ const IMenuProfile::MatrixOffset_t *Menu::CProfile::GetPreviosMatrixOffset() con
 
 	return pResult;
 }
+
+const Color *Menu::CProfile::GetBackgroundColor() const
+{
+	const auto *pResult = m_pBackgroundColor;
+
+	if(!pResult)
+	{
+		for(const auto &pInherited : m_aMetadata.GetBaseline()) 
+		{
+			if(pResult = pInherited->GetBackgroundColor()) 
+			{
+				break;
+			}
+		}
+	}
+
+	return pResult;
+}
+
 
 const Color *Menu::CProfile::GetInactiveColor() const
 {

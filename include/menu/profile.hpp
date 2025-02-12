@@ -96,6 +96,7 @@ namespace Menu
 		IMenuProfile::MatrixOffset_t *m_pMatrixOffset = nullptr; // "matrix_offset"
 		IMenuProfile::MatrixOffset_t *m_pMatrixOffset_Previos = nullptr; // "matrix_offset-previos"
 
+		Color *m_pBackgroundColor = nullptr; // "background_color"
 		Color *m_pInactiveColor = nullptr; // "inactive_color"
 		Color *m_pActiveColor = nullptr; // "active_color"
 
@@ -165,6 +166,7 @@ namespace Menu
 		const CUtlString &GetItemsVerificationClientConVarName() const override;
 		const MatrixOffset_t *GetMatrixOffset() const override;
 		const MatrixOffset_t *GetPreviosMatrixOffset() const override;
+		const Color *GetBackgroundColor() const override;
 		const Color *GetInactiveColor() const override;
 		const Color *GetActiveColor() const override;
 		float GetBackgroundAwayUnits() const override;

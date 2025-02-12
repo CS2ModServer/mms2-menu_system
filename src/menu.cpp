@@ -294,13 +294,23 @@ CEntityKeyValues *CMenu::GetAllocatedBackgroundKeyValues(CPlayerSlot aSlot, CKey
 
 	if(pMenuKV)
 	{
-		const Color *pInactiveColor = pProfile->GetInactiveColor(), 
-		            *pActiveColor = pProfile->GetActiveColor();
+		const Color *pBackgrounndColor = pProfile->GetBackgroundColor();
 
-		if(pInactiveColor && pActiveColor)
+		if(pBackgrounndColor)
 		{
-			pMenuKV->SetColor("color", CalculatePassiveColor(*pInactiveColor, *pActiveColor));
+			pMenuKV->SetColor("color", *pBackgrounndColor);
 		}
+		else
+		{
+			const Color *pInactiveColor = pProfile->GetInactiveColor(), 
+			            *pActiveColor = pProfile->GetActiveColor();
+	
+			if(pInactiveColor && pActiveColor)
+			{
+				pMenuKV->SetColor("color", CalculatePassiveColor(*pInactiveColor, *pActiveColor));
+			}
+		}
+
 
 		pMenuKV->SetString("message", GetCurrentPage(aSlot)->GetText());
 	}

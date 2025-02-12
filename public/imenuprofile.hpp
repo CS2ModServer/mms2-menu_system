@@ -102,6 +102,13 @@ public: // Abstract methods.
 	virtual const MatrixOffset_t *GetPreviosMatrixOffset() const = 0;
 
 	/**
+	 * @brief Gets the background color.
+	 * 
+	 * @return Returns a pointer to background color.
+	 */
+	virtual const Color *GetBackgroundColor() const = 0;
+
+	/**
 	 * @brief Gets the inactive color.
 	 * 
 	 * @return Returns a pointer to inactive color.
