@@ -41,14 +41,14 @@ bool MenuSystem_Plugin::CPlayer::AddLanguageListener(IPlayerLanguageListener *pL
 {
 	int iFound = m_vecLanguageCallbacks.Find(pListener);
 
-	bool bIsExists = m_vecLanguageCallbacks.IsValidIndex(iFound);
+	bool bIsNew = iFound == m_vecLanguageCallbacks.InvalidIndex();
 
-	if(bIsExists)
+	if(bIsNew)
 	{
 		m_vecLanguageCallbacks.AddToTail(pListener);
 	}
 
-	return bIsExists;
+	return bIsNew;
 }
 
 bool MenuSystem_Plugin::CPlayer::RemoveLanguageListener(IPlayerLanguageListener *pListener)
