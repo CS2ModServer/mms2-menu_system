@@ -163,6 +163,7 @@ CMenu::IPage *CMenu::Render(CPlayerSlot aSlot, ItemPosition_t iStartItem, Displa
 	{
 		if(eFlags & MENU_DISPLAY_RERENDER)
 		{
+			pPage->Clear();
 			pPage->Render(static_cast<IMenu *>(this), m_aData, aSlot, iStartItem, GetMaxItemsPerPageWithoutControls());
 		}
 	}

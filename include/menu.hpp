@@ -173,6 +173,7 @@ public: // IMenu
 		virtual const char *GetText() const = 0; // Aka background text.
 		virtual const char *GetInactiveText() const = 0;
 		virtual const char *GetActiveText() const = 0;
+		virtual void Clear() = 0;
 
 		virtual void Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, ItemPosition_t iStartPosition, uint8 nMaxItems) = 0; // Render a page.
 	};
@@ -201,6 +202,11 @@ public: // IMenu
 		const char *GetActiveText() const override
 		{
 			return "";
+		}
+
+		void Clear() override
+		{
+			m_sText.Clear();
 		}
 
 		void Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, ItemPosition_t iStartPosition, uint8 nMaxItems) override;
@@ -232,6 +238,12 @@ public: // IMenu
 		virtual const char *GetActiveText() const override
 		{
 			return m_sActiveText.Get();
+		}
+
+		void Clear() override
+		{
+			m_sInactiveText.Clear();
+			m_sActiveText.Clear();
 		}
 
 		void Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, ItemPosition_t iStartPosition, uint8 nMaxItems) override;
