@@ -163,7 +163,6 @@ CMenu::IPage *CMenu::Render(CPlayerSlot aSlot, ItemPosition_t iStartItem, Displa
 	{
 		if(eFlags & MENU_DISPLAY_RERENDER)
 		{
-			pPage->Clear();
 			pPage->Render(static_cast<IMenu *>(this), m_aData, aSlot, iStartItem, GetMaxItemsPerPageWithoutControls());
 		}
 	}
@@ -444,6 +443,8 @@ CMenu::CPageBase::CPageBase(int nTextSize)
 // Render just base text without.
 void CMenu::CPageBase::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, ItemPosition_t iStartPosition, uint8 nMaxItems)
 {
+	Clear();
+
 	const auto &aConcat = g_aMenuConcat;
 
 	IMenuHandler *pHandler = pMenu->GetHandler();
@@ -593,6 +594,8 @@ CMenu::CPage::CPage(int nTextSize)
 
 void CMenu::CPage::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, ItemPosition_t iStartPosition, uint8 nMaxItems)
 {
+	Clear();
+
 	const auto &aConcat = g_aMenuConcat;
 
 	IMenuHandler *pHandler = pMenu->GetHandler();
