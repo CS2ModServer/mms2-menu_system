@@ -900,7 +900,7 @@ bool MenuSystem_Plugin::UpdatePlayerMenus(CPlayerSlot aSlot)
 				AttachMenuInstanceToCSPlayer(iShift, pInternalMenu, instance_upper_cast<CCSPlayerPawn *>(pCSPlayerPawnBase));
 			}
 
-			pInternalMenu->InternalDisplayAt(aSlot, pInternalMenu->GetCurrentPosition(aSlot), i == iActiveMenu ? IMenu::MENU_DISPLAY_DEFAULT : IMenu::MENU_DISPLAY_READER_BASE_UPDATE);
+			pInternalMenu->InternalDisplayAt(aSlot, pInternalMenu->GetCurrentPosition(aSlot), i == iActiveMenu ? IMenu::MENU_DISPLAY_DEFAULT : IMenu::MENU_DISPLAY_RENDER_BASE_UPDATE);
 		}
 	}
 
