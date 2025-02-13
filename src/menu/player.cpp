@@ -64,7 +64,10 @@ void MenuSystem_Plugin::CPlayer::OnConnected(CServerSideClient *pClient)
 void MenuSystem_Plugin::CPlayer::OnDisconnected(CServerSideClient *pClient, ENetworkDisconnectionReason eReason)
 {
 	m_pServerSideClient = nullptr;
-	m_vecMenus.Purge();
+	m_vecMenus.RemoveAll();
+	m_bMenuTogglerState = false;
+	m_nMenuTogglerClientTick = -1;
+	m_nActiveMenuIndex = -1;
 
 	m_pLanguage = nullptr;
 	m_aYourArgumentPhrase = {};
