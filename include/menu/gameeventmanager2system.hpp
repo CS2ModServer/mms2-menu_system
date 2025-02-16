@@ -64,7 +64,7 @@ namespace Menu
 		void FireGameEvent(IGameEvent *pEvent) override;
 
 	private: // ConVars
-		ConVar<bool> m_aEnableDetaillsConVar;
+		CConVar<bool> m_aEnableDetaillsConVar;
 	}; // Menu::CGameEventManager2System
 }; // Menu
 

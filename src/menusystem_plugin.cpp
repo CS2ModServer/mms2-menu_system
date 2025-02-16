@@ -70,7 +70,7 @@
 
 #define EF_MENU EF_BONEMERGE | EF_BRIGHTLIGHT | EF_DIMLIGHT | EF_NOINTERP | EF_NOSHADOW | EF_NODRAW | EF_NORECEIVESHADOW | EF_BONEMERGE_FASTCULL | EF_ITEM_BLINK | EF_PARENT_ANIMATES
 
-SH_DECL_HOOK3_void(ICvar, DispatchConCommand, SH_NOATTRIB, 0, ConCommandHandle, const CCommandContext &, const CCommand &);
+SH_DECL_HOOK3_void(ICvar, DispatchConCommand, SH_NOATTRIB, 0, ConCommandRef, const CCommandContext &, const CCommand &);
 SH_DECL_HOOK3_void(INetworkServerService, StartupServer, SH_NOATTRIB, 0, const GameSessionConfiguration_t &, ISource2WorldSession *, const char *);
 SH_DECL_HOOK7_void(ISource2GameEntities, CheckTransmit, SH_NOATTRIB, 0, CCheckTransmitInfo **, int, CBitVec<MAX_EDICTS> &, const Entity2Networkable_t **, const uint16 *, int, bool);
 SH_DECL_HOOK0_void(CNetworkGameServerBase, Release, SH_NOATTRIB, 0);
@@ -1192,9 +1192,9 @@ void MenuSystem_Plugin::OnMenuDestroy(IMenu *pMenu)
 	}
 
 	// Enable a radar back.
-	ConVarRef<int8> aSVDisableRadar(MENUSYSTEM_SERVER_DISABLE_RADAR_CVAR_NAME);
+	CConVarRef<int> aSVDisableRadar(MENUSYSTEM_SERVER_DISABLE_RADAR_CVAR_NAME);
 
-	if(!aSVDisableRadar.GetValue())
+	if(!aSVDisableRadar.Get())
 	{
 		bool bSendDisableRadar = true;
 
@@ -1501,8 +1501,6 @@ void MenuSystem_Plugin::OnSpawnGroupCreateLoading(SpawnGroupHandle_t hSpawnGroup
 	             vecOrigin {-42.0f, 30.0f, -160.0f};
 
 	const QAngle angRotation {180.0f, 0.0f, 0.0f};
-
-	const Vector vecScales {1.f, 1.f, 1.f};
 
 	auto *pProfile = Menu::CProfileSystem::GetInternal();
 
@@ -3119,11 +3117,11 @@ void MenuSystem_Plugin::OnMenuSelectCommand(const CCommandContext &context, cons
 	}
 }
 
-void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandHandle hCommand, const CCommandContext &aContext, const CCommand &aArgs)
+void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const CCommandContext &aContext, const CCommand &aArgs)
 {
 	if(Logger::IsChannelEnabled(LV_DETAILED))
 	{
-		Logger::DetailedFormat("%s(%d, %d, %s)\n", __FUNCTION__, hCommand.GetIndex(), aContext.GetPlayerSlot().Get(), aArgs.GetCommandString());
+		Logger::DetailedFormat("%s(%d, %d, %s)\n", __FUNCTION__, hCommand.GetAccessIndex(), aContext.GetPlayerSlot().Get(), aArgs.GetCommandString());
 	}
 
 	auto aPlayerSlot = aContext.GetPlayerSlot();
@@ -3692,7 +3690,7 @@ META_RES MenuSystem_Plugin::OnExecuteStringCommandPre(CServerSideClientBase *pCl
 {
 	const char *pszFullCommand = aMessage.command().c_str();
 
-	if(m_aEnableClientCommandDetailsConVar.GetValue() && Logger::IsChannelEnabled(LV_DETAILED))
+	if(m_aEnableClientCommandDetailsConVar.GetBool() && Logger::IsChannelEnabled(LV_DETAILED))
 	{
 		const auto &aConcat = g_aEmbedConcat;
 
@@ -4042,7 +4040,7 @@ bool MenuSystem_Plugin::ProcessUserCmd(CServerSideClientBase *pClient, CCSGOUser
 	const auto *pBaseUserCmd = pMessage->has_base() ? &pMessage->base() : nullptr;
 
 	// Dump runcmd proto.
-	if(m_aEnablePlayerRunCmdDetailsConVar.GetValue() && Logger::IsChannelEnabled(LV_DETAILED))
+	if(m_aEnablePlayerRunCmdDetailsConVar.Get() && Logger::IsChannelEnabled(LV_DETAILED))
 	{
 		const auto &aConcat = g_aEmbedConcat, 
 		           &aConcat2 = g_aEmbed2Concat, 

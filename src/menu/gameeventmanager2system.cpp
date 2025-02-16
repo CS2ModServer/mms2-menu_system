@@ -157,7 +157,7 @@ bool Menu::CGameEventManager2System::Handle(const char *pszName, IGameEvent *pEv
 
 void Menu::CGameEventManager2System::FireGameEvent(IGameEvent *pEvent)
 {
-	if(m_aEnableDetaillsConVar.GetValue())
+	if(m_aEnableDetaillsConVar.Get())
 	{
 		DumpGameEvent(pEvent);
 	}
