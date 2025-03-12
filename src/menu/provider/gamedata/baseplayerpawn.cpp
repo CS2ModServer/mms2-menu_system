@@ -25,6 +25,7 @@
 #include <dynlibutils/virtual.hpp>
 
 Menu::CProvider::CGameDataStorage::CBasePlayerPawn::CBasePlayerPawn()
+ :  m_nGetEyePositionOffset(-1)
 {
 	{
 		auto &aCallbacks = m_aOffsetCallbacks;

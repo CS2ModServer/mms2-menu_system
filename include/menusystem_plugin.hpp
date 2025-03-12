@@ -135,7 +135,10 @@ public: // IMetamodListener
 public: // IMenuSystem
 	CGameEntitySystem **GetGameEntitySystemPointer() const override;
 	CBaseGameSystemFactory **GetFirstGameSystemPointer() const override;
+	CUtlStringMap<IGameSystem::FactoryInfo_t> *GetGameSystemFactoriesPointer() const override;
+	CUtlVector<AddedGameSystem_t> *GetGameSystemsPointer() const override;
 	CGameSystemEventDispatcher **GetGameSystemEventDispatcherPointer() const override;
+	CGameSystemEventDispatcher *GetOutOfGameEventDispatcher() const override;
 	IGameEventManager2 **GetGameEventManagerPointer() const override;
 
 	class CLanguage : public IMenuSystem::ILanguage
@@ -143,15 +146,15 @@ public: // IMenuSystem
 		friend class MenuSystem_Plugin;
 
 	public:
-		CLanguage(const CUtlSymbolLarge &sInitName = NULL, const char *pszInitCountryCode = "en");
+		CLanguage(const CUtlSymbolLarge &sInitName = {}, const char *pszInitCountryCode = "en") : m_sName(sInitName), m_sCountryCode(pszInitCountryCode) {}
 
 	public:
-		const char *GetName() const override;
-		const char *GetCountryCode() const override;
+		const char *GetName() const override { return m_sName.String(); }
+		const char *GetCountryCode() const override { return m_sCountryCode; }
 
 	protected:
-		void SetName(const CUtlSymbolLarge &sInitName);
-		void SetCountryCode(const char *psz);
+		void SetName(const CUtlSymbolLarge &s) { m_sName = s; }
+		void SetCountryCode(const char *psz) { m_sCountryCode = psz; }
 
 	private:
 		CUtlSymbolLarge m_sName;
@@ -518,22 +521,22 @@ private: // Language (hash)map.
 	CUtlMap<CUtlSymbolLarge, CLanguage> m_mapLanguages;
 
 private: // Fields.
-	CGameSystemStaticFactory<This> *m_pFactory = NULL;
+	CGameSystemStaticFactory<This> *m_pFactory;
 
 	// Provide to Entity Manager plugin.
 	PluginId m_iEntityManager;
-	IEntityManager *m_pEntityManager = nullptr;
-	IEntityManager::IProviderAgent *m_pEntityManagerProviderAgent = nullptr;
-	IEntityManager::CSpawnGroupProvider *m_pEntityManagerSpawnGroupProvider = nullptr;
+	IEntityManager *m_pEntityManager;
+	IEntityManager::IProviderAgent *m_pEntityManagerProviderAgent;
+	IEntityManager::CSpawnGroupProvider *m_pEntityManagerSpawnGroupProvider;
 
 	// Run-time things.
-	IEntityManager::IProviderAgent::ISpawnGroupInstance *m_pMySpawnGroupInstance = nullptr;
+	IEntityManager::IProviderAgent::ISpawnGroupInstance *m_pMySpawnGroupInstance;
 
-	INetworkMessageInternal *m_pSetConVarMessage = NULL;
-	INetworkMessageInternal *m_pGetCvarValueMessage = NULL;
-	INetworkMessageInternal *m_pSayText2Message = NULL;
-	INetworkMessageInternal *m_pTextMsgMessage = NULL;
-	// INetworkMessageInternal *m_pVGUIMenuMessage = NULL;
+	INetworkMessageInternal *m_pSetConVarMessage;
+	INetworkMessageInternal *m_pGetCvarValueMessage;
+	INetworkMessageInternal *m_pSayText2Message;
+	INetworkMessageInternal *m_pTextMsgMessage;
+	// INetworkMessageInternal *m_pVGUIMenuMessage;
 
 	CLanguage m_aServerLanguage;
 	CUtlVector<CLanguage> m_vecLanguages;

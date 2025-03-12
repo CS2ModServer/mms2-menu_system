@@ -109,8 +109,8 @@ namespace Menu
 			private: // Addresses.
 				using AcceptInput_t = void (CEntityInstance *, const char *, CEntityInstance *, CEntityInstance *, variant_t *, int);
 
-				AcceptInput_t *m_pAcceptInputMethod = nullptr;
-				ptrdiff_t m_nTeleportOffset = -1;
+				AcceptInput_t *m_pAcceptInputMethod;
+				ptrdiff_t m_nTeleportOffset;
 			}; // Menu::CProvider::GameStorage::CBaseEntity
 
 			class CBasePlayerPawn
@@ -144,15 +144,21 @@ namespace Menu
 
 			public:
 				CBaseGameSystemFactory **GetFirstPointer() const;
+				CUtlStringMap<IGameSystem::FactoryInfo_t> *GetFactories() const;
+				CUtlVector<AddedGameSystem_t> *GetList() const;
 				CGameSystemEventDispatcher **GetEventDispatcher() const;
+				CGameSystemEventDispatcher *GetOutOfGameEventDispatcher() const;
 
 			private:
 				GameData::Config::Addresses::ListenerCallbacksCollector m_aAddressCallbacks;
 				GameData::Config m_aGameConfig;
 
 			private: // Addresses.
-				CBaseGameSystemFactory **m_ppFirst = nullptr;
-				CGameSystemEventDispatcher **m_ppEventDispatcher = nullptr;
+				CBaseGameSystemFactory **m_ppFirst;
+				CUtlStringMap<IGameSystem::FactoryInfo_t> *m_pGameSystemFactories;
+				CUtlVector<AddedGameSystem_t> *m_pGameSystems;
+				CGameSystemEventDispatcher **m_ppEventDispatcher;
+				CGameSystemEventDispatcher *m_pOutOfGameEventDispatcher;
 			}; // Menu::CProvider::GameStorage::CGameSystem
 
 			class CSource2Server
@@ -172,7 +178,7 @@ namespace Menu
 				GameData::Config m_aGameConfig;
 
 			private: // Addresses.
-				CGameEventManager **m_ppGameEventManager = nullptr;
+				CGameEventManager **m_ppGameEventManager;
 			}; // Menu::CProvider::GameStorage::CSource2Server
 
 			class CUserCmd
@@ -197,9 +203,9 @@ namespace Menu
 				using ReadWithPlayerController_t = void (CBasePlayerController *, CCSGOUserCmd *);
 				using ProcessWithPlayerController_t = void (CBasePlayerController *, CCSGOUserCmd *, int, bool, float);
 
-				CCSGOUserCmd *m_pCmds = nullptr;
-				ReadWithPlayerController_t *m_pRead = nullptr;
-				ProcessWithPlayerController_t *m_pProcessWithPlayerController = nullptr;
+				CCSGOUserCmd *m_pCmds;
+				ReadWithPlayerController_t *m_pRead;
+				ProcessWithPlayerController_t *m_pProcessWithPlayerController;
 			}; // Menu::CProvider::GameStorage::CUserCmd
 
 			const CBaseEntity &GetBaseEntity() const

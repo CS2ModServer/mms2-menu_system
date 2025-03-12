@@ -25,6 +25,8 @@
 #include <dynlibutils/virtual.hpp>
 
 Menu::CProvider::CGameDataStorage::CBaseEntity::CBaseEntity()
+ :  m_pAcceptInputMethod(nullptr), 
+    m_nTeleportOffset(-1)
 {
 	{
 		auto &aCallbacks = m_aAddressCallbacks;

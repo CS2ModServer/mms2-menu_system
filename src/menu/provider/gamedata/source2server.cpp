@@ -22,6 +22,7 @@
 #include <menu/provider.hpp>
 
 Menu::CProvider::CGameDataStorage::CSource2Server::CSource2Server()
+ :  m_ppGameEventManager(nullptr)
 {
 	{
 		auto &aCallbacks = m_aAddressCallbacks;

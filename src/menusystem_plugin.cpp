@@ -117,6 +117,17 @@ MenuSystem_Plugin::MenuSystem_Plugin()
     m_mapConVarCookies(DefLessFunc(const CUtlSymbolLarge)),
     m_mapLanguages(DefLessFunc(const CUtlSymbolLarge)),
 
+    m_pEntityManager(nullptr),
+    m_pEntityManagerProviderAgent(nullptr),
+    m_pEntityManagerSpawnGroupProvider(nullptr),
+
+    m_pMySpawnGroupInstance(nullptr),
+    m_pSetConVarMessage(NULL),
+    m_pGetCvarValueMessage(NULL),
+    m_pSayText2Message(NULL),
+    m_pTextMsgMessage(NULL),
+    // m_pVGUIMenuMessage(NULL),
+
     m_aBackControlItem(CMenu::MENU_ITEM_FULL, "Back"),
     m_aNextControlItem(CMenu::MENU_ITEM_FULL, "Next"),
     m_aExitControlItem(CMenu::MENU_ITEM_FULL, "Exit"),
@@ -439,6 +450,26 @@ bool MenuSystem_Plugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t max
 
 	if(late)
 	{
+		// Initialize a game resource & load menu spawn groups.
+		{
+			char sMessage[256];
+		
+			bool (MenuSystem_Plugin::*pfnIntializers[])(char *error, size_t maxlen) = 
+			{
+				&MenuSystem_Plugin::InitEntityManager,
+				&MenuSystem_Plugin::RegisterGameResource,
+				&MenuSystem_Plugin::LoadSpawnGroups,
+			};
+		
+			for(const auto &aInitializer : pfnIntializers)
+			{
+				if(!(this->*(aInitializer))(sMessage, sizeof(sMessage)))
+				{
+					Logger::WarningFormat("%s\n", sMessage);
+				}
+			}
+		}
+
 		auto *pNetServer = reinterpret_cast<CNetworkGameServerBase *>(g_pNetworkServerService->GetIGameServer());
 
 		if(pNetServer)
@@ -451,16 +482,6 @@ bool MenuSystem_Plugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t max
 				{
 					OnConnectClient(pNetServer, pClient, pClient->GetClientName(), &pClient->m_nAddr, NULL, NULL, NULL, NULL, 0, pClient->m_bLowViolence);
 				}
-			}
-		}
-
-		// Initialize a game resource & load menu spawn groups.
-		{
-			char sMessage[256];
-
-			if(!RegisterGameResource(sMessage, sizeof(sMessage)) || !LoadSpawnGroups(sMessage, sizeof(sMessage)))
-			{
-				Logger::WarningFormat("%s\n", sMessage);
 			}
 		}
 	}
@@ -649,9 +670,24 @@ CBaseGameSystemFactory **MenuSystem_Plugin::GetFirstGameSystemPointer() const
 	return GetGameDataStorage().GetGameSystem().GetFirstPointer();
 }
 
+CUtlStringMap<IGameSystem::FactoryInfo_t> *MenuSystem_Plugin::GetGameSystemFactoriesPointer() const
+{
+	return GetGameDataStorage().GetGameSystem().GetFactories();
+}
+
+CUtlVector<AddedGameSystem_t> *MenuSystem_Plugin::GetGameSystemsPointer() const
+{
+	return GetGameDataStorage().GetGameSystem().GetList();
+}
+
 CGameSystemEventDispatcher **MenuSystem_Plugin::GetGameSystemEventDispatcherPointer() const
 {
 	return GetGameDataStorage().GetGameSystem().GetEventDispatcher();
+}
+
+CGameSystemEventDispatcher *MenuSystem_Plugin::GetOutOfGameEventDispatcher() const
+{
+	return GetGameDataStorage().GetGameSystem().GetOutOfGameEventDispatcher();
 }
 
 IGameEventManager2 **MenuSystem_Plugin::GetGameEventManagerPointer() const
@@ -2513,42 +2549,53 @@ bool MenuSystem_Plugin::UnregisterGameFactory(char *error, size_t maxlen)
 	{
 		m_pFactory->Shutdown();
 
+		auto *pGameSystem = m_pFactory->GetStaticGameSystem();
+
 		// Clean up smart dispatcher listener callbacks.
 		{
-			const auto *pGameSystem = m_pFactory->GetStaticGameSystem();
-
 			auto **ppDispatcher = GetGameSystemEventDispatcherPointer();
 
 			Assert(ppDispatcher);
 
 			auto *pDispatcher = *ppDispatcher;
 
-			if(pDispatcher)
+			Assert(pDispatcher);
+
+			pDispatcher->UnregisterListener(pGameSystem);
+		}
+
+		{
+			auto *pDispatcher2 = GetOutOfGameEventDispatcher();
+
+			Assert(pDispatcher2);
+
+			pDispatcher2->UnregisterListener(pGameSystem);
+		}
+
+		// Clean up the added game system.
+		{
+			auto *pGameSystemFactories = GetGameSystemFactoriesPointer();
+
+			Assert(pGameSystemFactories);
+
+			pGameSystemFactories->FindAndRemove(pGameSystem->GetName());
+		}
+
+		// Clean up the game systems.
+		{
+			auto *pGameSystems = GetGameSystemsPointer();
+
+			Assert(pGameSystems);
+
+			auto &vecGameSystems = *pGameSystems;
+
+			FOR_EACH_VEC_BACK(vecGameSystems, i)
 			{
-				auto *pfuncListeners = pDispatcher->m_funcListeners;
-
-				Assert(pfuncListeners);
-
-				auto &funcListeners = *pfuncListeners;
-
-				FOR_EACH_VEC_BACK(funcListeners, i)
+				if(pGameSystem == vecGameSystems[i].m_pGameSystem)
 				{
-					auto &vecListeners = funcListeners[i];
+					vecGameSystems.FastRemove(i);
 
-					FOR_EACH_VEC_BACK(vecListeners, j)
-					{
-						if(pGameSystem == vecListeners[j])
-						{
-							vecListeners.FastRemove(j);
-
-							break;
-						}
-					}
-
-					if(!vecListeners.Count())
-					{
-						funcListeners.FastRemove(i);
-					}
+					break;
 				}
 			}
 		}
@@ -2670,6 +2717,7 @@ bool MenuSystem_Plugin::UnregisterNetMessages(char *error, size_t maxlen)
 	m_pGetCvarValueMessage = NULL;
 	m_pSayText2Message = NULL;
 	m_pTextMsgMessage = NULL;
+	// m_pVGUIMenuMessage = NULL;
 
 	return true;
 }

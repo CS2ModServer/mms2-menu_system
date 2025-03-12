@@ -26,12 +26,17 @@
 #	pragma once
 
 #	include <playerslot.h>
+#	include <igamesystem.h>
 
 class CGameEntitySystem;
 class CBaseGameSystemFactory;
 class CGameSystemEventDispatcher;
 class CServerSideClient;
 class IGameEventManager2;
+template<class T> class CUtlStringMap;
+template<class T, class I> class CUtlMemory;
+template<class T, class I, class A> class CUtlVector;
+struct AddedGameSystem_t;
 
 /**
  * @brief A Sample-legacy interface.
@@ -54,11 +59,32 @@ public:
 	virtual CBaseGameSystemFactory **GetFirstGameSystemPointer() const = 0;
 
 	/**
+	 * @brief Gets game system factories.
+	 * 
+	 * @return              A pointer to a string map of game system factories.
+	 */
+	virtual CUtlStringMap<IGameSystem::FactoryInfo_t> *GetGameSystemFactoriesPointer() const = 0;
+
+	/**
+	 * @brief Gets game systems.
+	 * 
+	 * @return              A pointer to a list of game systems.
+	 */
+	virtual CUtlVector<AddedGameSystem_t, int, CUtlMemory<AddedGameSystem_t, int>> *GetGameSystemsPointer() const = 0;
+
+	/**
 	 * @brief Gets a game system event dispatcher.
 	 * 
 	 * @return              A double pointer to a game system event dispatcher.
 	 */
 	virtual CGameSystemEventDispatcher **GetGameSystemEventDispatcherPointer() const = 0;
+
+	/**
+	 * @brief Gets a out of game system event dispatcher.
+	 * 
+	 * @return              A pointer to an out of game system event dispatcher.
+	 */
+	virtual CGameSystemEventDispatcher *GetOutOfGameEventDispatcher() const = 0;
 
 	/**
 	 * @brief Gets a game event manager.

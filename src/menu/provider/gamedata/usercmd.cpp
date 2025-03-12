@@ -22,6 +22,9 @@
 #include <menu/provider.hpp>
 
 Menu::CProvider::CGameDataStorage::CUserCmd::CUserCmd()
+ :  m_pCmds(nullptr), 
+    m_pRead(nullptr), 
+    m_pProcessWithPlayerController(nullptr)
 {
 	{
 		auto &aCallbacks = m_aAddressCallbacks;

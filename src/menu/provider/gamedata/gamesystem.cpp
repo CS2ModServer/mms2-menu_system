@@ -22,12 +22,20 @@
 #include <menu/provider.hpp>
 
 Menu::CProvider::CGameDataStorage::CGameSystem::CGameSystem()
+ :  m_ppFirst(nullptr),
+    m_pGameSystemFactories(nullptr),
+    m_pGameSystems(nullptr),
+    m_ppEventDispatcher(nullptr),
+    m_pOutOfGameEventDispatcher(nullptr)
 {
 	{
 		auto &aCallbacks = m_aAddressCallbacks;
 
 		aCallbacks.Insert(m_aGameConfig.GetSymbol("CBaseGameSystemFactory::sm_pFirst"), GAMEDATA_ADDRESS_SHARED_LAMBDA_CAPTURE(m_ppFirst));
+		aCallbacks.Insert(m_aGameConfig.GetSymbol("&IGameSystem::sm_GameSystemFactories"), GAMEDATA_ADDRESS_SHARED_LAMBDA_CAPTURE(m_pGameSystemFactories));
+		aCallbacks.Insert(m_aGameConfig.GetSymbol("&s_GameSystems"), GAMEDATA_ADDRESS_SHARED_LAMBDA_CAPTURE(m_pGameSystems));
 		aCallbacks.Insert(m_aGameConfig.GetSymbol("&IGameSystem::sm_pEventDispatcher"), GAMEDATA_ADDRESS_SHARED_LAMBDA_CAPTURE(m_ppEventDispatcher));
+		aCallbacks.Insert(m_aGameConfig.GetSymbol("&s_outOfGameEventDispatcher"), GAMEDATA_ADDRESS_SHARED_LAMBDA_CAPTURE(m_pOutOfGameEventDispatcher));
 
 		m_aGameConfig.GetAddresses().AddListener(&aCallbacks);
 	}
@@ -49,7 +57,22 @@ CBaseGameSystemFactory **Menu::CProvider::CGameDataStorage::CGameSystem::GetFirs
 	return m_ppFirst;
 }
 
+CUtlStringMap<IGameSystem::FactoryInfo_t> *Menu::CProvider::CGameDataStorage::CGameSystem::GetFactories() const
+{
+	return m_pGameSystemFactories;
+}
+
+CUtlVector<AddedGameSystem_t> *Menu::CProvider::CGameDataStorage::CGameSystem::GetList() const
+{
+	return m_pGameSystems;
+}
+
 CGameSystemEventDispatcher **Menu::CProvider::CGameDataStorage::CGameSystem::GetEventDispatcher() const
 {
 	return m_ppEventDispatcher;
+}
+
+CGameSystemEventDispatcher *Menu::CProvider::CGameDataStorage::CGameSystem::GetOutOfGameEventDispatcher() const
+{
+	return m_pOutOfGameEventDispatcher;
 }
