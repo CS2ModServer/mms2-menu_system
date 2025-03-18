@@ -45,9 +45,7 @@ namespace Menu
 		class CBodyComponent_Helper
 		{
 		public:
-			CBodyComponent_Helper(CSystem *pSchemaSystemHelper);
-
-		public:
+			void AddListeners(CSystem *pSchemaSystemHelper);
 			void Clear();
 
 		public:

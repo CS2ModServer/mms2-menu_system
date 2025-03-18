@@ -44,9 +44,7 @@ namespace Menu
 		class CGameSceneNode_Helper
 		{
 		public:
-			CGameSceneNode_Helper(CSystem *pSchemaSystemHelper);
-
-		public:
+			void AddListeners(CSystem *pSchemaSystemHelper);
 			void Clear();
 
 		public:

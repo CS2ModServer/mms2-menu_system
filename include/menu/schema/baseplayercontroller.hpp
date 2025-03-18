@@ -48,9 +48,7 @@ namespace Menu
 		class CBasePlayerController_Helper : virtual public CBaseEntity_Helper
 		{
 		public:
-			CBasePlayerController_Helper(CSystem *pSchemaSystemHelper);
-
-		public:
+			void AddListeners(CSystem *pSchemaSystemHelper);
 			void Clear();
 
 		public:

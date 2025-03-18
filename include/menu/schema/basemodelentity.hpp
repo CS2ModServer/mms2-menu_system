@@ -45,9 +45,7 @@ namespace Menu
 		class CBaseModelEntity_Helper : virtual public CBaseEntity_Helper
 		{
 		public:
-			CBaseModelEntity_Helper(CSystem *pSchemaSystemHelper);
-
-		public:
+			void AddListeners(CSystem *pSchemaSystemHelper);
 			void Clear();
 
 		public:

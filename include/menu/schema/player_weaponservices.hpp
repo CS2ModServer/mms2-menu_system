@@ -41,9 +41,7 @@ namespace Menu
 		class CPlayer_WeaponServices_Helper
 		{
 		public:
-			CPlayer_WeaponServices_Helper(CSystem *pSchemaSystemHelper);
-
-		public:
+			void AddListeners(CSystem *pSchemaSystemHelper);
 			void Clear();
 
 		public:

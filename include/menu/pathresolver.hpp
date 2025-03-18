@@ -36,10 +36,7 @@ namespace Menu
 	class CPathResolver
 	{
 	public:
-		CPathResolver(const void *pInitModule);
-
-	public:
-		bool Init();
+		bool Init(const void *pModuleHandle);
 		void Clear();
 
 	public:
@@ -47,7 +44,6 @@ namespace Menu
 		std::string_view Extract(std::string_view sStartMarker = MENU_PATHRESOLVER_ADDONS_DIR, std::string_view sEndMarker = MENU_PATHRESOLVER_BINARY_DIR);
 
 	private:
-		const void *m_pModule;
 		DynLibUtils::CModule m_aModule;
 	};
 };

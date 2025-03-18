@@ -42,9 +42,7 @@ namespace Menu
 		class CPlayer_ObserverServices_Helper
 		{
 		public:
-			CPlayer_ObserverServices_Helper(CSystem *pSchemaSystemHelper);
-
-		public:
+			void AddListeners(CSystem *pSchemaSystemHelper);
 			void Clear();
 
 		public:

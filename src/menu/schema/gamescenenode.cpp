@@ -23,7 +23,7 @@
 
 #include <schemasystem/schemasystem.h>
 
-Menu::Schema::CGameSceneNode_Helper::CGameSceneNode_Helper(CSystem *pSchemaSystemHelper)
+void Menu::Schema::CGameSceneNode_Helper::AddListeners(CSystem *pSchemaSystemHelper)
 {
 	auto &aCallbacks = m_aClassFieldsClassbacks;
 

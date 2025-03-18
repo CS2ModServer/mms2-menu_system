@@ -65,9 +65,7 @@ namespace Menu
 		class CCSWeaponBaseVData_Helper : virtual public CBasePlayerWeaponVData_Helper
 		{
 		public:
-			CCSWeaponBaseVData_Helper(CSystem *pSchemaSystemHelper);
-
-		public:
+			void AddListeners(CSystem *pSchemaSystemHelper);
 			void Clear();
 
 		public:

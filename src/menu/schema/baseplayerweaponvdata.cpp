@@ -23,7 +23,7 @@
 
 #include <schemasystem/schemasystem.h>
 
-Menu::Schema::CBasePlayerWeaponVData_Helper::CBasePlayerWeaponVData_Helper(CSystem *pSchemaSystemHelper)
+void Menu::Schema::CBasePlayerWeaponVData_Helper::AddListeners(CSystem *pSchemaSystemHelper)
 {
 	auto &aCallbacks = m_aClassFieldsClassbacks;
 

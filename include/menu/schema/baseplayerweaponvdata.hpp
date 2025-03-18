@@ -41,7 +41,7 @@ namespace Menu
 		class CBasePlayerWeaponVData_Helper
 		{
 		public:
-			CBasePlayerWeaponVData_Helper(CSystem *pSchemaSystemHelper);
+			void AddListeners(CSystem *pSchemaSystemHelper);
 
 		public:
 			void Clear();

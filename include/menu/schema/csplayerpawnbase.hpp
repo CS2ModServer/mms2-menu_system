@@ -44,9 +44,7 @@ namespace Menu
 		class CCSPlayerPawnBase_Helper : virtual public CBasePlayerPawn_Helper
 		{
 		public:
-			CCSPlayerPawnBase_Helper(CSystem *pSchemaSystemHelper);
-
-		public:
+			void AddListeners(CSystem *pSchemaSystemHelper);
 			void Clear();
 
 		public:

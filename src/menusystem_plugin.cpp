@@ -86,30 +86,10 @@ MenuSystem_Plugin *g_pMenuPlugin = &s_aMenuPlugin;
 PLUGIN_EXPOSE(MenuSystem_Plugin, s_aMenuPlugin);
 
 MenuSystem_Plugin::MenuSystem_Plugin()
- :  CBaseEntity_Helper(schema_system_cast(this)), 
-    CBaseModelEntity_Helper(schema_system_cast(this)), 
-    CBasePlayerController_Helper(schema_system_cast(this)), 
-    CBasePlayerPawn_Helper(schema_system_cast(this)), 
-    CBasePlayerWeapon_Helper(schema_system_cast(this)), 
-    CBasePlayerWeaponVData_Helper(schema_system_cast(this)), 
-    CBaseViewModel_Helper(schema_system_cast(this)), 
-    CBodyComponent_Helper(schema_system_cast(this)), 
-    CCSPlayerPawnBase_Helper(schema_system_cast(this)), 
-    CCSWeaponBaseVData_Helper(schema_system_cast(this)), 
-    CCSObserverPawn_Helper(schema_system_cast(this)), 
-    CCSPlayer_ViewModelServices_Helper(schema_system_cast(this)), 
-    CCSPlayerBase_CameraServices_Helper(schema_system_cast(this)), 
-    CCSPlayerPawn_Helper(schema_system_cast(this)), 
-    CGameSceneNode_Helper(schema_system_cast(this)), 
-    CPlayer_ObserverServices_Helper(schema_system_cast(this)), 
-    CPlayer_WeaponServices_Helper(schema_system_cast(this)), 
-    CPointWorldText_Helper(schema_system_cast(this)), 
-
-    Logger(GetName(), [](LoggingChannelID_t nTagChannelID)
+ :  Logger(GetName(), [](LoggingChannelID_t nTagChannelID)
     {
     	LoggingSystem_AddTagToChannel(nTagChannelID, s_aMenuPlugin.GetLogTag());
-    }, 0, LV_DEFAULT, MENUSYSTEM_LOGGINING_COLOR),
-    CPathResolver(this),
+    }, 0, LV_DETAILED, MENUSYSTEM_LOGGINING_COLOR),
 
     m_aEnableClientCommandDetailsConVar("mm_" META_PLUGIN_PREFIX "_enable_client_command_details", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable client command detial messages", false, true, false, true, true), 
     m_aEnablePlayerRunCmdDetailsConVar("mm_" META_PLUGIN_PREFIX "_enable_player_runcmd_details", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable player usercmds detial messages", false, true, false, true, true),
@@ -135,6 +115,30 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 
     m_mapMenuHandlers(DefLessFunc(const IMenu *))
 {
+	// Adds schema listeners.
+	{
+		Menu::Schema::CSystem *pSchemaHelper = schema_system_cast(this);
+	
+		CBaseEntity_Helper::AddListeners(pSchemaHelper);
+		CBaseModelEntity_Helper::AddListeners(pSchemaHelper);
+		CBasePlayerController_Helper::AddListeners(pSchemaHelper);
+		CBasePlayerPawn_Helper::AddListeners(pSchemaHelper);
+		CBasePlayerWeapon_Helper::AddListeners(pSchemaHelper);
+		CBasePlayerWeaponVData_Helper::AddListeners(pSchemaHelper);
+		CBaseViewModel_Helper::AddListeners(pSchemaHelper);
+		CBodyComponent_Helper::AddListeners(pSchemaHelper);
+		CCSPlayerPawnBase_Helper::AddListeners(pSchemaHelper);
+		CCSWeaponBaseVData_Helper::AddListeners(pSchemaHelper);
+		CCSObserverPawn_Helper::AddListeners(pSchemaHelper);
+		CCSPlayer_ViewModelServices_Helper::AddListeners(pSchemaHelper);
+		CCSPlayerBase_CameraServices_Helper::AddListeners(pSchemaHelper);
+		CCSPlayerPawn_Helper::AddListeners(pSchemaHelper);
+		CGameSceneNode_Helper::AddListeners(pSchemaHelper);
+		CPlayer_ObserverServices_Helper::AddListeners(pSchemaHelper);
+		CPlayer_WeaponServices_Helper::AddListeners(pSchemaHelper);
+		CPointWorldText_Helper::AddListeners(pSchemaHelper);
+	}
+
 	// Game events.
 	{
 		Menu::CGameEventManager2System::AddHandler("player_team", {[&](const CUtlSymbolLarge &sName, IGameEvent *pEvent) -> bool
@@ -1690,7 +1694,7 @@ bool MenuSystem_Plugin::ClearSchema(char *error, size_t maxlen)
 
 bool MenuSystem_Plugin::InitPathResolver(char *error, size_t maxlen)
 {
-	if(!CPathResolver::Init())
+	if(!CPathResolver::Init(reinterpret_cast<void *>(this)))
 	{
 		if(error && maxlen)
 		{

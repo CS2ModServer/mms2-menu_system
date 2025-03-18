@@ -42,9 +42,7 @@ namespace Menu
 		class CCSPlayerBase_CameraServices_Helper
 		{
 		public:
-			CCSPlayerBase_CameraServices_Helper(CSystem *pSchemaSystemHelper);
-
-		public:
+			void AddListeners(CSystem *pSchemaSystemHelper);
 			void Clear();
 
 		public:

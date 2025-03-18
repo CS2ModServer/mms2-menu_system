@@ -44,11 +44,6 @@ namespace Menu
 		public:
 			using Base = CCSPlayerPawnBase_Helper;
 
-			CCSPlayerPawn_Helper(CSystem *pSchemaSystemHelper);
-
-		public:
-			void Clear();
-
 		public:
 			auto GetViewModelServicesAccessor(CCSPlayerPawn *pCSPlayerPawn)
 			{

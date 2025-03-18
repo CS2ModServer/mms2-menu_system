@@ -23,7 +23,7 @@
 
 #include <schemasystem/schemasystem.h>
 
-Menu::Schema::CCSPlayer_ViewModelServices_Helper::CCSPlayer_ViewModelServices_Helper(CSystem *pSchemaSystemHelper)
+void Menu::Schema::CCSPlayer_ViewModelServices_Helper::AddListeners(CSystem *pSchemaSystemHelper)
 {
 	auto &aCallbacks = m_aClassFieldsClassbacks;
 

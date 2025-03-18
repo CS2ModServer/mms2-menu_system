@@ -68,9 +68,7 @@ namespace Menu
 		class CPointWorldText_Helper : virtual public CBaseModelEntity_Helper
 		{
 		public:
-			CPointWorldText_Helper(CSystem *pSchemaSystemHelper);
-
-		public:
+			void AddListeners(CSystem *pSchemaSystemHelper);
 			void Clear();
 
 		public:

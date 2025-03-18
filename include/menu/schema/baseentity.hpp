@@ -49,9 +49,7 @@ namespace Menu
 		class CBaseEntity_Helper
 		{
 		public:
-			CBaseEntity_Helper(CSystem *pSchemaSystemHelper);
-
-		public:
+			void AddListeners(CSystem *pSchemaSystemHelper);
 			void Clear();
 
 		public:

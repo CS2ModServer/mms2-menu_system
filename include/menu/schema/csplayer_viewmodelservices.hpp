@@ -42,9 +42,7 @@ namespace Menu
 		class CCSPlayer_ViewModelServices_Helper
 		{
 		public:
-			CCSPlayer_ViewModelServices_Helper(CSystem *pSchemaSystemHelper);
-
-		public:
+			void AddListeners(CSystem *pSchemaSystemHelper);
 			void Clear();
 
 		public:

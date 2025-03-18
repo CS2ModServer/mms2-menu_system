@@ -45,8 +45,6 @@ namespace Menu
 		public:
 			using Base = CBaseModelEntity_Helper;
 
-			CBasePlayerWeapon_Helper(CSystem *pSchemaSystemHelper);
-
 		public:
 			auto GetEntitySubclassVDataAccessor(CBasePlayerWeapon *pPlayerWeapon)
 			{

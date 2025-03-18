@@ -45,9 +45,7 @@ namespace Menu
 		class CBasePlayerPawn_Helper : virtual public CBaseModelEntity_Helper
 		{
 		public:
-			CBasePlayerPawn_Helper(CSystem *pSchemaSystemHelper);
-
-		public:
+			void AddListeners(CSystem *pSchemaSystemHelper);
 			void Clear();
 
 		public:

@@ -46,11 +46,6 @@ namespace Menu
 		public:
 			using Base = CCSPlayerPawnBase_Helper;
 
-			CCSObserverPawn_Helper(CSystem *pSchemaSystemHelper);
-
-		public:
-			void Clear();
-
 		public:
 			auto GetObserverServicesAccessor(CCSObserverPawn *pCSObserverPawn)
 			{

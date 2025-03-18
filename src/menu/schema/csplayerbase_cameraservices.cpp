@@ -23,7 +23,7 @@
 
 #include <schemasystem/schemasystem.h>
 
-Menu::Schema::CCSPlayerBase_CameraServices_Helper::CCSPlayerBase_CameraServices_Helper(CSystem *pSchemaSystemHelper)
+void Menu::Schema::CCSPlayerBase_CameraServices_Helper::AddListeners(CSystem *pSchemaSystemHelper)
 {
 	auto &aCallbacks = m_aClassFieldsClassbacks;
 

@@ -26,14 +26,9 @@
 #include <tier0/basetypes.h>
 #include <tier0/dbg.h>
 
-Menu::CPathResolver::CPathResolver(const void *pInitModule)
- :  m_pModule(pInitModule)
+bool Menu::CPathResolver::Init(const void *pModuleHandle)
 {
-}
-
-bool Menu::CPathResolver::Init()
-{
-	m_aModule.InitFromMemory(m_pModule);
+	m_aModule.InitFromMemory(pModuleHandle);
 
 	return true;
 }

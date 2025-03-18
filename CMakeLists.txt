@@ -82,13 +82,10 @@ set(SOURCE_MENU_SCHEMA_FILES
 	${SOURCE_MENU_SCHEMA_DIR}/baseplayercontroller.cpp
 	${SOURCE_MENU_SCHEMA_DIR}/baseviewmodel.cpp
 	${SOURCE_MENU_SCHEMA_DIR}/bodycomponent.cpp
-	${SOURCE_MENU_SCHEMA_DIR}/csobserverpawn.cpp
 	${SOURCE_MENU_SCHEMA_DIR}/baseplayerpawn.cpp
-	${SOURCE_MENU_SCHEMA_DIR}/baseplayerweapon.cpp
 	${SOURCE_MENU_SCHEMA_DIR}/baseplayerweaponvdata.cpp
 	${SOURCE_MENU_SCHEMA_DIR}/csplayer_viewmodelservices.cpp
 	${SOURCE_MENU_SCHEMA_DIR}/csplayerbase_cameraservices.cpp
-	${SOURCE_MENU_SCHEMA_DIR}/csplayerpawn.cpp
 	${SOURCE_MENU_SCHEMA_DIR}/csplayerpawnbase.cpp
 	${SOURCE_MENU_SCHEMA_DIR}/csweaponbasevdata.cpp
 	${SOURCE_MENU_SCHEMA_DIR}/gamescenenode.cpp
