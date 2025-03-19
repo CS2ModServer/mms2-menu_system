@@ -52,8 +52,12 @@ bool Menu::CProfileSystem::Load(const char *pszBaseGameDir, const char *pszPathI
 	AnyConfig::LoadFromFile_Generic_t aLoadPresets({{&sError, NULL, pszPathID}, g_KV3Format_Generic});
 
 	{
-		sConfigFile.Insert(0, pszBaseGameDir);
-		sConfigFile.Insert(sConfigFile.Length(), CORRECT_PATH_SEPARATOR_S);
+		if (strlen(pszBaseGameDir) > 0)
+		{
+			sConfigFile.Insert(0, pszBaseGameDir);
+			sConfigFile.Insert(sConfigFile.Length(), CORRECT_PATH_SEPARATOR_S);
+		}
+
 		sConfigFile.Insert(sConfigFile.Length(), MENU_SYSTEM_PROFILES_FILENAME);
 
 		const char *pszConfigFile = sConfigFile.Get();

@@ -2728,7 +2728,12 @@ bool MenuSystem_Plugin::UnregisterNetMessages(char *error, size_t maxlen)
 
 bool MenuSystem_Plugin::ParseLanguages(char *error, size_t maxlen)
 {
-	std::string sTranslationsFilesPath = m_sBaseGameDirectory + CORRECT_PATH_SEPARATOR_S MENUSYSTEM_GAME_LANGUAGES_FILES;
+	std::string sTranslationsFilesPath = "";
+	if (m_sBaseGameDirectory.length() > 0)
+		sTranslationsFilesPath.append(m_sBaseGameDirectory + CORRECT_PATH_SEPARATOR_S);
+
+	sTranslationsFilesPath.append(MENUSYSTEM_GAME_LANGUAGES_FILES);
+
 
 	const char *pszPathID = MENUSYSTEM_BASE_PATHID, 
 	           *pszLanguagesFiles = sTranslationsFilesPath.c_str();
@@ -2840,7 +2845,11 @@ bool MenuSystem_Plugin::ClearLanguages(char *error, size_t maxlen)
 
 bool MenuSystem_Plugin::ParseTranslations(char *error, size_t maxlen)
 {
-	std::string sTranslationsFilesPath = m_sBaseGameDirectory + CORRECT_PATH_SEPARATOR_S MENUSYSTEM_GAME_TRANSLATIONS_FILES;
+	std::string sTranslationsFilesPath = "";
+	if (m_sBaseGameDirectory.length() > 0)
+		sTranslationsFilesPath.append(m_sBaseGameDirectory + CORRECT_PATH_SEPARATOR_S);
+
+	sTranslationsFilesPath.append(MENUSYSTEM_GAME_TRANSLATIONS_FILES);
 
 	const char *pszPathID = MENUSYSTEM_BASE_PATHID, 
 	           *pszTranslationsFiles = sTranslationsFilesPath.c_str();
@@ -2908,7 +2917,11 @@ bool MenuSystem_Plugin::ParseTranslations(char *error, size_t maxlen)
 
 bool MenuSystem_Plugin::ParseTranslations2(char *error, size_t maxlen)
 {
-	std::string sTranslationsDirsPath = m_sBaseGameDirectory + CORRECT_PATH_SEPARATOR_S MENUSYSTEM_GAME_TRANSLATIONS_COUNTRY_CODES_DIRS;
+	std::string sTranslationsDirsPath = "";
+	if (m_sBaseGameDirectory.length() > 0)
+		sTranslationsDirsPath.append(m_sBaseGameDirectory + CORRECT_PATH_SEPARATOR_S);
+	
+	sTranslationsDirsPath.append(MENUSYSTEM_GAME_TRANSLATIONS_COUNTRY_CODES_DIRS);
 
 	const char *pszPathID = MENUSYSTEM_BASE_PATHID, 
 	           *pszTranslationsDirs = sTranslationsDirsPath.c_str();
@@ -2944,7 +2957,11 @@ bool MenuSystem_Plugin::ParseTranslations2(char *error, size_t maxlen)
 
 		if(g_pFullFileSystem->IsDirectory(pszDirectory, pszPathID))
 		{
-			std::string sTranslationsFilesPath = std::string(pszDirectory) + CORRECT_PATH_SEPARATOR_S MENUSYSTEM_GAME_TRANSLATIONS_FILENAMES;
+			std::string sTranslationsFilesPath = "";
+			if (strlen(pszDirectory) > 0)
+				sTranslationsFilesPath.append(std::string(pszDirectory) + CORRECT_PATH_SEPARATOR_S);
+
+			sTranslationsFilesPath.append(MENUSYSTEM_GAME_TRANSLATIONS_FILENAMES);
 
 			const char *pszTranslationsFiles = sTranslationsFilesPath.c_str();
 
