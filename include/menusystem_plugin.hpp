@@ -63,6 +63,12 @@
 #	include <ISmmPlugin.h>
 #	include <sourcehook/sourcehook.h>
 
+#include <string>
+#include <vector>
+class ConCommandHandle;
+#include "../CS2Fixes/sdk/public/tier1/convar.h"
+#include <cs2fixes.h>
+
 #	include <bitvec.h>
 #	include <const.h>
 #	include <igameevents.h>

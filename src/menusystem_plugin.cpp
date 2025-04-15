@@ -58,6 +58,40 @@
 
 #include <usercmd.pb.h>
 
+//i started fucking up here
+
+class ConCommandHandle;
+#include "../CS2Fixes/sdk/public/tier1/convar.h"
+extern CS2Fixes g_CS2Fixes;
+
+#include "../CS2Fixes/src/cs2fixes.h"
+//#include <cs2fixes.h>
+#include <PyPlugin.h>
+#include <PyRuntime.h>
+#include <PyInclude.h>
+#include "pymenu.hpp"
+#include <pybind11/functional.h>
+#include <string>
+#include <algorithm>
+
+void Message(const char* msg, ...)
+{
+	va_list args;
+	va_start(args, msg);
+
+	char buf[1024] = {};
+	V_vsnprintf(buf, sizeof(buf) - 1, msg, args);
+
+	ConColorMsg(Color(255, 0, 255, 255), "[MenuSystem] %s", buf);
+
+	va_end(args);
+}
+class tCS2Fixes : public CS2Fixes
+{
+	bool loaded = true;
+};
+//stopped here
+
 // <cstrike15/cs_shareddefs.h> BEGIN
 // CS Team IDs.
 #define TEAM_TERRORIST			2
@@ -82,6 +116,7 @@ SH_DECL_HOOK1_void(CServerSideClientBase, PerformDisconnection, SH_NOATTRIB, 0, 
 
 static MenuSystem_Plugin s_aMenuPlugin;
 MenuSystem_Plugin *g_pMenuPlugin = &s_aMenuPlugin;
+tCS2Fixes* g_CS2Fixes_mm = nullptr;
 
 PLUGIN_EXPOSE(MenuSystem_Plugin, s_aMenuPlugin);
 
@@ -315,6 +350,30 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 				} s_aItemHandler(this);
 
 				IMenu::IItemHandler *pItemHandler = static_cast<IMenu::IItemHandler *>(&s_aItemHandler);
+
+
+				if (g_CS2Fixes_mm)
+				{
+					Logger::WarningFormat("\n\n\n[MenuSystem] g_CS2Fixes_mm is valid\n");
+					CPlayerSlot t_temp = CPlayerSlot(iSlot);
+					Logger::WarningFormat("[MenuSystem] iSlot is %d, CPlayerSlot is %d\n", iSlot, t_temp.Get());
+
+					std::vector<std::string> inv = g_CS2Fixes_mm->GetPlayerItems(t_temp);
+					Logger::WarningFormat("[MenuSystem] inv.size() is %d\n", inv.size());
+					if (inv.size() > 0)
+					{
+						Logger::WarningFormat("[MenuSystem] inv.front() is %s\n", inv.front().c_str());
+						Logger::WarningFormat("[MenuSystem] inv.back() is %s\n", inv.back().c_str());
+
+						for (std::string& str : inv)
+						{
+							Logger::WarningFormat("[MenuSystem] str:inv is %s\n", str.c_str());
+							vecItems.AddToTail({ str.c_str(), pItemHandler });
+						}
+					}
+				}
+				else
+					Logger::WarningFormat("\n\n\n\n[MenuSystem] g_CS2Fixes_mm is NOT valid\n\n\n\n");
 
 				vecItems.AddToTail({"First Item", pItemHandler});
 				vecItems.AddToTail({"Second Item", pItemHandler});
@@ -615,6 +674,16 @@ void MenuSystem_Plugin::AllPluginsLoaded()
 	{
 		Logger::WarningFormat("%s\n", error);
 	}
+	int retval;
+	int retID;
+	g_CS2Fixes_mm = reinterpret_cast<tCS2Fixes*>(g_SMAPI->MetaFactory("CS2Fixes", &retval, &retID));
+	
+	if (!g_CS2Fixes_mm)
+	{
+		Logger::WarningFormat("[MenuSystem] Could not get CS2Fixes: retval %d, retID %d\n", retval, retID);
+		return;
+	}
+
 }
 
 const char *MenuSystem_Plugin::GetAuthor()        { return META_PLUGIN_AUTHOR; }
