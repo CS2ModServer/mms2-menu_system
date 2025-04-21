@@ -129,26 +129,6 @@ static const std::array s_arrSchemaMetadataHash_VarName
 	SCHEMA_HASH("MNetworkVarTypeOverride"),
 };
 
-Menu::Schema::CSystem::CBufferStringVector *Menu::Schema::CSystem::CDetailsConcatBase::GetMessages()
-{
-	return m_pMessages;
-}
-
-const CConcatLineString *Menu::Schema::CSystem::CDetailsConcatBase::GetConcatLine() const
-{
-	return m_arrConcats[0];
-}
-
-void Menu::Schema::CSystem::CDetailsConcatBase::AppendHeader()
-{
-	AssertMsg(0, "Not implemented");
-}
-
-void Menu::Schema::CSystem::CDetailsConcatBase::AppendMembers()
-{
-	AssertMsg(0, "Not implemented");
-}
-
 void Menu::Schema::CSystem::CDetailsConcatBase::AppendEmpty()
 {
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);

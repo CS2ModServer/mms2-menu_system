@@ -14,6 +14,7 @@ set(SOURCESDK_PROTOS
 	network_connection
 	networkbasetypes
 	networksystem_protomessages
+	connectionless_netmessages
 	usermessages
 
 	# steammessages

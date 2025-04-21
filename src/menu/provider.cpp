@@ -162,7 +162,7 @@ bool Menu::CProvider::CGameDataStorage::Load(IGameData *pRoot, const char *pszBa
 
 	AnyConfig::Anyone aGameConfig;
 
-	AnyConfig::LoadFromFile_Generic_t aLoadPresets({{&sError, NULL, pszPathID}, g_KV3Format_Generic});
+	AnyConfig::CLoadFromFile_General aLoadPresets({{&sError, NULL, pszPathID}, g_KV3Format_Generic});
 
 	for(const auto &aConfig : aConfigs)
 	{

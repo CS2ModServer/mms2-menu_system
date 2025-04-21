@@ -191,9 +191,9 @@ namespace Menu
 				using ConcatArr_t = std::array<const CConcatLineString *, N>;
 
 				DetailsConcatBase_t() = delete;
-				DetailsConcatBase_t(CBufferStringVector *pMessages, const ConcatArr_t &&arrConcats)
+				DetailsConcatBase_t(CBufferStringVector *pMessages, ConcatArr_t &&arrConcats)
 				 :  Base_t(pMessages), 
-				    m_arrConcats(arrConcats)
+				    m_arrConcats(std::move(arrConcats))
 				{
 				}
 
@@ -249,12 +249,12 @@ namespace Menu
 				}
 
 			protected:
-				CBufferStringVector *GetMessages();
-				const CConcatLineString *GetConcatLine() const;
+				CBufferStringVector *GetMessages() { return m_pMessages; }
+				const CConcatLineString *GetConcatLine() const { return m_arrConcats[0]; }
 
 			public:
-				void AppendHeader() override;
-				void AppendMembers() override;
+				void AppendHeader() override { AssertMsg(0, "Not implemented"); }
+				void AppendMembers() override { AssertMsg(0, "Not implemented"); }
 				void AppendEmpty() override;
 			}; // Menu::Schema::CSystem::CDetailsConcatBase
 

@@ -44,11 +44,11 @@ namespace Menu
 	}; // Menu::ISystemBase
 
 	template<typename... Args>
-	class CSystemBase : public ISystemBase, virtual public Logger
+	class CSystemBase : public ISystemBase, virtual public CLogger
 	{
 	public:
 		CSystemBase()
-		  : Logger(GetName(), NULL, 0, LV_DEFAULT, MENU_SYSTEMBASE_LOGGINING_COLOR), 
+		  : CLogger(GetName(), NULL, 0, LV_DEFAULT, MENU_SYSTEMBASE_LOGGINING_COLOR), 
 		    m_mapCallbacks(DefLessFunc(const CUtlSymbolLarge))
 		{
 		}
@@ -132,9 +132,9 @@ namespace Menu
 				return false;
 			}
 
-			if(Logger::IsChannelEnabled(LS_DETAILED))
+			if(CLogger::IsChannelEnabled(LS_DETAILED))
 			{
-				Logger::DetailedFormat("Handling \"%s\" %s...\n", pszName, GetHandlerLowercaseName());
+				CLogger::DetailedFormat("Handling \"%s\" %s...\n", pszName, GetHandlerLowercaseName());
 			}
 
 			OnCallback_t it = m_mapCallbacks[iFound];

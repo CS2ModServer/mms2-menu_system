@@ -30,7 +30,7 @@
 #include <any_config.hpp>
 
 Menu::CProfileSystem::CProfileSystem()
- :  Logger(Base::GetName(), NULL, 0, LV_DEFAULT, MENU_SYSTEMBASE_LOGGINING_COLOR), 
+ :  CLogger(Base::GetName(), NULL, 0, LV_DEFAULT, MENU_SYSTEMBASE_LOGGINING_COLOR), 
 
     m_map(DefLessFunc(const CUtlSymbolLarge)), 
     m_mapRefs(DefLessFunc(const CUtlSymbolLarge))
@@ -49,7 +49,7 @@ bool Menu::CProfileSystem::Load(const char *pszBaseGameDir, const char *pszPathI
 
 	AnyConfig::Anyone aGameConfig;
 
-	AnyConfig::LoadFromFile_Generic_t aLoadPresets({{&sError, NULL, pszPathID}, g_KV3Format_Generic});
+	AnyConfig::CLoadFromFile_General aLoadPresets({{&sError, NULL, pszPathID}, g_KV3Format_Generic});
 
 	{
 		sConfigFile.Insert(0, pszBaseGameDir);

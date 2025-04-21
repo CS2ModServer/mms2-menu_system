@@ -26,7 +26,7 @@
 #include <tier1/utlrbtree.h>
 
 Menu::CGameEventManager2System::CGameEventManager2System()
- :  Logger(GetName(), NULL, 0, LV_DEFAULT, MENU_GAMEEVENTSYSTEM_LOGGINING_COLOR),
+ :  CLogger(GetName(), NULL, 0, LV_DEFAULT, MENU_GAMEEVENTSYSTEM_LOGGINING_COLOR),
     Base(), 
 
     m_aEnableDetaillsConVar("mm_" META_PLUGIN_PREFIX "_enable_game_events_details", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable detail messages of game events", false, true, false, true, true)
@@ -64,15 +64,15 @@ bool Menu::CGameEventManager2System::HookAll()
 
 		if(g_pGameEventManager->AddListener(pEventListener, pszName, true) == -1)
 		{
-			Logger::WarningFormat("Failed to hook \"%s\" %s\n", pszName, pszHandlerLowercaseName);
+			CLogger::WarningFormat("Failed to hook \"%s\" %s\n", pszName, pszHandlerLowercaseName);
 
 			nFails++;
 		}
 		else
 		{
-			if(Logger::IsChannelEnabled(LV_DETAILED))
+			if(CLogger::IsChannelEnabled(LV_DETAILED))
 			{
-				Logger::DetailedFormat("Hooked \"%s\" %s\n", pszName, pszHandlerLowercaseName);
+				CLogger::DetailedFormat("Hooked \"%s\" %s\n", pszName, pszHandlerLowercaseName);
 			}
 		}
 	}
@@ -100,24 +100,24 @@ bool Menu::CGameEventManager2System::DumpGameEvent(IGameEvent *pEvent)
 
 	if(!pEventDataKeys)
 	{
-		Logger::WarningFormat("Data keys is empty at \"%s\" %s\n", pEvent->GetName(), GetHandlerLowercaseName());
+		CLogger::WarningFormat("Data keys is empty at \"%s\" %s\n", pEvent->GetName(), GetHandlerLowercaseName());
 
 		return false;
 	}
 
-	if(Logger::IsChannelEnabled(LS_DETAILED))
+	if(CLogger::IsChannelEnabled(LS_DETAILED))
 	{
 		int nMemberCount = pEventDataKeys->GetMemberCount();
 
 		if(!nMemberCount)
 		{
-			Logger::WarningFormat("No members at \"%s\" %s\n", pEvent->GetName(), GetHandlerLowercaseName());
+			CLogger::WarningFormat("No members at \"%s\" %s\n", pEvent->GetName(), GetHandlerLowercaseName());
 
 			return false;
 		}
 
 		{
-			auto aDetails = Logger::CreateDetailsScope();
+			auto aDetails = CLogger::CreateDetailsScope();
 
 			aDetails.PushFormat("\"%s\":", pEvent->GetName());
 			aDetails.Push("{");
@@ -142,7 +142,7 @@ bool Menu::CGameEventManager2System::DumpGameEvent(IGameEvent *pEvent)
 			aDetails.Push("}");
 			aDetails.Send([&](const CUtlString &sMessage)
 			{
-				Logger::Detailed(sMessage);
+				CLogger::Detailed(sMessage);
 			});
 		}
 	}

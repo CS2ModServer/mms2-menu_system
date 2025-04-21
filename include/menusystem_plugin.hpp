@@ -104,7 +104,7 @@ namespace Menu
 
 class MenuSystem_Plugin final : public ISmmPlugin, public IMetamodListener, public IMenuSystem, public IMenuHandler, public CBaseGameSystem, public IEntityManager::IProviderAgent::ISpawnGroupNotifications, // Interfaces.
                                 virtual public Menu::Schema::CSystem, virtual public Menu::Schema::CBaseEntity_Helper, virtual public Menu::Schema::CBaseModelEntity_Helper, virtual public Menu::Schema::CBasePlayerController_Helper, virtual public Menu::Schema::CBasePlayerPawn_Helper, virtual public Menu::Schema::CBasePlayerWeapon_Helper, virtual public Menu::Schema::CBasePlayerWeaponVData_Helper, virtual public Menu::Schema::CBaseViewModel_Helper, virtual public Menu::Schema::CBodyComponent_Helper, virtual public Menu::Schema::CCSPlayerPawnBase_Helper, virtual public Menu::Schema::CCSWeaponBaseVData_Helper, virtual public Menu::Schema::CCSObserverPawn_Helper, virtual public Menu::Schema::CCSPlayer_ViewModelServices_Helper, virtual public Menu::Schema::CCSPlayerBase_CameraServices_Helper, virtual public Menu::Schema::CCSPlayerPawn_Helper, virtual public Menu::Schema::CGameSceneNode_Helper, virtual public Menu::Schema::CPlayer_ObserverServices_Helper, virtual public Menu::Schema::CPlayer_WeaponServices_Helper, virtual public Menu::Schema::CPointWorldText_Helper, // Schema helpers.
-                                virtual public Logger, public Translations, public Menu::CPathResolver, public Menu::CProvider, // Components.
+                                virtual public CLogger, public Translations, public Menu::CPathResolver, public Menu::CProvider, // Components.
                                 public Menu::CGameEventManager2System, public Menu::CChatSystem, public Menu::CProfileSystem // Subsystems.
 {
 public:
@@ -466,7 +466,7 @@ public: // SourceHooks.
 	void OnStartupServerHook(const GameSessionConfiguration_t &config, ISource2WorldSession *pWorldSession, const char *);
 	void OnDispatchConCommandHook(ConCommandRef hCommand, const CCommandContext &aContext, const CCommand &aArgs);
 	void OnCheckTransmitHook(CCheckTransmitInfo **ppInfoList, int nInfoCount, CBitVec<MAX_EDICTS> &bvUnionTransmitEdicts, const Entity2Networkable_t **pNetworkables, const uint16 *pEntityIndicies, int nEntities, bool bEnablePVSBits);
-	CServerSideClientBase *OnConnectClientHook(const char *pszName, ns_address *pAddr, void *pNetInfo, C2S_CONNECT_Message *pConnectMsg, const char *pszChallenge, const byte *pAuthTicket, int nAuthTicketLength, bool bIsLowViolence);
+	CServerSideClientBase *OnConnectClientHook(const char *pszName, ns_address *pAddr, uint32 hSocket, const C2S_CONNECT_Message &msg, const char *pszChallenge, const byte *pAuthTicket, int nAuthTicketLength, bool bIsLowViolence);
 	bool OnExecuteStringCommandPreHook(const CNETMsg_StringCmd_t &aMessage);
 	bool OnProcessRespondCvarValueHook(const CCLCMsg_RespondCvarValue_t &aMessage);
 	bool OnProcessMoveHook(const CCLCMsg_Move_t &aMessage);
@@ -494,7 +494,7 @@ public: // Utils.
 
 protected: // Handlers.
 	void OnStartupServer(CNetworkGameServerBase *pNetServer, const GameSessionConfiguration_t &config, ISource2WorldSession *pWorldSession);
-	void OnConnectClient(CNetworkGameServerBase *pNetServer, CServerSideClientBase *pClient, const char *pszName, ns_address *pAddr, void *pNetInfo, C2S_CONNECT_Message *pConnectMsg, const char *pszChallenge, const byte *pAuthTicket, int nAuthTicketLength, bool bIsLowViolence);
+	void OnConnectClient(CNetworkGameServerBase *pNetServer, CServerSideClientBase *pClient);
 	void OnCheckTransmit(ISource2GameEntities *pGameEntities, CCheckTransmitInfo **ppInfoList, int nInfoCount, CBitVec<MAX_EDICTS> &bvUnionTransmitEdicts, const Entity2Networkable_t **pNetworkables, const uint16 *pEntityIndicies, int nEntities, bool bEnablePVSBits);
 	META_RES OnExecuteStringCommandPre(CServerSideClientBase *pClient, const CNETMsg_StringCmd_t &aMessage);
 	META_RES OnProcessMovePre(CServerSideClientBase *pClient, const CCLCMsg_Move_t &aMessage);

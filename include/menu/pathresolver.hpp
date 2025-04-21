@@ -36,7 +36,7 @@ namespace Menu
 	class CPathResolver
 	{
 	public:
-		bool Init(const void *pModuleHandle);
+		bool Init(void *pModuleHandle);
 		void Clear();
 
 	public:
