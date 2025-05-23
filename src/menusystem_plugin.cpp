@@ -1634,35 +1634,35 @@ bool MenuSystem_Plugin::LoadSchema(char *error, size_t maxlen)
 {
 	bool bResult {};
 
-	// if(CLogger::IsChannelEnabled(LV_DETAILED))
-	// {
-	// 	Menu::Schema::CSystem::CBufferStringVector vecMessages;
+	if(CLogger::IsChannelEnabled(LV_DETAILED))
+	{
+		Menu::Schema::CSystem::CBufferStringVector vecMessages;
 
-	// 	using Concat_t = decltype(g_arrEmbedsConcat)::value_type;
-	// 	using SchemaFullDetails_t = Menu::Schema::CSystem::FullDetails_t;
-	// 	constexpr uintp kEmbeds = SchemaFullDetails_t::sm_nEmbeds;
+		using Concat_t = decltype(g_arrEmbedsConcat)::value_type;
+		using SchemaFullDetails_t = Menu::Schema::CSystem::FullDetails_t;
+		constexpr uintp kEmbeds = SchemaFullDetails_t::sm_nEmbeds;
 
-	// 	std::array<Concat_t *, kEmbeds> arrSchemaEmbedConcats;
+		std::array<Concat_t *, kEmbeds> arrSchemaEmbedConcats;
 
-	// 	static_assert(g_arrEmbedsConcat.size() >= arrSchemaEmbedConcats.size());
-	// 	std::transform(g_arrEmbedsConcat.begin(), g_arrEmbedsConcat.begin() + arrSchemaEmbedConcats.size(), arrSchemaEmbedConcats.begin(), [](const Concat_t &aConcat) { return &aConcat; });
-	// 	std::reverse(arrSchemaEmbedConcats.begin(), arrSchemaEmbedConcats.end());
+		static_assert(g_arrEmbedsConcat.size() >= arrSchemaEmbedConcats.size());
+		std::transform(g_arrEmbedsConcat.begin(), g_arrEmbedsConcat.begin() + arrSchemaEmbedConcats.size(), arrSchemaEmbedConcats.begin(), [](const Concat_t &aConcat) { return &aConcat; });
+		std::reverse(arrSchemaEmbedConcats.begin(), arrSchemaEmbedConcats.end());
 
-	// 	auto aFullDetails = SchemaFullDetails_t 
-	// 	{
-	// 		&vecMessages,
+		auto aFullDetails = SchemaFullDetails_t 
+		{
+			&vecMessages,
 
-	// 		std::move(arrSchemaEmbedConcats)
-	// 	};
+			std::move(arrSchemaEmbedConcats)
+		};
 
-	// 	bResult = Menu::Schema::CSystem::Load(&aFullDetails);
+		bResult = Menu::Schema::CSystem::Load(&aFullDetails);
 
-	// 	for(const auto &sMessage : vecMessages)
-	// 	{
-	// 		CLogger::Detailed(sMessage.String());
-	// 	}
-	// }
-	// else
+		for(const auto &sMessage : vecMessages)
+		{
+			CLogger::Detailed(sMessage.String());
+		}
+	}
+	else
 	{
 		bResult = Menu::Schema::CSystem::Load();
 	}
