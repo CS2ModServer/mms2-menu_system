@@ -140,7 +140,7 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 
 	// Game events.
 	{
-		Menu::CGameEventManager2System::AddHandler("player_team", {[&](const CUtlSymbolLarge &sName, IGameEvent *pEvent) -> bool
+		CGameEventSystem::AddHandler("player_team", {[&](const CUtlSymbolLarge &sName, IGameEvent *pEvent) -> bool
 		{
 			auto aPlayerSlot = pEvent->GetPlayerSlot("userid");
 
@@ -249,7 +249,7 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 
 	// Chat commands.
 	{
-		Menu::CChatCommandSystem::AddHandler("menu", {[&](const CUtlSymbolLarge &sName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments) -> bool
+		CChatSystem::AddHandler("menu", {[&](const CUtlSymbolLarge &sName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments) -> bool
 		{
 			CSingleRecipientFilter aFilter(aSlot);
 
@@ -278,7 +278,7 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 
 				sBuffer.SetLength(sBuffer.Length() - 1); // Strip the last next line.
 
-				Menu::CChatSystem::ReplaceString(sBuffer);
+				CChatSystem::ReplaceString(sBuffer);
 				SendTextMessage(&aFilter, HUD_PRINTTALK, 1, sBuffer.Get());
 			}
 			else
@@ -336,7 +336,7 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 			}
 		}});
 
-		Menu::CChatCommandSystem::AddHandler("menu_clear", {[&](const CUtlSymbolLarge &sName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments) -> bool
+		CChatSystem::AddHandler("menu_clear", {[&](const CUtlSymbolLarge &sName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments) -> bool
 		{
 			auto &aPlayer = GetPlayerData(aSlot);
 
@@ -1596,7 +1596,7 @@ bool MenuSystem_Plugin::InitSchema(char *error, size_t maxlen)
 #endif
 	);
 
-	Menu::Schema::CSystem::CBufferStringVector vecMessages;
+	Menu::Schema::CSystem::CStringVector vecMessages;
 
 	bool bResult = Menu::Schema::CSystem::Init(g_pSchemaSystem, vecLoadLibraries, &vecMessages);
 
@@ -1634,7 +1634,7 @@ bool MenuSystem_Plugin::LoadSchema(char *error, size_t maxlen)
 
 	if(CLogger::IsChannelEnabled(LV_DETAILED))
 	{
-		Menu::Schema::CSystem::CBufferStringVector vecMessages;
+		Menu::Schema::CSystem::CStringVector vecMessages;
 
 		using Concat_t = decltype(g_arrEmbedsConcat)::value_type;
 		using SchemaFullDetails_t = Menu::Schema::CSystem::FullDetails_t;
@@ -1709,7 +1709,7 @@ bool MenuSystem_Plugin::ClearPathResolver(char *error, size_t maxlen)
 
 bool MenuSystem_Plugin::InitProvider(char *error, size_t maxlen)
 {
-	GameData::CBufferStringVector vecMessages;
+	GameData::CStringVector vecMessages;
 
 	bool bResult = CProvider::Init(vecMessages);
 
@@ -1746,7 +1746,7 @@ bool MenuSystem_Plugin::InitProvider(char *error, size_t maxlen)
 
 bool MenuSystem_Plugin::LoadProvider(char *error, size_t maxlen)
 {
-	GameData::CBufferStringVector vecMessages;
+	GameData::CStringVector vecMessages;
 
 	bool bResult = CProvider::Load(m_sBaseGameDirectory.c_str(), MENUSYSTEM_BASE_PATHID, vecMessages);
 
@@ -1780,7 +1780,7 @@ bool MenuSystem_Plugin::LoadProvider(char *error, size_t maxlen)
 
 bool MenuSystem_Plugin::UnloadProvider(char *error, size_t maxlen)
 {
-	GameData::CBufferStringVector vecMessages;
+	GameData::CStringVector vecMessages;
 
 	bool bResult = CProvider::Destroy(vecMessages);
 
@@ -2838,7 +2838,7 @@ bool MenuSystem_Plugin::ParseTranslations(char *error, size_t maxlen)
 
 	CUtlVector<CUtlString> vecTranslationsFiles;
 
-	Translations::CBufferStringVector vecSubmessages;
+	Translations::CStringVector vecSubmessages;
 
 	CUtlString sMessage;
 
@@ -2907,7 +2907,7 @@ bool MenuSystem_Plugin::ParseTranslations2(char *error, size_t maxlen)
 	CUtlVector<CUtlString> vecTranslationsDirs, 
 	                       vecTranslationFilenames;
 
-	Translations::CBufferStringVector vecSubmessages;
+	Translations::CStringVector vecSubmessages;
 
 	CUtlString sMessage;
 
@@ -3003,7 +3003,7 @@ bool MenuSystem_Plugin::LoadChat(char *error, size_t maxlen)
 {
 	CUtlVector<CUtlString> vecMessages;
 
-	if(!Menu::CChatSystem::Load(m_sBaseGameDirectory.c_str(), MENUSYSTEM_BASE_PATHID, vecMessages))
+	if(!CChatSystem::Load(m_sBaseGameDirectory.c_str(), MENUSYSTEM_BASE_PATHID, vecMessages))
 	{
 		if(vecMessages.Count() && CLogger::IsChannelEnabled(LS_WARNING))
 		{
@@ -3030,14 +3030,14 @@ bool MenuSystem_Plugin::LoadChat(char *error, size_t maxlen)
 
 bool MenuSystem_Plugin::ClearChat(char *error, size_t maxlen)
 {
-	Menu::CChatSystem::Clear();
+	CChatSystem::Clear();
 
 	return true;
 }
 
 bool MenuSystem_Plugin::HookGameEvents(char *error, size_t maxlen)
 {
-	if(!Menu::CGameEventManager2System::HookAll())
+	if(!CGameEventSystem::HookAll())
 	{
 		strncpy(error, "Failed to hook game events", maxlen);
 
@@ -3049,7 +3049,7 @@ bool MenuSystem_Plugin::HookGameEvents(char *error, size_t maxlen)
 
 bool MenuSystem_Plugin::UnhookGameEvents(char *error, size_t maxlen)
 {
-	if(!Menu::CGameEventManager2System::UnhookAll())
+	if(!CGameEventSystem::UnhookAll())
 	{
 		strncpy(error, "Failed to unhook game events", maxlen);
 
@@ -3187,17 +3187,11 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 				pszArg1++;
 			}
 
-			bool bIsSilent = *pszArg1 == Menu::CChatCommandSystem::GetSilentTrigger();
+			bool bIsSilent = *pszArg1 == CChatSystem::GetSilentTrigger();
 
-			if(bIsSilent || *pszArg1 == Menu::CChatCommandSystem::GetPublicTrigger())
+			if(bIsSilent || *pszArg1 == CChatSystem::GetPublicTrigger())
 			{
 				pszArg1++; // Skip a command character.
-
-				// Print a chat message before.
-				if(!bIsSilent && g_pCVar)
-				{
-					SH_CALL(g_pCVar, &ICvar::DispatchConCommand)(hCommand, aContext, aArgs);
-				}
 
 				// Call the handler.
 				{
@@ -3241,7 +3235,22 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 						CLogger::Detailed(sBuffer);
 					}
 
-					Menu::CChatCommandSystem::Handle(vecArgs[0], aPlayerSlot, bIsSilent, vecArgs);
+					uint16 iHandler = CChatSystem::FindHandler(vecArgs[0]);
+
+					if(CChatSystem::IsValidHandler(iHandler)) // Chat command is found.
+					{
+						// Print a chat message before.
+						if(!bIsSilent && g_pCVar)
+						{
+							SH_CALL(g_pCVar, &ICvar::DispatchConCommand)(hCommand, aContext, aArgs);
+						}
+
+						CChatSystem::Call(iHandler, vecArgs[0], aPlayerSlot, bIsSilent, vecArgs);
+					}
+					else if(g_pCVar)
+					{
+						SH_CALL(g_pCVar, &ICvar::DispatchConCommand)(hCommand, aContext, aArgs);
+					}
 				}
 
 				RETURN_META(MRES_SUPERCEDE);
