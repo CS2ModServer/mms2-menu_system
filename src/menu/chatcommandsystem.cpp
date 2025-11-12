@@ -24,7 +24,7 @@
 #include <tier1/utlrbtree.h>
 
 Menu::CChatCommandSystem::CChatCommandSystem()
- :  Logger(GetName(), NULL, 0, LV_DEFAULT, MENU_CHATCOMMANDSYSTEM_LOGGINING_COLOR), 
+ :  CLogger(GetName(), NULL, 0, LV_DEFAULT, MENU_CHATCOMMANDSYSTEM_LOGGINING_COLOR), 
     Base()
 {
 }
@@ -51,18 +51,18 @@ char Menu::CChatCommandSystem::GetSilentTrigger()
 
 bool Menu::CChatCommandSystem::Handle(const char *pszName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArgs)
 {
-	if(aSlot == CPlayerSlot::InvalidIndex())
+	if(!aSlot.IsValid())
 	{
-		Logger::Message("Type the chat command from root console?\n");
+		CLogger::Message("Type the chat command from root console?\n");
 
 		return false;
 	}
 
 	if(!vecArgs.Count())
 	{
-		if(Logger::IsChannelEnabled(LS_DETAILED))
+		if(CLogger::IsChannelEnabled(LS_DETAILED))
 		{
-			Logger::Detailed("Chat command arguments is empty\n");
+			CLogger::Detailed("Chat command arguments is empty\n");
 		}
 
 		return false;

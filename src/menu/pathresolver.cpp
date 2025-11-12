@@ -26,7 +26,7 @@
 #include <tier0/basetypes.h>
 #include <tier0/dbg.h>
 
-bool Menu::CPathResolver::Init(const void *pModuleHandle)
+bool Menu::CPathResolver::Init(void *pModuleHandle)
 {
 	m_aModule.InitFromMemory(pModuleHandle);
 
@@ -42,6 +42,7 @@ std::string_view Menu::CPathResolver::GetAbsoluteModuleFilename()
 {
 	return m_aModule.GetPath();
 }
+
 
 std::string_view Menu::CPathResolver::Extract(std::string_view sStartMarker, std::string_view sEndMarker)
 {

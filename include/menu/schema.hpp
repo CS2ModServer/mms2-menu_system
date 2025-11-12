@@ -171,17 +171,17 @@ namespace Menu
 		public:
 			CSystem();
 
-			using CBufferStringVector = GameData::CBufferStringVector;
+			using CStringVector = GameData::CStringVector;
 
 			struct DetailsBase_t
 			{
 				DetailsBase_t() = delete;
-				DetailsBase_t(CBufferStringVector *pMessages)
+				DetailsBase_t(CStringVector *pMessages)
 				 :  m_pMessages(pMessages)
 				{
 				}
 
-				CBufferStringVector *m_pMessages;
+				CStringVector *m_pMessages;
 			}; // Menu::Schema::CSystem::DetailsBase_t
 
 			template<std::size_t N>
@@ -191,9 +191,9 @@ namespace Menu
 				using ConcatArr_t = std::array<const CConcatLineString *, N>;
 
 				DetailsConcatBase_t() = delete;
-				DetailsConcatBase_t(CBufferStringVector *pMessages, const ConcatArr_t &&arrConcats)
+				DetailsConcatBase_t(CStringVector *pMessages, ConcatArr_t &&arrConcats)
 				 :  Base_t(pMessages), 
-				    m_arrConcats(arrConcats)
+				    m_arrConcats(std::move(arrConcats))
 				{
 				}
 
@@ -249,12 +249,12 @@ namespace Menu
 				}
 
 			protected:
-				CBufferStringVector *GetMessages();
-				const CConcatLineString *GetConcatLine() const;
+				CStringVector *GetMessages() { return m_pMessages; }
+				const CConcatLineString *GetConcatLine() const { return m_arrConcats[0]; }
 
 			public:
-				void AppendHeader() override;
-				void AppendMembers() override;
+				void AppendHeader() override { AssertMsg(0, "Not implemented"); }
+				void AppendMembers() override { AssertMsg(0, "Not implemented"); }
 				void AppendEmpty() override;
 			}; // Menu::Schema::CSystem::CDetailsConcatBase
 
@@ -359,7 +359,7 @@ namespace Menu
 			}; // Menu::Schema::CSystem::CDetailsConcatMetadataEntry
 
 		public:
-			bool Init(ISchemaSystem *pSchemaSystem, const CUtlVector<const char *> &vecLoadedLibraries, CBufferStringVector *pMessages = nullptr);
+			bool Init(ISchemaSystem *pSchemaSystem, const CUtlVector<const char *> &vecLoadedLibraries, CStringVector *pMessages = nullptr);
 			bool Load(FullDetails_t *pDetails = nullptr); // Calls the classes -> fields callbacks.
 			void Clear();
 

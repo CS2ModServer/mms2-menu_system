@@ -5,12 +5,12 @@
  * Written by Wend4r & komashchenko (Vladimir Ezhikov & Borys Komashchenko).
  * ======================================================
 
- * This program is free software: you can redistribute it and/or modify
+ * CThis program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
 
- * This program is distributed in the hope that it will be useful,
+ * CThis program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -110,11 +110,14 @@ namespace Menu
 
 class MenuSystem_Plugin final : public ISmmPlugin, public IMetamodListener, public IMenuSystem, public IMenuHandler, public CBaseGameSystem, public IEntityManager::IProviderAgent::ISpawnGroupNotifications, // Interfaces.
                                 virtual public Menu::Schema::CSystem, virtual public Menu::Schema::CBaseEntity_Helper, virtual public Menu::Schema::CBaseModelEntity_Helper, virtual public Menu::Schema::CBasePlayerController_Helper, virtual public Menu::Schema::CBasePlayerPawn_Helper, virtual public Menu::Schema::CBasePlayerWeapon_Helper, virtual public Menu::Schema::CBasePlayerWeaponVData_Helper, virtual public Menu::Schema::CBaseViewModel_Helper, virtual public Menu::Schema::CBodyComponent_Helper, virtual public Menu::Schema::CCSPlayerPawnBase_Helper, virtual public Menu::Schema::CCSWeaponBaseVData_Helper, virtual public Menu::Schema::CCSObserverPawn_Helper, virtual public Menu::Schema::CCSPlayer_ViewModelServices_Helper, virtual public Menu::Schema::CCSPlayerBase_CameraServices_Helper, virtual public Menu::Schema::CCSPlayerPawn_Helper, virtual public Menu::Schema::CGameSceneNode_Helper, virtual public Menu::Schema::CPlayer_ObserverServices_Helper, virtual public Menu::Schema::CPlayer_WeaponServices_Helper, virtual public Menu::Schema::CPointWorldText_Helper, // Schema helpers.
-                                virtual public Logger, public Translations, public Menu::CPathResolver, public Menu::CProvider, // Components.
+                                virtual public CLogger, public Translations, public Menu::CPathResolver, public Menu::CProvider, // Components.
                                 public Menu::CGameEventManager2System, public Menu::CChatSystem, public Menu::CProfileSystem // Subsystems.
 {
 public:
-	using This = MenuSystem_Plugin;
+	using CThis = MenuSystem_Plugin;
+	using CGameEventSystem = Menu::CGameEventManager2System;
+	using CChatSystem = Menu::CChatSystem;
+	using CProfileSystem = Menu::CProfileSystem;
 
 	MenuSystem_Plugin();
 
@@ -456,13 +459,13 @@ public: // Event actions.
 
 private:
 	// Commands of reload components.
-	CON_COMMAND_MEMBER_F(This, "mm_" META_PLUGIN_PREFIX "_reload_schema", OnReloadSchemaCommand, "Reload schema fields of classes", FCVAR_LINKED_CONCOMMAND);
-	CON_COMMAND_MEMBER_F(This, "mm_" META_PLUGIN_PREFIX "_reload_gamedata", OnReloadGameDataCommand, "Reload gamedata configs", FCVAR_LINKED_CONCOMMAND);
-	CON_COMMAND_MEMBER_F(This, "mm_" META_PLUGIN_PREFIX "_reload_profiles", OnReloadProfilesCommand, "Reload menu profiles", FCVAR_LINKED_CONCOMMAND);
-	CON_COMMAND_MEMBER_F(This, "mm_" META_PLUGIN_PREFIX "_reload_translations", OnReloadTranslationsCommand, "Reload translations", FCVAR_LINKED_CONCOMMAND);
+	CON_COMMAND_MEMBER_F(CThis, "mm_" META_PLUGIN_PREFIX "_reload_schema", OnReloadSchemaCommand, "Reload schema fields of classes", FCVAR_LINKED_CONCOMMAND);
+	CON_COMMAND_MEMBER_F(CThis, "mm_" META_PLUGIN_PREFIX "_reload_gamedata", OnReloadGameDataCommand, "Reload gamedata configs", FCVAR_LINKED_CONCOMMAND);
+	CON_COMMAND_MEMBER_F(CThis, "mm_" META_PLUGIN_PREFIX "_reload_profiles", OnReloadProfilesCommand, "Reload menu profiles", FCVAR_LINKED_CONCOMMAND);
+	CON_COMMAND_MEMBER_F(CThis, "mm_" META_PLUGIN_PREFIX "_reload_translations", OnReloadTranslationsCommand, "Reload translations", FCVAR_LINKED_CONCOMMAND);
 
 	// Players interaction.
-	CON_COMMAND_MEMBER_F(This, "menuselect", OnMenuSelectCommand, "", FCVAR_LINKED_CONCOMMAND | FCVAR_CLIENT_CAN_EXECUTE);
+	CON_COMMAND_MEMBER_F(CThis, "menuselect", OnMenuSelectCommand, "", FCVAR_LINKED_CONCOMMAND | FCVAR_CLIENT_CAN_EXECUTE);
 
 private: // ConVars. See the constructor
 	CConVar<bool> m_aEnableClientCommandDetailsConVar;
@@ -472,7 +475,7 @@ public: // SourceHooks.
 	void OnStartupServerHook(const GameSessionConfiguration_t &config, ISource2WorldSession *pWorldSession, const char *);
 	void OnDispatchConCommandHook(ConCommandRef hCommand, const CCommandContext &aContext, const CCommand &aArgs);
 	void OnCheckTransmitHook(CCheckTransmitInfo **ppInfoList, int nInfoCount, CBitVec<MAX_EDICTS> &bvUnionTransmitEdicts, const Entity2Networkable_t **pNetworkables, const uint16 *pEntityIndicies, int nEntities, bool bEnablePVSBits);
-	CServerSideClientBase *OnConnectClientHook(const char *pszName, ns_address *pAddr, void *pNetInfo, C2S_CONNECT_Message *pConnectMsg, const char *pszChallenge, const byte *pAuthTicket, int nAuthTicketLength, bool bIsLowViolence);
+	CServerSideClientBase *OnConnectClientHook(const char *pszName, ns_address *pAddr, uint32 hSocket, const C2S_CONNECT_Message &msg, const char *pszChallenge, const byte *pAuthTicket, int nAuthTicketLength, bool bIsLowViolence);
 	bool OnExecuteStringCommandPreHook(const CNETMsg_StringCmd_t &aMessage);
 	bool OnProcessRespondCvarValueHook(const CCLCMsg_RespondCvarValue_t &aMessage);
 	bool OnProcessMoveHook(const CCLCMsg_Move_t &aMessage);
@@ -500,7 +503,7 @@ public: // Utils.
 
 protected: // Handlers.
 	void OnStartupServer(CNetworkGameServerBase *pNetServer, const GameSessionConfiguration_t &config, ISource2WorldSession *pWorldSession);
-	void OnConnectClient(CNetworkGameServerBase *pNetServer, CServerSideClientBase *pClient, const char *pszName, ns_address *pAddr, void *pNetInfo, C2S_CONNECT_Message *pConnectMsg, const char *pszChallenge, const byte *pAuthTicket, int nAuthTicketLength, bool bIsLowViolence);
+	void OnConnectClient(CNetworkGameServerBase *pNetServer, CServerSideClientBase *pClient);
 	void OnCheckTransmit(ISource2GameEntities *pGameEntities, CCheckTransmitInfo **ppInfoList, int nInfoCount, CBitVec<MAX_EDICTS> &bvUnionTransmitEdicts, const Entity2Networkable_t **pNetworkables, const uint16 *pEntityIndicies, int nEntities, bool bEnablePVSBits);
 	META_RES OnExecuteStringCommandPre(CServerSideClientBase *pClient, const CNETMsg_StringCmd_t &aMessage);
 	META_RES OnProcessMovePre(CServerSideClientBase *pClient, const CCLCMsg_Move_t &aMessage);
@@ -527,7 +530,7 @@ private: // Language (hash)map.
 	CUtlMap<CUtlSymbolLarge, CLanguage> m_mapLanguages;
 
 private: // Fields.
-	CGameSystemStaticFactory<This> *m_pFactory;
+	CGameSystemStaticFactory<CThis> *m_pFactory;
 
 	// Provide to Entity Manager plugin.
 	PluginId m_iEntityManager;

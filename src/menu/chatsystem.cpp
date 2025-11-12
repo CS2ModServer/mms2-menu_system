@@ -29,7 +29,7 @@
 #include <any_config.hpp>
 
 Menu::CChatSystem::CChatSystem()
- :  Logger(Base::GetName(), NULL, 0, LV_DEFAULT, MENU_CHATCOMMANDSYSTEM_LOGGINING_COLOR), 
+ :  CLogger(Base::GetName(), NULL, 0, LV_DEFAULT, MENU_CHATCOMMANDSYSTEM_LOGGINING_COLOR), 
 
     m_mapAliases(DefLessFunc(const CUtlSymbolLarge))
 {
@@ -47,7 +47,7 @@ bool Menu::CChatSystem::Load(const char *pszBaseGameDir, const char *pszPathID, 
 
 	AnyConfig::Anyone aGameConfig;
 
-	AnyConfig::LoadFromFile_Generic_t aLoadPresets({{&sError, NULL, pszPathID}, g_KV3Format_Generic});
+	AnyConfig::CLoadFromFile_General aLoadPresets({{&sError, NULL, pszPathID}, g_KV3Format_Generic});
 
 	{
 		if (strlen(pszBaseGameDir) > 0)
